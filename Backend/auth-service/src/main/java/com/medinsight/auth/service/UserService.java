@@ -89,7 +89,7 @@ public class UserService {
      */
     public UserResponse toUserResponse(User user) {
         UserResponse.UserResponseBuilder builder = UserResponse.builder()
-                .id(user.getId())
+                .id(UUID.fromString(user.getKeycloakId()))
                 .keycloakId(user.getKeycloakId())
                 .email(user.getEmail())
                 .firstName(user.getFirstName())

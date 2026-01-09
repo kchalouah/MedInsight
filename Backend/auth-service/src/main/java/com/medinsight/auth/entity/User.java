@@ -13,7 +13,10 @@ import java.util.UUID;
  * This stores business data while authentication is handled by Keycloak.
  */
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_user_email", columnList = "email"),
+        @Index(name = "idx_user_keycloak_id", columnList = "keycloak_id")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
