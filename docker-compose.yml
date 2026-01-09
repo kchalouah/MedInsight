@@ -1,0 +1,340 @@
+services:
+  # ============================
+  # PostgreSQL
+  # ============================
+  postgres:
+    image: postgres:15-alpine
+    container_name: medinsight-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - medinsight-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================
+  # pgAdmin
+  # ============================
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: medinsight-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@medinsight.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - medinsight-network
+
+
+  
+
+
+  # ============================
+  # Keycloak
+  # ============================
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: medinsight-keycloak
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      KC_DB_USERNAME: ${KC_DB_USERNAME}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      # KC_HOSTNAME removed to avoid conflict with KC_HOSTNAME_URL
+      KC_HOSTNAME_URL: http://localhost:8180
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HOSTNAME_STRICT: "false"
+    # volumes:
+    #   - ./infra/keycloak/realm.json:/opt/keycloak/data/import/realm.json
+    command: start-dev
+    # command: start-dev --import-realm
+    ports:
+      - "8180:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - medinsight-network
+
+  # ============================
+  # Prometheus
+  # ============================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: medinsight-prometheus
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - medinsight-network
+
+  # ============================
+  # Grafana
+  # ============================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: medinsight-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    networks:
+      - medinsight-network
+
+  # ============================
+  # Eureka Discovery Service
+  # ============================
+  discovery-service:
+    build:
+      context: ./Backend/discovery-service
+      dockerfile: Dockerfile
+    container_name: medinsight-discovery
+    ports:
+      - "8761:8761"
+    networks:
+      - medinsight-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # ============================
+  # Auth Service
+  # ============================
+  auth-service:
+    build:
+      context: ./Backend/auth-service
+      dockerfile: Dockerfile
+    container_name: medinsight-auth-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      KEYCLOAK_URL: ${KEYCLOAK_URL}
+      KEYCLOAK_REALM: medinsight
+      KEYCLOAK_CLIENT_ID: auth-service
+      KEYCLOAK_CLIENT_SECRET: auth-service-secret
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - medinsight-network
+
+  # ============================
+  # API Gateway
+  # ============================
+  gateway-service:
+    build:
+      context: ./Backend/gateway-service
+      dockerfile: Dockerfile
+    container_name: medinsight-gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      SECURITY_OAUTH2_ISSUER_URI: http://keycloak:8080/realms/medinsight
+      SECURITY_OAUTH2_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
+    ports:
+      - "8080:8080"
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - medinsight-network
+
+  # ============================
+  # Appointment Service
+  # ============================
+  appointment-service:
+    build:
+      context: ./Backend/appointment-service
+      dockerfile: Dockerfile
+    container_name: medinsight-appointment-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - medinsight-network
+
+  medical-record-service:
+    build:
+      context: ./Backend/medical-record-service
+      dockerfile: Dockerfile
+    container_name: medinsight-medical-record-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: medinsight
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
+      EUREKA_URL: http://discovery-service:8761/eureka/
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - medinsight-network
+
+  audit-service:
+    build:
+      context: ./Backend/audit-service
+      dockerfile: Dockerfile
+    container_name: medinsight-audit-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_URL: http://discovery-service:8761/eureka/
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+      LOKI_URL: http://loki:3100/loki/api/v1/push
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
+    ports:
+      - "8085:8085"
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      loki:
+        condition: service_started
+    networks:
+      - medinsight-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
+    container_name: medinsight-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    networks:
+      - medinsight-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  loki:
+    image: grafana/loki:2.8.2
+    container_name: medinsight-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - medinsight-network
+
+  ml-service:
+    build:
+      context: ./ML/ml-service
+      dockerfile: Dockerfile
+    container_name: medinsight-ml-service
+    environment:
+      - EUREKA_SERVER_URL=http://discovery-service:8761/eureka/
+      - INSTANCE_HOST=ml-service
+      - KEYCLOAK_ISSUER=http://keycloak:8080/realms/medinsight
+    ports:
+      - "8086:8086"
+    depends_on:
+      - discovery-service
+      - keycloak
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - medinsight-network
+
+  mail-service:
+    build:
+      context: ./Backend
+      dockerfile: mail-service/Dockerfile
+    container_name: medinsight-mail-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://discovery-service:8761/eureka/
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/medinsight
+    ports:
+      - "8087:8087"
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - medinsight-network
+
+# ============================
+# Networks & Volumes
+# ============================
+networks:
+  medinsight-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
