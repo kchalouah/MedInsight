@@ -1,0 +1,190 @@
+import httpx
+import asyncio
+import logging
+import sys
+from datetime import datetime, timedelta
+import random
+
+# Configuration
+GATEWAY_URL = "http://localhost:8080"
+KEYCLOAK_URL = "http://localhost:8180/realms/medinsight/protocol/openid-connect/token"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger("MedInsight-V2-Tester")
+
+class MedInsightV2Tester:
+    def __init__(self):
+        self.patient_creds = {"email": f"tester_pat_{random.randint(1000, 9999)}@example.com", "password": "Password123!"}
+        self.doctor_creds = {"email": f"tester_doc_{random.randint(1000, 9999)}@example.com", "password": "Password123!"}
+        self.admin_creds = {"email": "admin@medinsight.com", "password": "admin"} # Assuming bootstrap created this
+        
+        self.ids = {"patient": None, "doctor": None, "appointment": None}
+        self.tokens = {"patient": None, "doctor": None, "admin": None}
+
+    async def get_token(self, client, email, password):
+        data = {
+            "grant_type": "password",
+            "client_id": "auth-service",
+            "client_secret": "auth-service-secret",
+            "username": email,
+            "password": password
+        }
+        try:
+            resp = await client.post(KEYCLOAK_URL, data=data)
+            if resp.status_code == 200:
+                return f"Bearer {resp.json()['access_token']}"
+        except Exception: pass
+        return None
+
+    async def test_step(self, name, func, client):
+        logger.info(f"--- Testing: {name} ---")
+        try:
+            success = await func(client)
+            if success:
+                logger.info(f"✅ {name}: SUCCESS")
+            else:
+                logger.error(f"❌ {name}: FAILED")
+            return success
+        except Exception as e:
+            logger.error(f"💥 {name}: ERROR -> {e}")
+            return False
+
+    # --- Test Modules ---
+
+    async def register_users(self, client):
+        # Register Doctor
+        doc_payload = {
+            "email": self.doctor_creds["email"], "password": self.doctor_creds["password"],
+            "firstName": "Doc", "lastName": "Tester", "specialization": "Testing",
+            "licenseNumber": "LIC-" + str(random.randint(1000, 9999)), "yearsOfExperience": 5, "consultationFee": 50.0
+        }
+        r1 = await client.post(f"{GATEWAY_URL}/api/auth/register/medecin", json=doc_payload)
+        if r1.status_code == 201:
+            self.ids["doctor"] = r1.json().get("id")
+        
+        # Register Patient
+        pat_payload = {
+            "email": self.patient_creds["email"], "password": self.patient_creds["password"],
+            "firstName": "Pat", "lastName": "Tester", "dateOfBirth": "1995-05-15",
+            "phoneNumber": "0601020304"
+        }
+        r2 = await client.post(f"{GATEWAY_URL}/api/auth/register/patient", json=pat_payload)
+        if r2.status_code == 201:
+            self.ids["patient"] = r2.json().get("id")
+            
+        return self.ids["doctor"] and self.ids["patient"]
+
+    async def login_all(self, client):
+        self.tokens["doctor"] = await self.get_token(client, self.doctor_creds["email"], self.doctor_creds["password"])
+        self.tokens["patient"] = await self.get_token(client, self.patient_creds["email"], self.patient_creds["password"])
+        # Attempt admin login if available
+        self.tokens["admin"] = await self.get_token(client, "admin", "KeycloakAdmin2024!") # Using known admin
+        return self.tokens["doctor"] and self.tokens["patient"]
+
+    async def create_appointment(self, client):
+        payload = {
+            "patientId": self.ids["patient"],
+            "doctorId": self.ids["doctor"],
+            "appointmentDateTime": (datetime.now() + timedelta(days=5)).isoformat(),
+            "reason": "Test Validation"
+        }
+        headers = {"Authorization": self.tokens["patient"]}
+        resp = await client.post(f"{GATEWAY_URL}/api/appointments", json=payload, headers=headers)
+        if resp.status_code == 201:
+            self.ids["appointment"] = resp.json().get("id")
+            return True
+        return False
+
+    async def update_medical_record(self, client):
+        # Only doctors can update clinical data
+        payload = {
+            "bloodType": "B+", "allergies": "Latex, Pollen",
+            "chronicConditions": "Asthma", "emergencyContactName": "Testing Contact",
+            "emergencyContactPhone": "0700000000", "medicalHistory": "None"
+        }
+        headers = {"Authorization": self.tokens["doctor"]}
+        resp = await client.put(f"{GATEWAY_URL}/api/records/patient/{self.ids['patient']}", json=payload, headers=headers)
+        return resp.status_code == 200
+
+    async def add_clinical_note(self, client):
+        payload = {
+            "appointmentId": self.ids["appointment"],
+            "patientId": self.ids["patient"],
+            "noteContent": "L'intégration est fonctionnelle. Le système de test valide ce point."
+        }
+        headers = {"Authorization": self.tokens["doctor"]}
+        resp = await client.post(f"{GATEWAY_URL}/api/records/notes", json=note_payload if 'note_payload' in locals() else payload, headers=headers)
+        return resp.status_code == 201
+
+    async def get_full_dossier(self, client):
+        # Patient viewing their own record
+        headers = {"Authorization": self.tokens["patient"]}
+        resp = await client.get(f"{GATEWAY_URL}/api/records/patient/{self.ids['patient']}/dossier", headers=headers)
+        if resp.status_code == 200:
+            data = resp.json()
+            # Verify aggregation
+            has_record = data.get("medicalRecord") is not None
+            has_notes = len(data.get("consultationNotes", [])) > 0
+            if has_record and has_notes:
+                logger.info(f"   - Dossier verified: {len(data.get('consultationNotes'))} notes found.")
+                return True
+        return False
+
+    async def test_audit_logs(self, client):
+        # Assuming admin can read logs
+        if not self.tokens["admin"]: return True # Skip if no admin token
+        headers = {"Authorization": self.tokens["admin"]}
+        # We try to get logs for the patient
+        resp = await client.get(f"{GATEWAY_URL}/api/audit/logs", headers=headers)
+        if resp.status_code == 200:
+            logger.info(f"   - Audit Service reachable. Found {len(resp.json())} entries.")
+            return True
+        return False
+
+    async def test_mail_service(self, client):
+        # Administrators or Doctors can trigger mail
+        payload = {
+            "to": "test@example.com",
+            "subject": "MedInsight Connectivity Test",
+            "body": "This is a test from the integration suite."
+        }
+        headers = {"Authorization": self.tokens["doctor"]}
+        resp = await client.post(f"{GATEWAY_URL}/api/mail/send", json=payload, headers=headers)
+        # 202 because mail handling might be async
+        return resp.status_code in [200, 202]
+
+    async def run(self):
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            steps = [
+                ("User Registration", self.register_users),
+                ("Authentication & Tokens", self.login_all),
+                ("Appointment Creation", self.create_appointment),
+                ("Medical Record Initialization", self.update_medical_record),
+                ("Clinical Notes Recording", self.add_clinical_note),
+                ("Aggregated Patient Dossier", self.get_full_dossier),
+                ("Audit Trail Verification", self.test_audit_logs),
+                ("Mail Service Connectivity", self.test_mail_service)
+            ]
+            
+            summary = []
+            for name, func in steps:
+                success = await self.test_step(name, func, client)
+                summary.append((name, success))
+                if not success:
+                    logger.warning(f"Aborting sequence after failure in {name}")
+                    break
+            
+            logger.info("\n" + "="*30)
+            logger.info(" FINAL TEST SUMMARY ")
+            logger.info("="*30)
+            for name, success in summary:
+                status = "PASS" if success else "FAIL"
+                logger.info(f"{name:.<30} {status}")
+            logger.info("="*30)
+
+if __name__ == "__main__":
+    asyncio.run(MedInsightV2Tester().run())

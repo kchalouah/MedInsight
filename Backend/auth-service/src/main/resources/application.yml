@@ -27,8 +27,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/medinsight}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs}
+          issuer-uri: http://localhost:8180/realms/medinsight
+          jwk-set-uri: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
 
 # Keycloak Admin API Configuration
 keycloak:

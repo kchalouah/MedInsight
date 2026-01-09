@@ -70,7 +70,8 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(auth -> auth
                         // Public endpoints (Swagger and health)
-                        .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()
+                        .pathMatchers("/api/*/v3/api-docs").permitAll()
                         .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/auth/register/**").permitAll()
                         // RBAC rules for API routes

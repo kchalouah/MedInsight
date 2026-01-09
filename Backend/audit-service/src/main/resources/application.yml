@@ -2,14 +2,14 @@ spring:
   application:
     name: audit-service
   elasticsearch:
-    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+    uris: ${ELASTICSEARCH_URIS:http://elasticsearch:9200}
   
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/medinsight}
-          jwk-set-uri: ${KEYCLOAK_JWKS_URI:http://localhost:8180/realms/medinsight/protocol/openid-connect/certs}
+          issuer-uri: http://localhost:8180/realms/medinsight
+          jwk-set-uri: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
 
 server:
   port: 8085
@@ -17,7 +17,7 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+      defaultZone: ${EUREKA_URL:http://discovery-service:8761/eureka/}
     register-with-eureka: true
   instance:
     prefer-ip-address: true

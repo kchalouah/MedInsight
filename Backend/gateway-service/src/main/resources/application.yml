@@ -18,6 +18,10 @@ spring:
           uri: lb://auth-service
           predicates:
             - Path=/api/auth/**,/api/admin/**
+        - id: records-route
+          uri: lb://medical-record-service
+          predicates:
+            - Path=/api/records/**
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -33,8 +37,8 @@ spring:
       resourceserver:
         jwt:
           # Provide your Keycloak realm issuer and JWK set URIs (Docker-friendly defaults)
-          issuer-uri: ${SECURITY_OAUTH2_ISSUER_URI:http://keycloak:8080/realms/medinsight}
-          jwk-set-uri: ${SECURITY_OAUTH2_JWK_SET_URI:http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs}
+          issuer-uri: http://localhost:8180/realms/medinsight
+          jwk-set-uri: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
 
 eureka:
   client:
@@ -49,6 +53,13 @@ eureka:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+    urls:
+      - name: auth-service
+        url: /api/auth/v3/api-docs
+      - name: appointment-service
+        url: /api/appointments/v3/api-docs
+      - name: medical-record-service
+        url: /api/records/v3/api-docs
   api-docs:
     path: /v3/api-docs
 
