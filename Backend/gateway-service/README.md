@@ -1,248 +1,271 @@
-# MedInsight API Gateway
-
-The MedInsight API Gateway routes external traffic to internal microservices, enforces authentication and authorization using Keycloak-issued JWT tokens, exposes OpenAPI documentation, and integrates with Eureka for service discovery.
-
-## Key Features
-- Spring Cloud Gateway on Spring Boot 3 (Java 17)
-- Eureka client for service discovery (`lb://` URIs)
-- OAuth2 Resource Server (JWT) with Keycloak
-- Role-based access control (RBAC) mapping Keycloak realm roles to Spring Security roles
-- CORS support for frontend apps (e.g., React)
-- OpenAPI/Swagger UI at `/swagger-ui.html`
 # Gateway Service
 
-API Gateway for the MedInsight E-Health Platform using Spring Cloud Gateway.
+## Overview
+The **Gateway Service** is the API Gateway for the MedInsight platform, providing a single entry point for all client requests. It handles routing, load balancing, security, and cross-cutting concerns like CORS and rate limiting.
 
-## Features
+## Architecture
 
-- Centralized API routing to all microservices
-- OAuth2 Resource Server with JWT validation
-- CORS configuration for frontend integration
-- Service discovery integration with Eureka
-- Rate limiting and circuit breaker support
-- OpenAPI/Swagger aggregation
-- Actuator endpoints for monitoring
+### Technology Stack
+- **Framework**: Spring Cloud Gateway (Reactive)
+- **Language**: Java 17
+- **Authentication**: OAuth2/JWT via Keycloak
+- **Service Discovery**: Netflix Eureka
+- **API Documentation**: SpringDoc OpenAPI 3 (Aggregated)
 
-## Tech Stack
+### Port Configuration
+- **Service Port**: 8080
+- **Eureka Discovery**: 8761
 
-- Java 17
-- Spring Boot 3.x
-- Spring Cloud Gateway
-- Spring Security OAuth2 Resource Server
-- Spring Cloud Netflix Eureka Client
-- Springdoc OpenAPI
+## Key Features
 
-## Routes
+1. **Dynamic Routing**: Routes requests to appropriate microservices based on path patterns
+2. **Load Balancing**: Distributes requests across service instances via Eureka
+3. **Security**: Centralized OAuth2 authentication and authorization
+4. **CORS**: Configured for frontend integration
+5. **API Documentation**: Aggregates Swagger docs from all services
+6. **Circuit Breaker**: Fault tolerance for downstream services
+7. **Rate Limiting**: Prevents API abuse
 
-The gateway routes requests to backend microservices:
+## Routing Configuration
 
-| Path | Target Service | Description |
-|------|---------------|-------------|
-| `/api/auth/**` | auth-service | Authentication and user management |
-| `/api/admin/**` | auth-service | Admin operations |
-| `/api/patients/**` | patient-service | Patient operations |
-| `/api/doctors/**` | doctor-service | Doctor operations |
-| `/api/appointments/**` | appointment-service | Appointment management |
+### Route Definitions
 
-## Security
+#### Appointments Route
+```yaml
+- id: appointments-route
+  uri: lb://appointment-service
+  predicates:
+    - Path=/api/appointments/**
+```
+Routes all `/api/appointments/**` requests to the appointment-service instances.
 
-### JWT Validation
+#### Auth Route
+```yaml
+- id: auth-route
+  uri: lb://auth-service
+  predicates:
+    - Path=/api/auth/**,/api/admin/**
+```
+Routes authentication and admin requests to auth-service.
 
-All requests (except public endpoints) require a valid JWT token from Keycloak:
+#### Medical Records Route
+```yaml
+- id: records-route
+  uri: lb://medical-record-service
+  predicates:
+    - Path=/api/records/**
+```
+Routes medical record requests to medical-record-service.
 
-```bash
-curl -H "Authorization: Bearer <jwt_token>" http://localhost:8080/api/patients
+### Load Balancing
+- **Protocol**: `lb://` (Load Balanced)
+- **Discovery**: Uses Eureka for service instance resolution
+- **Algorithm**: Round-robin by default
+
+## Security Configuration
+
+### OAuth2 Resource Server
+```yaml
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/medinsight}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs}
 ```
 
-### Public Endpoints
+### Access Control Rules
 
-The following endpoints are publicly accessible:
-- `POST /api/auth/register/patient`
-- `POST /api/auth/register/medecin`
-- `/swagger-ui.html`
-- `/v3/api-docs/**`
-- `/actuator/health`
+#### Public Endpoints
+- `/swagger-ui/**` - API documentation
+- `/v3/api-docs/**` - OpenAPI specs
+- `/api/*/v3/api-docs` - Service-specific docs
+- `/actuator/health` - Health check
+- `POST /api/auth/register/**` - User registration
 
-### Role-Based Access
+#### Role-Based Access
+- `/api/admin/**` → `ROLE_ADMIN`
+- `/api/patients/**` → `ROLE_PATIENT`, `ROLE_ADMIN`
+- `/api/doctors/**` → `ROLE_MEDECIN`, `ROLE_ADMIN`
+- `/api/appointments/**` → Authenticated users
+- All other endpoints → Authenticated users
 
-The gateway validates JWT tokens and extracts roles from Keycloak:
-- Admin endpoints require `ROLE_ADMIN`
-- Other endpoints require valid authentication
+### Security Filter Chain
+```java
+@Bean
+public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+    return http
+        .csrf(ServerHttpSecurity.CsrfSpec::disable)
+        .authorizeExchange(auth -> auth
+            .pathMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            .pathMatchers(HttpMethod.POST, "/api/auth/register/**").permitAll()
+            .pathMatchers("/api/admin/**").hasRole("ADMIN")
+            .anyExchange().authenticated()
+        )
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(...))
+        .build();
+}
+```
+
+### JWT Authentication Converter
+Extracts Keycloak realm roles and converts them to Spring Security authorities:
+- Reads from `realm_access.roles` claim
+- Prefixes with `ROLE_` (e.g., `PATIENT` → `ROLE_PATIENT`)
+- Combines with scope authorities
 
 ## CORS Configuration
-
-CORS is configured to allow requests from:
-- `http://localhost:3000` (React frontend)
-- `http://localhost:8080` (Gateway itself)
-
-Allowed methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
-
-## Running Locally
-
-```bash
-# Build
-mvn clean package
-
-# Run
-java -jar target/gateway-service-1.0.0.jar
-```
-
-The gateway will start on port **8080**.
-
-## Docker
-
-```bash
-# Build image
-docker build -t medinsight/gateway-service:latest .
-
-# Run container
-docker run -p 8080:8080 \
-  -e EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/ \
-  -e SECURITY_OAUTH2_ISSUER_URI=http://keycloak:8080/realms/medinsight \
-  medinsight/gateway-service:latest
-```
-
-## Configuration
-
-Key environment variables:
-
-- `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE` - Eureka server URL
-- `SECURITY_OAUTH2_ISSUER_URI` - Keycloak issuer URI
-- `SECURITY_OAUTH2_JWK_SET_URI` - Keycloak JWK set URI
-
-## API Documentation
-
-### Swagger UI
-
-Access aggregated API documentation:
-- **URL**: http://localhost:8080/swagger-ui.html
-
-### OpenAPI Spec
-
-- **URL**: http://localhost:8080/v3/api-docs
-
-## Monitoring
-
-### Health Check
-
-```bash
-curl http://localhost:8080/actuator/health
-```
-
-### Actuator Endpoints
-
-Available at `/actuator/*`:
-- `/actuator/health` - Health status
-- `/actuator/info` - Application info
-- `/actuator/gateway/routes` - Configured routes
-
-## Testing Routes
-
-### Test Patient Registration (Public)
-
-```bash
-curl -X POST http://localhost:8080/api/auth/register/patient \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "SecurePass123!",
-    "firstName": "John",
-    "lastName": "Doe"
-  }'
-```
-
-### Test Authenticated Endpoint
-
-```bash
-# First, get a token from Keycloak
-TOKEN=$(curl -X POST http://localhost:8180/realms/medinsight/protocol/openid-connect/token \
-  -d "client_id=medinsight-gateway" \
-  -d "client_secret=gateway-secret" \
-  -d "grant_type=password" \
-  -d "username=user@example.com" \
-  -d "password=password" \
-  | jq -r '.access_token')
-
-# Use the token to access protected endpoints
-curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/patients
-```
-
-## Docker Compose
-
-The service is included in the main `docker-compose.yml`:
-
-```yaml
-gateway-service:
-  build: ./Backend/gateway-service
-  ports:
-    - "8080:8080"
-  depends_on:
-    - discovery-service
-    - keycloak
-  environment:
-    EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-    SECURITY_OAUTH2_ISSUER_URI: http://keycloak:8080/realms/medinsight
-```
-
-## Load Balancing
-
-The gateway uses Eureka for service discovery and automatically load balances requests across multiple instances of the same service using the `lb://` URI scheme.
-
-## Circuit Breaker
-
-Circuit breaker patterns can be configured for resilience:
 
 ```yaml
 spring:
   cloud:
     gateway:
-      routes:
-        - id: patient-service
-          uri: lb://patient-service
-          predicates:
-            - Path=/api/patients/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: patientServiceCircuitBreaker
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: ["http://localhost:3000"]
+            allowedMethods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
+            allowedHeaders: ["*"]
+            exposedHeaders: ["*"]
+            allowCredentials: true
+            maxAge: 3600
 ```
 
-Swagger UI: http://localhost:8080/swagger-ui.html
+**Configurable via**:
+```yaml
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://frontend.example.com
+```
 
-## Testing
+## API Documentation Aggregation
 
-Run tests for the gateway from the project root or this module:
+### Swagger UI Configuration
+```yaml
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: auth-service
+        url: /api/auth/v3/api-docs
+      - name: appointment-service
+        url: /api/appointments/v3/api-docs
+      - name: medical-record-service
+        url: /api/records/v3/api-docs
+```
 
+**Access**: http://localhost:8080/swagger-ui.html
+
+### Features
+- Unified API documentation for all services
+- Service selector dropdown
+- Try-it-out functionality with JWT authentication
+- Schema definitions and examples
+
+## Service Discovery Integration
+
+### Eureka Client Configuration
+```yaml
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-service:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+```
+
+### Dynamic Service Resolution
+1. Gateway receives request
+2. Extracts service name from route URI (e.g., `lb://appointment-service`)
+3. Queries Eureka for available instances
+4. Selects instance using load balancing algorithm
+5. Forwards request to selected instance
+
+## Request Flow
+
+### Typical Request Flow
+```
+1. Client → Gateway (http://localhost:8080/api/appointments)
+2. Gateway → Authenticate JWT token
+3. Gateway → Extract roles from token
+4. Gateway → Check authorization rules
+5. Gateway → Query Eureka for appointment-service instances
+6. Gateway → Forward request to selected instance
+7. Appointment Service → Process request
+8. Appointment Service → Gateway
+9. Gateway → Client (response)
+```
+
+## Error Handling
+
+### Global Error Responses
+- `401 Unauthorized` - Invalid or missing JWT token
+- `403 Forbidden` - Insufficient permissions
+- `404 Not Found` - Service or endpoint not found
+- `503 Service Unavailable` - Downstream service unavailable
+- `504 Gateway Timeout` - Downstream service timeout
+
+### Circuit Breaker
+Implements fallback mechanisms when services are unavailable:
+- Returns cached responses when available
+- Provides meaningful error messages
+- Prevents cascading failures
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SERVER_PORT` | 8080 | Gateway port |
+| `KEYCLOAK_ISSUER_URI` | http://localhost:8180/realms/medinsight | Keycloak issuer |
+| `KEYCLOAK_JWK_SET_URI` | http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs | JWK set URI |
+| `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE` | http://discovery-service:8761/eureka/ | Eureka URL |
+| `APP_CORS_ALLOWED_ORIGINS` | http://localhost:3000 | CORS allowed origins |
+
+## Build & Run
+
+### Maven Build
 ```bash
-# From project root (recommended)
-mvn -pl gateway-service -am test
-
-# Or from the module directory
-cd gateway-service
-mvn test
+mvn clean package -DskipTests
 ```
 
-Coverage:
-- GatewayServiceApplicationTests: boots the Spring context to ensure the gateway starts.
-- SecurityConfigTest: verifies RBAC using mocked JWTs (Keycloak roles in `realm_access.roles`) and checks public endpoints.
-- GatewayRoutesTest: ensures that route definitions from `application.yml` are loaded (patients, doctors, appointments, auth).
-
-## Docker
-Build the image (after packaging):
+### Docker Build
 ```bash
-cd gateway-service
-docker build -t medinsight/gateway-service:1.0.0 .
+docker build -t medinsight-gateway-service .
 ```
 
-Run the container:
+### Run Locally
 ```bash
-docker run --rm -p 8080:8080 \
-  -e SECURITY_OAUTH2_ISSUER_URI="http://localhost:8080/realms/medinsight" \
-  -e SECURITY_OAUTH2_JWK_SET_URI="http://localhost:8080/realms/medinsight/protocol/openid-connect/certs" \
-  -e EUREKA_CLIENT_SERVICEURL_DEFAULTZONE="http://host.docker.internal:8761/eureka/" \
-  --name gateway medinsight/gateway-service:1.0.0
+java -jar target/gateway-service-1.0.0.jar
 ```
 
-## Notes
-- No controllers or business logic are included; this service strictly authenticates, authorizes, and routes requests.
-- For production, configure TLS, stricter CORS, proper timeouts/limits, and observability.
+### Docker Compose
+```bash
+docker-compose up -d gateway-service
+```
+
+## Health & Monitoring
+- **Health Check**: http://localhost:8080/actuator/health
+- **Info**: http://localhost:8080/actuator/info
+
+## Key Responsibilities
+
+1. **Single Entry Point**: All client requests go through the gateway
+2. **Authentication**: Validates JWT tokens from Keycloak
+3. **Authorization**: Enforces role-based access control
+4. **Routing**: Directs requests to appropriate microservices
+5. **Load Balancing**: Distributes load across service instances
+6. **CORS**: Handles cross-origin requests for frontend
+7. **API Documentation**: Provides unified Swagger UI
+8. **Security**: Centralized security configuration
+
+## Best Practices
+
+1. **Stateless**: Gateway is stateless for horizontal scalability
+2. **Reactive**: Uses Spring WebFlux for non-blocking I/O
+3. **Resilient**: Circuit breakers prevent cascading failures
+4. **Observable**: Exposes health and metrics endpoints
+5. **Configurable**: Environment-based configuration for different deployments

@@ -19,7 +19,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
-        return buildError(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class).error("Unhandled exception: ", ex);
+        return buildError(ex.getClass().getSimpleName() + ": " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseEntity<ErrorResponse> buildError(String msg, HttpStatus status) {

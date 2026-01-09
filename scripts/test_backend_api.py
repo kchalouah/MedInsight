@@ -153,9 +153,54 @@ class MedInsightV2Tester:
             "body": "This is a test from the integration suite."
         }
         headers = {"Authorization": self.tokens["doctor"]}
-        resp = await client.post(f"{GATEWAY_URL}/api/mail/send", json=payload, headers=headers)
+        resp = await client.post( f"{GATEWAY_URL}/api/mail/send", json=payload, headers=headers)
         # 202 because mail handling might be async
         return resp.status_code in [200, 202]
+
+    async def issue_prescription(self, client):
+        payload = {
+            "patientId": self.ids["patient"],
+            "medicationName": "Amoxicillin",
+            "dosage": "500mg",
+            "duration": "7 days",
+            "instructions": "Take with food"
+        }
+        headers = {"Authorization": self.tokens["doctor"]}
+        resp = await client.post(f"{GATEWAY_URL}/api/appointments/{self.ids['appointment']}/prescriptions", json=payload, headers=headers)
+        return resp.status_code == 201
+
+    async def verify_patient_prescriptions(self, client):
+        headers = {"Authorization": self.tokens["patient"]}
+        resp = await client.get(
+            f"{GATEWAY_URL}/api/prescriptions/patient/{self.ids['patient']}",
+            headers=headers
+        )
+        if resp.status_code == 200:
+            found = any(
+                p["medicationName"] == "Amoxicillin"
+                for p in resp.json().get("content", [])
+            )
+            return found
+        return False
+
+
+    async def test_ml_predictions(self, client):
+        # Diagnosis prediction
+        diag_payload = {
+            "age": 30, "gender": "M", "symptoms": ["fever", "cough"],
+            "blood_pressure_systolic": 120, "blood_pressure_diastolic": 80,
+            "heart_rate": 72, "temperature": 38.5
+        }
+        headers = {"Authorization": self.tokens["doctor"]}
+        r1 = await client.post(f"{GATEWAY_URL}/api/ml/predict/diagnosis", json=diag_payload, headers=headers)
+        
+        # Treatment suggestion
+        treat_payload = {
+            "diagnosis": "Common Cold", "patient_age": 30, "severity": "mild", "history": []
+        }
+        r2 = await client.post(f"{GATEWAY_URL}/api/ml/predict/treatment", json=treat_payload, headers=headers)
+        
+        return r1.status_code == 200 and r2.status_code == 200
 
     async def run(self):
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -163,8 +208,11 @@ class MedInsightV2Tester:
                 ("User Registration", self.register_users),
                 ("Authentication & Tokens", self.login_all),
                 ("Appointment Creation", self.create_appointment),
+                ("Prescription Issuance", self.issue_prescription),
+                ("Patient Prescription Access", self.verify_patient_prescriptions),
                 ("Medical Record Initialization", self.update_medical_record),
                 ("Clinical Notes Recording", self.add_clinical_note),
+                ("ML Medical Predictions", self.test_ml_predictions),
                 ("Aggregated Patient Dossier", self.get_full_dossier),
                 ("Audit Trail Verification", self.test_audit_logs),
                 ("Mail Service Connectivity", self.test_mail_service)

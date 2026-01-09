@@ -14,14 +14,34 @@ spring:
           uri: lb://appointment-service
           predicates:
             - Path=/api/appointments/**
+        - id: prescriptions-route
+          uri: lb://appointment-service
+          predicates:
+            - Path=/api/prescriptions/**
         - id: auth-route
           uri: lb://auth-service
           predicates:
-            - Path=/api/auth/**,/api/admin/**
+            - Path=/api/auth/**
+        - id: admin-route
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/admin/**
         - id: records-route
           uri: lb://medical-record-service
           predicates:
             - Path=/api/records/**
+        - id: audit-route
+          uri: lb://audit-service
+          predicates:
+            - Path=/api/audit/**
+        - id: mail-route
+          uri: lb://mail-service
+          predicates:
+            - Path=/api/mail/**
+        - id: ml-route
+          uri: lb://ml-service
+          predicates:
+            - Path=/api/ml/**
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -37,8 +57,8 @@ spring:
       resourceserver:
         jwt:
           # Provide your Keycloak realm issuer and JWK set URIs (Docker-friendly defaults)
-          issuer-uri: http://localhost:8180/realms/medinsight
-          jwk-set-uri: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/medinsight}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs}
 
 eureka:
   client:
@@ -60,6 +80,12 @@ springdoc:
         url: /api/appointments/v3/api-docs
       - name: medical-record-service
         url: /api/records/v3/api-docs
+      - name: audit-service
+        url: /api/audit/v3/api-docs
+      - name: mail-service
+        url: /api/mail/v3/api-docs
+      - name: ml-service
+        url: /api/ml/v3/api-docs
   api-docs:
     path: /v3/api-docs
 
@@ -79,3 +105,10 @@ app:
     # List of allowed origins for CORS (React frontend, etc.)
     allowed-origins:
       - http://localhost:3000
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.netty: DEBUG
