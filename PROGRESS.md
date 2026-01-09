@@ -98,7 +98,5 @@ The system consists of the following microservices:
 - [x] Unified API documentation (OpenAPI)
 
 ## Upcoming Milestones
-1. Complete deep implementation of Medical Record logic in Patient Service.
-2. Implement Advanced Availability Management in Doctor Service.
-3. Integrate real-time notifications (WebSockets) for appointments.
-4. Finalize the React frontend integration via the API Gateway.
+1. Implement Advanced Availability Management in Doctor Service.
+2. Finalize the React frontend integration via the API Gateway.

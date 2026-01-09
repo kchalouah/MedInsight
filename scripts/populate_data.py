@@ -13,7 +13,7 @@ MEDICAL_RECORD_SERVICE_URL = f"{BASE_URL}/api/records"
 
 # Keycloak Config
 KEYCLOAK_TOKEN_URL = "http://localhost:8180/realms/medinsight/protocol/openid-connect/token"
-CLIENT_ID = "medinsight-client"
+CLIENT_ID = "auth-service"
 
 fake = Faker('fr_FR')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

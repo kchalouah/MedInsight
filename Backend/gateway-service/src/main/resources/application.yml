@@ -7,17 +7,9 @@ spring:
 
   cloud:
     gateway:
-      default-filters:
-        - RemoveHopByHopHeaders=
+      # default-filters:
+      #   - RemoveHopByHopHeaders=
       routes:
-        - id: patients-route
-          uri: lb://patient-service
-          predicates:
-            - Path=/api/patients/**
-        - id: doctors-route
-          uri: lb://doctor-service
-          predicates:
-            - Path=/api/doctors/**
         - id: appointments-route
           uri: lb://appointment-service
           predicates:
@@ -25,7 +17,7 @@ spring:
         - id: auth-route
           uri: lb://auth-service
           predicates:
-            - Path=/api/auth/**, /api/admin/**
+            - Path=/api/auth/**,/api/admin/**
       globalcors:
         corsConfigurations:
           '[/**]':

@@ -60,6 +60,12 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_HOSTNAME_STRICT_HTTPS: "false"
       KC_HOSTNAME_STRICT: "false"
+      KC_HEALTH_ENABLED: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/live HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep '200 OK'"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     # volumes:
     #   - ./infra/keycloak/realm.json:/opt/keycloak/data/import/realm.json
     command: start-dev
@@ -108,8 +114,8 @@ services:
   # ============================
   discovery-service:
     build:
-      context: ./Backend/discovery-service
-      dockerfile: Dockerfile
+      context: ./Backend
+      dockerfile: discovery-service/Dockerfile
     container_name: medinsight-discovery
     ports:
       - "8761:8761"
@@ -126,8 +132,8 @@ services:
   # ============================
   auth-service:
     build:
-      context: ./Backend/auth-service
-      dockerfile: Dockerfile
+      context: ./Backend
+      dockerfile: auth-service/Dockerfile
     container_name: medinsight-auth-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -135,7 +141,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      KEYCLOAK_URL: ${KEYCLOAK_URL}
+      KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: medinsight
       KEYCLOAK_CLIENT_ID: auth-service
       KEYCLOAK_CLIENT_SECRET: auth-service-secret
@@ -150,7 +156,7 @@ services:
       postgres:
         condition: service_healthy
       keycloak:
-        condition: service_started
+        condition: service_healthy
       discovery-service:
         condition: service_healthy
     networks:
@@ -161,8 +167,8 @@ services:
   # ============================
   gateway-service:
     build:
-      context: ./Backend/gateway-service
-      dockerfile: Dockerfile
+      context: ./Backend
+      dockerfile: gateway-service/Dockerfile
     container_name: medinsight-gateway
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -175,7 +181,7 @@ services:
       discovery-service:
         condition: service_healthy
       keycloak:
-        condition: service_started
+        condition: service_healthy
     networks:
       - medinsight-network
 
@@ -184,8 +190,8 @@ services:
   # ============================
   appointment-service:
     build:
-      context: ./Backend/appointment-service
-      dockerfile: Dockerfile
+      context: ./Backend
+      dockerfile: appointment-service/Dockerfile
     container_name: medinsight-appointment-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -202,7 +208,7 @@ services:
       postgres:
         condition: service_healthy
       keycloak:
-        condition: service_started
+        condition: service_healthy
       discovery-service:
         condition: service_healthy
     networks:
@@ -210,8 +216,8 @@ services:
 
   medical-record-service:
     build:
-      context: ./Backend/medical-record-service
-      dockerfile: Dockerfile
+      context: ./Backend
+      dockerfile: medical-record-service/Dockerfile
     container_name: medinsight-medical-record-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -227,7 +233,7 @@ services:
       postgres:
         condition: service_healthy
       keycloak:
-        condition: service_started
+        condition: service_healthy
       discovery-service:
         condition: service_healthy
     networks:
@@ -235,8 +241,8 @@ services:
 
   audit-service:
     build:
-      context: ./Backend/audit-service
-      dockerfile: Dockerfile
+      context: ./Backend
+      dockerfile: audit-service/Dockerfile
     container_name: medinsight-audit-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -323,7 +329,7 @@ services:
       discovery-service:
         condition: service_healthy
       keycloak:
-        condition: service_started
+        condition: service_healthy
     networks:
       - medinsight-network
 

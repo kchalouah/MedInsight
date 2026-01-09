@@ -72,6 +72,7 @@ public class SecurityConfig {
                         // Public endpoints (Swagger and health)
                         .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/auth/register/**").permitAll()
                         // RBAC rules for API routes
                         .pathMatchers("/api/admin/**").hasRole("ADMIN")
                         .pathMatchers("/api/patients/**").hasAnyRole("PATIENT", "ADMIN")
