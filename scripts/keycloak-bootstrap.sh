@@ -15,6 +15,7 @@ set -euo pipefail
 : "${GATEWAY_CLIENT_SECRET:=gateway-secret}"
 : "${AUTH_SERVICE_CLIENT_ID:=auth-service}"
 : "${AUTH_SERVICE_CLIENT_SECRET:=auth-service-secret}"
+: "${FRONTEND_CLIENT_ID:=medinsight-frontend}"
 
 # Roles to create at realm level
 ROLES=("ADMIN" "MEDECIN" "PATIENT" "GESTIONNAIRE" "RESPONSABLE_SECURITE")
@@ -81,6 +82,24 @@ create_confidential_client() {
   fi
 }
 
+create_public_client() {
+  local token="$1" clientId="$2"
+  echo "[INFO] Ensuring client '$clientId' exists (public)"
+  local existing
+  existing=$(curl -s -H "Authorization: Bearer $token" \
+    "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/clients?clientId=$clientId")
+  local id
+  id=$(echo "$existing" | jq -r '.[0].id // empty')
+  if [[ -z "$id" || "$id" == "null" ]]; then
+    curl -s -X POST "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/clients" \
+      -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
+      -d "{\"clientId\":\"$clientId\",\"enabled\":true,\"protocol\":\"openid-connect\",\"publicClient\":true,\"redirectUris\":[\"http://localhost:3001/*\",\"http://localhost:3000/*\"],\"webOrigins\":[\"http://localhost:3001\",\"http://localhost:3000\"]}"
+    echo "[OK] Client '$clientId' created"
+  else
+    echo "[OK] Client '$clientId' already exists"
+  fi
+}
+
 main() {
   if ! command -v jq >/dev/null 2>&1; then
     echo "[ERROR] jq is required. Install jq and retry." >&2
@@ -97,6 +116,7 @@ main() {
   create_roles "$TOKEN"
   create_confidential_client "$TOKEN" "$GATEWAY_CLIENT_ID" "$GATEWAY_CLIENT_SECRET"
   create_confidential_client "$TOKEN" "$AUTH_SERVICE_CLIENT_ID" "$AUTH_SERVICE_CLIENT_SECRET"
+  create_public_client "$TOKEN" "$FRONTEND_CLIENT_ID"
 
   # Optional: Configure OAuth identity providers if credentials are provided
   if [[ -n "${GOOGLE_CLIENT_ID:-}" && -n "${GOOGLE_CLIENT_SECRET:-}" ]]; then

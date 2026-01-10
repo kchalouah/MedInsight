@@ -107,6 +107,26 @@ services:
       - medinsight-network
 
   # ============================
+  # Frontend Application
+  # ============================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: medinsight-frontend
+    ports:
+      - "3001:80"
+    environment:
+      NEXT_PUBLIC_GATEWAY_URL: http://localhost:8080/api
+      NEXT_PUBLIC_KEYCLOAK_URL: http://localhost:8180
+      NEXT_PUBLIC_REALM: medinsight
+      NEXT_PUBLIC_CLIENT_ID: medinsight-frontend
+    networks:
+      - medinsight-network
+    depends_on:
+      - gateway-service
+
+  # ============================
   # Eureka Discovery Service
   # ============================
   discovery-service:

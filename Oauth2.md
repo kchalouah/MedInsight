@@ -40,7 +40,7 @@ Enter Name: MedInsight Web Client
 Authorized JavaScript origins: Add:
 
 http://localhost:8180
-http://localhost:3000
+http://localhost:3001
 Authorized redirect URIs: Add:
 
 http://localhost:8180/realms/medinsight/broker/google/endpoint
@@ -75,7 +75,7 @@ Step 2: Register New OAuth Application
 Fill in the application details:
 
 Application name: MedInsight
-Homepage URL: http://localhost:3000
+Homepage URL: http://localhost:3001
 Application description: MedInsight E-Health Platform
 Authorization callback URL:
 http://localhost:8180/realms/medinsight/broker/github/endpoint

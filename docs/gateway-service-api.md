@@ -78,7 +78,8 @@ The gateway extracts roles from JWT tokens and enforces role-based access:
 
 ### Allowed Origins
 
-- `http://localhost:3000` (React frontend)
+- `http://localhost:3000` (Legacy/Optional)
+- `http://localhost:3001` (React/Next.js frontend)
 - `http://localhost:8080` (Gateway itself)
 
 ### Allowed Methods
