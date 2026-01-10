@@ -38,7 +38,7 @@ La solution repose sur une architecture microservices dockerisée :
 - **Sécurité** : Keycloak (OAuth2 / OIDC).
 - **Audit & Logs** : Elasticsearch, Grafana Loki, Grafana dashboard.
 - **Infrastructure** : Docker, Docker Compose.
-- **Frontend** : Next.js 14, TailwindCSS, TypeScript (Planifié).
+- **Frontend** : Next.js 14, TailwindCSS, TypeScript (Implémenté).
 
 ---
 
@@ -46,7 +46,7 @@ La solution repose sur une architecture microservices dockerisée :
 
 ### Prérequis
 - Docker & Docker Compose
-- Java 21 (pour le développement local)
+- Java 17 (pour le développement local)
 - Maven 3.9+
 
 ### Démarrage Rapide

@@ -57,3 +57,7 @@ infra/postgres/
 logs/
 data/
 temp/
+
+!frontend/lib/
+
+!frontend/lib/
