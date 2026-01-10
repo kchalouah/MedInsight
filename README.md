@@ -20,14 +20,14 @@ MedInsight est une plateforme de santé numérique basée sur une architecture m
 
 La solution repose sur une architecture microservices dockerisée :
 
-- **Gateway API (Spring Cloud Gateway)** : Point d'entrée unique (Port 8080).
-- **Service Découverte (Eureka)** : Enregistrement et découverte dynamique des services.
-- **Service Authentification (Auth Service)** : Pont entre Keycloak et la base de données PostgreSQL.
-- **Service Rendez-vous** : Gestion du cycle de vie des RDV et des ordonnances.
-- **Service Dossier Médical** : Agrégation des données cliniques des patients.
-- **Service Audit** : Collecte des logs et stockage dans Elasticsearch pour analyse.
-- **Service ML** : Moteur de prédiction basé sur l'IA (FastAPI).
-- **Service Mail** : Envoi de courriels (SMTP Gmail).
+- **Gateway API (Spring Cloud Gateway)** : Point d'entrée unique (Port 8080). Gère le routing unifié via `StripPrefix=1`.
+- **Service Découverte (Eureka)** : Enregistrement et découverte (Port 8761).
+- **Service Authentification (Auth Service)** : Authentification et profils (Port 8081).
+- **Service Rendez-vous** : Gestion RDV et ordonnances (Port 8082).
+- **Service Dossier Médical** : DMP et agrégation clinique (Port 8084).
+- **Service Audit** : Traçabilité via Elasticsearch (Port 8085).
+- **Service ML** : Prédictions médicales IA (Port 8000).
+- **Service Mail** : Notifications SMTP (Port 8086).
 
 ---
 
@@ -60,10 +60,14 @@ La solution repose sur une architecture microservices dockerisée :
 
 ---
 
-## 📁 Documentation API
+---
 
-La documentation complète (OpenAPI/Swagger) est disponible via la Gateway :
-- **Swagger UI** : `http://localhost:8080/swagger-ui.html`
+## 📁 Documentation & Routing API
+
+Le système utilise une stratégie de routing unifiée : `http://localhost:8080/api/{service-prefix}/**`.
+
+- **Swagger UI** : `http://localhost:8080/swagger-ui.html` (Agrégation de tous les services).
+- **OpenAPI Specs** : Accessibles via `/api/{service}/v3/api-docs`.
 - **Docs détaillées** : Consultez le dossier `/docs` pour les contrats API de chaque service.
 
 ---

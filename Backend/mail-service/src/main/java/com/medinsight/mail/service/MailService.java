@@ -23,6 +23,9 @@ public class MailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
 
+    @org.springframework.beans.factory.annotation.Value("${spring.mail.username}")
+    private String fromEmail;
+
     public void sendSimpleMail(MailRequest request) {
         log.info("Sending simple email to: {}", request.getTo());
         try {
@@ -30,6 +33,7 @@ public class MailService {
                 sendHtmlEmail(request.getTo(), request.getSubject(), request.getBody());
             } else {
                 SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(fromEmail);
                 message.setTo(request.getTo());
                 message.setSubject(request.getSubject());
                 message.setText(request.getBody());
@@ -65,6 +69,7 @@ public class MailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, StandardCharsets.UTF_8.name());
 
+        helper.setFrom(fromEmail);
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(body, true);

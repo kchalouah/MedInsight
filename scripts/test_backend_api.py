@@ -202,12 +202,60 @@ class MedInsightV2Tester:
         
         return r1.status_code == 200 and r2.status_code == 200
 
+    async def test_security_rbac(self, client):
+        logger.info("   - Verifying Patient cannot access Doctor endpoints...")
+        # Patient trying to call a doctor-only endpoint (issue prescription)
+        headers = {"Authorization": self.tokens["patient"]}
+        payload = {
+            "patientId": self.ids["patient"],
+            "medicationName": "HackAttempt",
+            "dosage": "999mg", "duration": "forever"
+        }
+        appointment_id = self.ids["appointment"] or "00000000-0000-0000-0000-000000000000"
+        resp = await client.post(f"{GATEWAY_URL}/api/appointments/{appointment_id}/prescriptions", json=payload, headers=headers)
+        # Should be 403 Forbidden
+        if resp.status_code != 403:
+            logger.error(f"   ⚠️ RBAC Failure: Expected 403, got {resp.status_code}")
+            return False
+        return True
+
+    async def test_service_discovery(self, client):
+        logger.info("   - Checking Eureka registration for all services...")
+        # Query discovery-service directly (usually on 8761)
+        # In docker-compose it's mapped to localhost:8761
+        try:
+            resp = await client.get("http://localhost:8761/eureka/apps", headers={"Accept": "application/json"})
+            if resp.status_code == 200:
+                apps = resp.json().get("applications", {}).get("application", [])
+                app_names = [app["name"].upper() for app in apps]
+                required = ["AUTH-SERVICE", "APPOINTMENT-SERVICE", "MEDICAL-RECORD-SERVICE", 
+                            "AUDIT-SERVICE", "MAIL-SERVICE", "ML-SERVICE", "GATEWAY-SERVICE"]
+                missing = [svc for svc in required if svc not in app_names]
+                if not missing:
+                    logger.info(f"   - All {len(required)} core services are registered.")
+                    return True
+                else:
+                    logger.error(f"   - Missing from Eureka: {missing}")
+        except Exception as e:
+            logger.error(f"   - Eureka check failed: {e}")
+        return False
+
+    async def test_error_handling(self, client):
+        logger.info("   - Verifying handling of invalid data...")
+        # Non-existent appointment ID
+        headers = {"Authorization": self.tokens["doctor"]}
+        resp = await client.get(f"{GATEWAY_URL}/api/appointments/00000000-0000-0000-0000-000000000000", headers=headers)
+        # Should be 404
+        return resp.status_code == 404
+
     async def run(self):
         async with httpx.AsyncClient(timeout=30.0) as client:
             steps = [
+                ("Service Discovery Check", self.test_service_discovery),
                 ("User Registration", self.register_users),
                 ("Authentication & Tokens", self.login_all),
                 ("Appointment Creation", self.create_appointment),
+                ("Security & RBAC", self.test_security_rbac),
                 ("Prescription Issuance", self.issue_prescription),
                 ("Patient Prescription Access", self.verify_patient_prescriptions),
                 ("Medical Record Initialization", self.update_medical_record),
@@ -215,7 +263,8 @@ class MedInsightV2Tester:
                 ("ML Medical Predictions", self.test_ml_predictions),
                 ("Aggregated Patient Dossier", self.get_full_dossier),
                 ("Audit Trail Verification", self.test_audit_logs),
-                ("Mail Service Connectivity", self.test_mail_service)
+                ("Mail Service Connectivity", self.test_mail_service),
+                ("API Error Handling", self.test_error_handling)
             ]
             
             summary = []

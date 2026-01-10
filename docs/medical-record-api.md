@@ -3,14 +3,23 @@
 ## Overview
 The Medical Record Service centralizes patient health history. It combines internal clinical data (allergies, blood type) with external data (appointments, prescriptions) fetched from the Appointment Service.
 
-## Base URL
-Through Gateway: `http://localhost:8080/api/records`
-Direct (internal): `http://localhost:8084/api/records`
+## Access via API Gateway (Recommended)
+Base URL: `http://localhost:8080/api`
+
+The Gateway strips the `/api` prefix and forwards to the service.
+
+- Records: `http://localhost:8080/api/records/**`
+
+## Direct Access (Development)
+Base URL: `http://localhost:8084`
+
+- Records: `http://localhost:8084/records/**`
 
 ## Endpoints
 
-### 1. Get Unified Medical Dossier
-**Endpoint:** `GET /patient/{patientId}/dossier`
+### Get Medical Dossier
+**Gateway Path:** `GET /api/records/patient/{patientId}/dossier`
+**Service Path:** `GET /records/patient/{patientId}/dossier`
 **Access:** `ROLE_PATIENT` (self), `ROLE_MEDECIN`, `ROLE_ADMIN`
 **Description:** Returns a complete view of the patient's health including:
 - Chronic conditions and allergies
@@ -20,8 +29,9 @@ Direct (internal): `http://localhost:8084/api/records`
 
 ---
 
-### 2. Update Patient Clinical Data
-**Endpoint:** `PUT /patient/{patientId}`
+### Update Patient Clinical Data
+**Gateway Path:** `PUT /api/records/patient/{patientId}`
+**Service Path:** `PUT /records/patient/{patientId}`
 **Access:** `ROLE_MEDECIN`, `ROLE_ADMIN`
 **Description:** Update permanent health data.
 
@@ -39,8 +49,9 @@ Direct (internal): `http://localhost:8084/api/records`
 
 ---
 
-### 3. Add Consultation Note
-**Endpoint:** `POST /notes`
+### Add Consultation Note
+**Gateway Path:** `POST /api/records/notes`
+**Service Path:** `POST /records/notes`
 **Access:** `ROLE_MEDECIN`, `ROLE_ADMIN`
 **Description:** Link a new clinical note to a specific appointment.
 

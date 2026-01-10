@@ -4,13 +4,24 @@
 The Mail Service handles all outbound email communication for the MedInsight platform.
 
 ## Base URL
-Through Gateway: `http://localhost:8080/api/mail`
-Direct (internal): `http://localhost:8087/api/mail`
+
+### Access via API Gateway (Recommended)
+Base URL: `http://localhost:8080/api`
+
+The Gateway strips the `/api` prefix and forwards to the service.
+
+- Mail: `http://localhost:8080/api/mail/**`
+
+### Direct Access (Development)
+Base URL: `http://localhost:8086`
+
+- Mail: `http://localhost:8086/mail/**`
 
 ## Endpoints
 
-### 1. Send Simple Mail
-**POST** `/send`
+### Send Email
+**Gateway Path:** `POST /api/mail/send`
+**Service Path:** `POST /mail/send`
 - **Access**: `ROLE_ADMIN`, `ROLE_MEDECIN`, `ROLE_GESTIONNAIRE`
 - **Description**: Sends a basic text or HTML email.
 

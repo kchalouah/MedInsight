@@ -10,11 +10,19 @@ The Auth Service is responsible for user authentication, registration, and manag
 http://localhost:8081
 ```
 
-When accessed through the API Gateway:
-```
-http://localhost:8080/api/auth
-http://localhost:8080/api/admin
-```
+### Access via API Gateway (Recommended)
+Base URL: `http://localhost:8080/api`
+
+The Gateway strips the `/api` prefix and forwards to the service.
+
+- Auth registration/login: `http://localhost:8080/api/auth/**`
+- Admin operations: `http://localhost:8080/api/admin/**`
+
+### Direct Access (Development)
+Base URL: `http://localhost:8081`
+
+- Auth: `http://localhost:8081/auth/**`
+- Admin: `http://localhost:8081/admin/**`
 
 ## Authentication
 
@@ -41,8 +49,8 @@ The system supports 5 roles:
 ## Public Endpoints
 
 ### Register Patient
-
-**Endpoint:** `POST /api/auth/register/patient`
+**Gateway Path:** `POST /api/auth/register/patient`
+**Service Path:** `POST /auth/register/patient`
 
 **Access:** Public (no authentication required)
 
@@ -109,8 +117,8 @@ The system supports 5 roles:
 ---
 
 ### Register Doctor
-
-**Endpoint:** `POST /api/auth/register/medecin`
+**Gateway Path:** `POST /api/auth/register/medecin`
+**Service Path:** `POST /auth/register/medecin`
 
 **Access:** Public (no authentication required)
 
@@ -174,8 +182,8 @@ The system supports 5 roles:
 ## Admin Endpoints
 
 ### Create Admin User
-
-**Endpoint:** `POST /api/admin/users`
+**Gateway Path:** `POST /api/admin/users`
+**Service Path:** `POST /admin/users`
 
 **Access:** Requires `ROLE_ADMIN`
 
@@ -263,8 +271,8 @@ The system supports 5 roles:
 ---
 
 ### List All Users
-
-**Endpoint:** `GET /api/admin/users`
+**Gateway Path:** `GET /api/admin/users`
+**Service Path:** `GET /admin/users`
 
 **Access:** Requires `ROLE_ADMIN`
 

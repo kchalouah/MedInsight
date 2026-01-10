@@ -20,13 +20,16 @@ The gateway uses Spring Cloud Gateway to route requests to backend microservices
 
 ### Route Configuration
 
-| Path Pattern | Target Service | Description |
-|-------------|----------------|-------------|
-| `/api/auth/**` | auth-service | Authentication and registration |
-| `/api/admin/**` | auth-service | Admin operations |
-| `/api/patients/**` | patient-service | Patient management |
-| `/api/doctors/**` | doctor-service | Doctor management |
-| `/api/appointments/**` | appointment-service | Appointment scheduling |
+| Path Pattern | Target Service | Description | Prefix Stripped | Forwarded Path |
+|-------------|----------------|-------------|-----------------|----------------|
+| `/api/auth/**` | auth-service | Auth & login | `/api` | `/auth/**` |
+| `/api/admin/**` | auth-service | Admin ops | `/api` | `/admin/**` |
+| `/api/appointments/**` | appointment-service | Appointments | `/api` | `/appointments/**` |
+| `/api/prescriptions/**` | appointment-service | Prescriptions | `/api` | `/prescriptions/**` |
+| `/api/records/**` | medical-record-service | Records | `/api` | `/records/**` |
+| `/api/audit/**` | audit-service | Logs/Audit | `/api` | `/audit/**` |
+| `/api/mail/**` | mail-service | Email ops | `/api` | `/mail/**` |
+| `/api/ml/**` | ml-service | Predictions | `/api` | `/ml/**` |
 
 ### Load Balancing
 
@@ -182,7 +185,7 @@ Credentials are allowed (`Access-Control-Allow-Credentials: true`)
 ### 1. Client Request
 
 ```
-Client → Gateway (http://localhost:8080/api/patients)
+Client → Gateway (http://localhost:8080/api/records/patient/...)
 ```
 
 ### 2. JWT Validation
@@ -190,31 +193,32 @@ Client → Gateway (http://localhost:8080/api/patients)
 Gateway validates JWT token:
 - Checks signature with Keycloak JWK
 - Validates expiration
-- Extracts roles from `realm_access.roles`
+- Extracts roles
 
 ### 3. Route Matching
 
 Gateway matches request path to configured routes:
-- `/api/patients/**` → `lb://patient-service`
+- `/api/records/**` → `lb://medical-record-service`
 
-### 4. Service Discovery
+### 4. Strip Prefix (New!)
 
-Gateway queries Eureka for available instances of `patient-service`
+Gateway applies `StripPrefix=1`:
+- Path `/api/records/...` → Forwarded as `/records/...`
 
-### 5. Load Balancing
+### 5. Service Discovery & Load Balancing
 
-Gateway selects an instance using round-robin load balancing
+Gateway queries Eureka for `medical-record-service` and selects an instance.
 
 ### 6. Request Forwarding
 
 ```
-Gateway → Patient Service (http://patient-service:8082/api/patients)
+Gateway → Medical Record Service (http://medical-record-service:8084/records/patient/...)
 ```
 
 ### 7. Response
 
 ```
-Patient Service → Gateway → Client
+Service → Gateway → Client
 ```
 
 ---

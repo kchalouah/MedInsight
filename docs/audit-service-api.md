@@ -8,14 +8,25 @@ The Audit Service provides centralized immutable logging for the MedInsight plat
 - **ADMIN**: Full access to query logs.
 - **Microservices**: Can POST logs to the storage endpoint.
 
-## Base URL
-Through Gateway: `http://localhost:8080/api/audit`
-Direct (internal): `http://localhost:8085/api/audit`
+## Base URLs
+
+### Access via API Gateway (Recommended)
+Base URL: `http://localhost:8080/api`
+
+The Gateway strips the `/api` prefix and forwards to the service.
+
+- Audit: `http://localhost:8080/api/audit/**`
+
+### Direct Access (Development)
+Base URL: `http://localhost:8085`
+
+- Audit: `http://localhost:8085/audit/**`
 
 ## Endpoints
 
 ### 1. Store Audit Log
-**Endpoint:** `POST /logs`
+**Gateway Path:** `POST /api/audit/logs`
+**Service Path:** `POST /audit/logs`
 **Access:** Open (Internal service use)
 **Description:** Record a discrete user action.
 

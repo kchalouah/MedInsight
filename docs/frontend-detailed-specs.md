@@ -5,10 +5,8 @@ Ce document sert de guide de référence complet pour le développement du front
 ## 🏗️ 1. Architecture & Authentification (OAuth2/Keycloak)
 
 ### 🔐 Flux d'Authentification
-- **Standard** : Authorization Code Flow avec PKCE.
-- **Service** : Intégration directe avec `keycloak-js`.
-- **Persistance** : Token stocké en mémoire (RAM) ou via `HttpOnly` cookies via NextAuth.
-- **Gestion des Sessions** : Refresh token automatique 1 minute avant expiration.
+- **Authentification** : Gestion par `Keycloak`. Le frontend utilise le `sub` (Keycloak ID) comme identifiant unique (`patientId`, `doctorId`).
+- **Persistance** : Token JWT stocké de manière sécurisée (NextAuth ou State persisté).
 
 ### 👥 Rôles & Permissions
 | Rôle | Accès Dashboard | Capacités Principales |
@@ -56,7 +54,7 @@ Ce document sert de guide de référence complet pour le développement du front
 2. **Étape 2** : Liste des médecins disponibles (Filtre par ville/disponibilité).
 3. **Étape 3** : Choix du créneau horaire sur un calendrier interactif.
 4. **Étape 4** : Saisie du motif de consultation.
-5. **Confirmation** : Envoi auto d'un email via `mail-service`.
+5. **Confirmation** : Envoi auto d'un email via `mail-service` (Endpoint Gateway: `/api/mail/send`).
 
 ### 🩺 Workflow : Consultation Médicale (Médecin)
 1. **Dashboard** : Cliquer sur "Démarrer" sur un patient en salle d'attente.
@@ -122,7 +120,7 @@ CMD ["nginx", "-g", "daemon off;"]
 ```
 
 ### Variables d'Environnement (Vercel/Docker)
-- `NEXT_PUBLIC_GATEWAY_URL`: `http://localhost:8080`
+- `NEXT_PUBLIC_GATEWAY_URL`: `http://localhost:8080/api` (Toutes les requêtes passent par ce prefixe)
 - `NEXT_PUBLIC_KEYCLOAK_URL`: `http://localhost:8180`
 - `NEXT_PUBLIC_REALM`: `medinsight`
 - `NEXT_PUBLIC_CLIENT_ID`: `medinsight-frontend`

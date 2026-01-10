@@ -3,17 +3,30 @@
 ## Overview
 The Appointment Service manages medical appointments between patients and doctors. It provides endpoints for scheduling, viewing, updating, and cancelling appointments with role-based access control.
 
-## Base URL
-Through Gateway: `http://localhost:8080/api/appointments`
-Direct (internal): `http://localhost:8082/api/appointments`
+## Base URLs
+
+### Access via API Gateway (Recommended)
+Base URL: `http://localhost:8080/api`
+
+The Gateway strips the `/api` prefix and forwards to the service.
+
+- Appointments: `http://localhost:8080/api/appointments/**`
+- Prescriptions: `http://localhost:8080/api/prescriptions/**`
+
+### Direct Access (Development)
+Base URL: `http://localhost:8082`
+
+- Appointments: `http://localhost:8082/appointments/**`
+- Prescriptions: `http://localhost:8082/prescriptions/**`
 
 ## Authentication
 Requires a valid JWT token from Keycloak. The token must contain appropriate realm roles: `ROLE_PATIENT`, `ROLE_MEDECIN`, or `ROLE_ADMIN`.
 
 ## Endpoints
 
-### 1. Create Appointment
-**Endpoint:** `POST /`
+### Create Appointment
+**Gateway Path:** `POST /api/appointments`
+**Service Path:** `POST /appointments`
 **Access:** `ROLE_PATIENT`, `ROLE_ADMIN`
 **Description:** Patients can schedule an appointment for themselves. Admins can schedule for anyone.
 
@@ -32,8 +45,9 @@ Requires a valid JWT token from Keycloak. The token must contain appropriate rea
 
 ---
 
-### 2. Get Appointment by ID
-**Endpoint:** `GET /{id}`
+### Get Appointment by ID
+**Gateway Path:** `GET /api/appointments/{id}`
+**Service Path:** `GET /appointments/{id}`
 **Access:** `ROLE_PATIENT`, `ROLE_MEDECIN`, `ROLE_ADMIN`
 **Description:** Get details of a specific appointment. Patients can only see their own, doctors can only see their assigned appointments.
 
@@ -109,8 +123,9 @@ Requires a valid JWT token from Keycloak. The token must contain appropriate rea
 
 Prescriptions are medical orders issued by doctors for patients during appointments.
 
-### 1. Issue a Prescription
-**Endpoint:** `POST /api/appointments/{appointmentId}/prescriptions`
+### Issue Prescription
+**Gateway Path:** `POST /api/appointments/{appointmentId}/prescriptions`
+**Service Path:** `POST /appointments/{appointmentId}/prescriptions`
 **Access:** `ROLE_MEDECIN`, `ROLE_ADMIN`
 **Description:** Issued by the assigned doctor or admin.
 
@@ -130,7 +145,8 @@ Prescriptions are medical orders issued by doctors for patients during appointme
 ---
 
 ### 2. Get Appointment Prescriptions
-**Endpoint:** `GET /api/appointments/{appointmentId}/prescriptions`
+**Gateway Path:** `GET /api/appointments/{appointmentId}/prescriptions`
+**Service Path:** `GET /appointments/{appointmentId}/prescriptions`
 **Access:** `ROLE_PATIENT`, `ROLE_MEDECIN`, `ROLE_ADMIN`
 **Description:** View all prescriptions issued for a specific appointment.
 

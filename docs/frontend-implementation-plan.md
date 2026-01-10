@@ -61,24 +61,22 @@ Ce document détaille la mise en œuvre du frontend pour la plateforme MedInsigh
 
 ---
 
-## 🔗 Mappage des Points de Terminaison (API Gateway: 8080)
-
-| Fonctionnalité | Méthode | Endpoint Backend | Service Responsable |
+| Fonctionnalité | Méthode | Endpoint Gateway | Service Backend |
 | :--- | :---: | :--- | :--- |
 | Inscription Patient | `POST` | `/api/auth/register/patient` | `auth-service` |
 | Inscription Médecin | `POST` | `/api/auth/register/medecin` | `auth-service` |
 | Liste Rendez-vous | `GET` | `/api/appointments/patient/{id}` | `appointment-service` |
 | Créer Rendez-vous | `POST` | `/api/appointments` | `appointment-service` |
-| Émettre Ordonnance | `POST` | `/api/appointments/prescriptions` | `appointment-service` |
-| Dossier Médical | `GET` | `/api/records/patient/{id}/summary` | `medical-record-service` |
-| Assistant Diagnostic | `POST` | `/api/v1/predict/diagnosis` | `ml-service` |
+| Émettre Ordonnance | `POST` | `/api/appointments/{id}/prescriptions` | `appointment-service` |
+| Dossier Médical | `GET` | `/api/records/patient/{id}/dossier` | `medical-record-service` |
+| Assistant Diagnostic | `POST` | `/api/ml/predict/diagnosis` | `ml-service` |
 | Consultation Logs | `GET` | `/api/audit/logs` | `audit-service` |
+| Envoi Email | `POST` | `/api/mail/send` | `mail-service` |
 
 ---
 
-## 📋 Structures de Données (DTOs) & Attributs des Formulaires
-
-Pour assurer la compatibilité totale avec le backend, les formulaires doivent utiliser les noms de champs exacts suivants :
+> [!IMPORTANT]
+> Tous les identifiants (`patientId`, `doctorId`, `id`) doivent correspondre au **Keycloak ID** (`sub`) retourné lors de l'authentification. Le backend utilise ces IDs comme clés primaires standardisées.
 
 ### 1. Inscription Patient (`PatientRegistrationRequest`)
 - `email`: (String) Adresse email valide.
