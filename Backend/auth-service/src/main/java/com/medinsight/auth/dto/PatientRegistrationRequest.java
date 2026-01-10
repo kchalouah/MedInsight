@@ -34,7 +34,7 @@ public class PatientRegistrationRequest {
     @Size(max = 100)
     private String lastName;
 
-    @Pattern(regexp = "^\\+?[0-9]{10,20}$", message = "Phone number must be valid")
+    @Pattern(regexp = "^\\+?[0-9]{8,20}$", message = "Phone number must be valid")
     private String phoneNumber;
 
     private String addressLine;

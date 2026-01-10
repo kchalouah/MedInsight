@@ -61,7 +61,11 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins: ${app.cors.allowed-origins:["http://localhost:3000","http://localhost:3001"]}
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:3001"
+              - "http://localhost:3002"
+              - "http://localhost:3003"
             allowedMethods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
             allowedHeaders: ["*"]
             exposedHeaders: ["*"]
@@ -121,6 +125,9 @@ app:
     # List of allowed origins for CORS (React frontend, etc.)
     allowed-origins:
       - http://localhost:3000
+      - http://localhost:3001
+      - http://localhost:3002
+      - http://localhost:3003
 
 logging:
   level:

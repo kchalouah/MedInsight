@@ -22,8 +22,10 @@ const formSchema = z.object({
     password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
     confirmPassword: z.string(),
     phoneNumber: z.string().min(8, "Numéro de téléphone requis"),
-    speciality: z.string().min(2, "Spécialité requise"),
+    specialization: z.string().min(2, "Spécialité requise"),
     licenseNumber: z.string().min(4, "Numéro de licence requis"),
+    yearsOfExperience: z.coerce.number().min(0, "Années d'expérience invalides"),
+    consultationFee: z.coerce.number().min(0, "Tarif de consultation invalide"),
     address: z.object({
         street: z.string().optional(),
         city: z.string().optional(),
@@ -40,15 +42,49 @@ export default function RegisterMedecinPage() {
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
 
-    const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof formSchema>>({
+    const { register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(formSchema),
+        defaultValues: {
+            firstName: "",
+            lastName: "",
+            email: "",
+            password: "",
+            confirmPassword: "",
+            phoneNumber: "",
+            specialization: "",
+            licenseNumber: "",
+            yearsOfExperience: 0,
+            consultationFee: 0,
+            address: {
+                street: "",
+                city: "",
+                zipCode: "",
+                country: "Tunisie"
+            }
+        }
     })
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsLoading(true)
         setError(null)
         try {
-            await api.post("/auth/register/medecin", values)
+            // Map frontend form values to backend DTO structure
+            const payload = {
+                firstName: values.firstName,
+                lastName: values.lastName,
+                email: values.email,
+                password: values.password,
+                phoneNumber: values.phoneNumber,
+                specialization: values.specialization,
+                licenseNumber: values.licenseNumber,
+                yearsOfExperience: values.yearsOfExperience,
+                consultationFee: values.consultationFee,
+                addressLine: values.address?.street,
+                city: values.address?.city,
+                country: values.address?.country
+            };
+
+            await api.post("/auth/register/medecin", payload)
             setSuccess(true)
         } catch (err: any) {
             console.error("Registration error:", err);
@@ -157,9 +193,9 @@ export default function RegisterMedecinPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="space-y-2">
-                                    <Label htmlFor="speciality">Spécialité</Label>
-                                    <Input id="speciality" placeholder="ex: Cardiologie" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("speciality")} />
-                                    {errors.speciality && <p className="text-xs text-red-500 font-medium">{errors.speciality.message}</p>}
+                                    <Label htmlFor="specialization">Spécialité</Label>
+                                    <Input id="specialization" placeholder="ex: Cardiologie" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("specialization")} />
+                                    {errors.specialization && <p className="text-xs text-red-500 font-medium">{errors.specialization.message}</p>}
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="licenseNumber">Numéro de Licence (CNOM)</Label>
@@ -167,6 +203,20 @@ export default function RegisterMedecinPage() {
                                     {errors.licenseNumber && <p className="text-xs text-red-500 font-medium">{errors.licenseNumber.message}</p>}
                                 </div>
                             </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="space-y-2">
+                                    <Label htmlFor="yearsOfExperience">Années d'expérience</Label>
+                                    <Input id="yearsOfExperience" type="number" min="0" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("yearsOfExperience")} />
+                                    {errors.yearsOfExperience && <p className="text-xs text-red-500 font-medium">{errors.yearsOfExperience.message}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="consultationFee">Tarif de consultation (DT)</Label>
+                                    <Input id="consultationFee" type="number" min="0" step="0.5" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("consultationFee")} />
+                                    {errors.consultationFee && <p className="text-xs text-red-500 font-medium">{errors.consultationFee.message}</p>}
+                                </div>
+                            </div>
+
                             <div className="space-y-2">
                                 <Label htmlFor="phoneNumber">Téléphone Professionnel</Label>
                                 <Input id="phoneNumber" type="tel" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("phoneNumber")} />
@@ -175,8 +225,12 @@ export default function RegisterMedecinPage() {
 
                             <div className="space-y-3 pt-4 border-t border-slate-100">
                                 <Label className="text-slate-500">Adresse Cabinet</Label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    <div className="md:col-span-3">
+                                        <Input placeholder="Rue, Bâtiment..." className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("address.street")} />
+                                    </div>
                                     <Input placeholder="Ville" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("address.city")} />
+                                    <Input placeholder="Code Postal" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("address.zipCode")} />
                                     <Input placeholder="Pays" defaultValue="Tunisie" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("address.country")} />
                                 </div>
                             </div>

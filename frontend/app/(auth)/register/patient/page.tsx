@@ -23,7 +23,8 @@ const formSchema = z.object({
     password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
     confirmPassword: z.string(),
     dateOfBirth: z.string().refine((date) => new Date(date) < new Date(), "Date invalide"),
-    phoneNumber: z.string().optional(),
+    phoneNumber: z.string().min(8, "Numéro de téléphone requis"),
+    gender: z.enum(["MALE", "FEMALE"]),
     address: z.object({
         street: z.string().optional(),
         city: z.string().optional(),
@@ -40,7 +41,7 @@ export default function RegisterPatientPage() {
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
 
-    const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof formSchema>>({
+    const { register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(formSchema),
     })
 
@@ -48,7 +49,21 @@ export default function RegisterPatientPage() {
         setIsLoading(true)
         setError(null)
         try {
-            await api.post("/auth/register/patient", values)
+            // Map frontend form values to backend DTO structure
+            const payload = {
+                firstName: values.firstName,
+                lastName: values.lastName,
+                email: values.email,
+                password: values.password,
+                phoneNumber: values.phoneNumber,
+                dateOfBirth: values.dateOfBirth,
+                gender: values.gender,
+                addressLine: values.address?.street,
+                city: values.address?.city,
+                country: values.address?.country
+            };
+
+            await api.post("/auth/register/patient", payload)
             setSuccess(true)
         } catch (err: any) {
             console.error("Registration error:", err);
@@ -162,15 +177,32 @@ export default function RegisterPatientPage() {
                                     {errors.dateOfBirth && <p className="text-xs text-red-500 font-medium">{errors.dateOfBirth.message}</p>}
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="phoneNumber">Téléphone</Label>
-                                    <Input id="phoneNumber" type="tel" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("phoneNumber")} />
+                                    <Label htmlFor="gender">Genre</Label>
+                                    <select
+                                        id="gender"
+                                        className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+                                        {...register("gender")}
+                                    >
+                                        <option value="">Sélectionner...</option>
+                                        <option value="MALE">Homme</option>
+                                        <option value="FEMALE">Femme</option>
+                                    </select>
+                                    {errors.gender && <p className="text-xs text-red-500 font-medium">{errors.gender.message}</p>}
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="phoneNumber">Téléphone</Label>
+                                <Input id="phoneNumber" type="tel" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("phoneNumber")} />
+                                {errors.phoneNumber && <p className="text-xs text-red-500 font-medium">{errors.phoneNumber.message}</p>}
                             </div>
 
                             <div className="space-y-3 pt-4 border-t border-slate-100">
                                 <Label className="text-slate-500">Adresse (Optionnel)</Label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <Input placeholder="Rue, Bâtiment..." className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("address.street")} />
                                     <Input placeholder="Ville" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("address.city")} />
+                                    <Input placeholder="Code Postal" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("address.zipCode")} />
                                     <Input placeholder="Pays" defaultValue="Tunisie" className="h-10 border-slate-300 focus:border-primary focus:ring-primary/20" {...register("address.country")} />
                                 </div>
                             </div>

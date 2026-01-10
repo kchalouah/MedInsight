@@ -122,7 +122,6 @@ services:
       NEXT_PUBLIC_KEYCLOAK_URL: http://localhost:8180
       NEXT_PUBLIC_KEYCLOAK_REALM: medinsight
       NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: medinsight-frontend
-      NEXT_PUBLIC_KEYCLOAK_URL: http://localhost:8180
       NEXT_PUBLIC_REALM: medinsight
       NEXT_PUBLIC_CLIENT_ID: medinsight-frontend
     networks:

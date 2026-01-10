@@ -68,8 +68,10 @@ public class SecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .cors(cors -> cors.disable()) // Disable Spring Security's default CORS to let the Gateway handle it
                 .authorizeExchange(auth -> auth
                         // Public endpoints (Swagger and health)
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
                         .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()
                         .pathMatchers("/api/*/v3/api-docs").permitAll()
                         .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
