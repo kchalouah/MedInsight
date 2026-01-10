@@ -28,9 +28,9 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/audit/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/**").permitAll()
-                .requestMatchers("/api/audit/logs").permitAll() // Internal logging (path with prefix)
-                .requestMatchers("/api/audit/**").authenticated()
+                .requestMatchers("/audit/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/**").permitAll()
+                .requestMatchers("/audit/logs").permitAll() // Internal logging
+                .requestMatchers("/audit/**").authenticated()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2

@@ -14,6 +14,8 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Machine Learning service for medical predictions",
     version="1.0.0",
+    openapi_url=f"{settings.API_V1_STR}/v3/api-docs",
+    docs_url=f"{settings.API_V1_STR}/swagger-ui.html",
 )
 
 # CORS Policy

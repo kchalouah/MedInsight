@@ -51,7 +51,7 @@ management:
 
 springdoc:
   api-docs:
-    path: /api/appointments/v3/api-docs
+    path: /appointments/v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
     operations-sorter: method

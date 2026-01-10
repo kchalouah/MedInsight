@@ -22,7 +22,7 @@ import java.util.UUID;
  * Controller for appointment management endpoints.
  */
 @RestController
-@RequestMapping("/api/appointments")
+@RequestMapping("/appointments")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Appointments", description = "Appointment management endpoints")

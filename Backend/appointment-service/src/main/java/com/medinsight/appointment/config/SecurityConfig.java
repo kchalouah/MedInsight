@@ -40,13 +40,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Swagger/OpenAPI endpoints
-                        .requestMatchers("/api/appointments/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/appointments/v3/api-docs/**", "/prescriptions/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         
                         // Actuator health endpoint
                         .requestMatchers("/actuator/health").permitAll()
                         
-                        // All appointment endpoints require authentication (paths with /api/appointments prefix)
-                        .requestMatchers("/api/appointments/**").authenticated()
+                        // Authenticated endpoints
+                        .requestMatchers("/appointments/**", "/prescriptions/**").authenticated()
                         
                         // All other endpoints require authentication
                         .anyRequest().authenticated()

@@ -50,6 +50,6 @@ logging:
 
 springdoc:
   api-docs:
-    path: /api/mail/v3/api-docs
+    path: /mail/v3/api-docs
   swagger-ui:
     path: /swagger-ui.html

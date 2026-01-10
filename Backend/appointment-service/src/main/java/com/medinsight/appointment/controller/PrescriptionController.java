@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Prescriptions", description = "Prescription management endpoints")

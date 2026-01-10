@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  * Controller for public authentication and registration endpoints.
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Authentication", description = "Public authentication and registration endpoints")

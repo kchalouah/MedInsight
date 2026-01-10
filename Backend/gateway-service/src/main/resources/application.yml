@@ -14,34 +14,50 @@ spring:
           uri: lb://appointment-service
           predicates:
             - Path=/api/appointments/**
+          filters:
+            - StripPrefix=1
         - id: prescriptions-route
           uri: lb://appointment-service
           predicates:
             - Path=/api/prescriptions/**
+          filters:
+            - StripPrefix=1
         - id: auth-route
           uri: lb://auth-service
           predicates:
             - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
         - id: admin-route
           uri: lb://auth-service
           predicates:
             - Path=/api/admin/**
+          filters:
+            - StripPrefix=1
         - id: records-route
           uri: lb://medical-record-service
           predicates:
             - Path=/api/records/**
+          filters:
+            - StripPrefix=1
         - id: audit-route
           uri: lb://audit-service
           predicates:
             - Path=/api/audit/**
+          filters:
+            - StripPrefix=1
         - id: mail-route
           uri: lb://mail-service
           predicates:
             - Path=/api/mail/**
+          filters:
+            - StripPrefix=1
         - id: ml-route
           uri: lb://ml-service
           predicates:
             - Path=/api/ml/**
+          filters:
+            - StripPrefix=1
       globalcors:
         corsConfigurations:
           '[/**]':

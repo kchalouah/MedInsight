@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "MedInsight ML Service"
-    API_V1_STR: str = "/api/v1"
+    API_V1_STR: str = "/ml"
     
     # Eureka Configuration
     EUREKA_SERVER_URL: str = "http://localhost:8761/eureka/"

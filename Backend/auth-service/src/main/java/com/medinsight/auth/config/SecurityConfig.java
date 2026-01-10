@@ -40,20 +40,21 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register/patient").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register/medecin").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/register/patient").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/register/medecin").permitAll()
                         
-                        // Swagger/OpenAPI endpoints
-                        .requestMatchers("/api/auth/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Swagger/OpenAPI endpoints (relative to stripped path)
+                        // If gateway calls /api/auth/v3/api-docs, it becomes /auth/v3/api-docs
+                        .requestMatchers("/auth/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         
                         // Actuator health endpoint
                         .requestMatchers("/actuator/health").permitAll()
                         
                         // Admin endpoints require ADMIN role
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         
-                        // Internal endpoints (should be protected at gateway level)
-                        .requestMatchers("/api/internal/**").permitAll()
+                        // Internal endpoints
+                        .requestMatchers("/internal/**").permitAll()
                         
                         // All other endpoints require authentication
                         .anyRequest().authenticated()

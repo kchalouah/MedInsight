@@ -43,6 +43,6 @@ loki:
 
 springdoc:
   api-docs:
-    path: /api/audit/v3/api-docs
+    path: /audit/v3/api-docs
   swagger-ui:
     path: /swagger-ui.html

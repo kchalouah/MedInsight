@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/records")
+@RequestMapping("/records")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Medical Records", description = "Patient dossier and clinical notes management")
