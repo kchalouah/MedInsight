@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/mail")
+@RequestMapping("/mail")
 @RequiredArgsConstructor
 @Tag(name = "Email Service", description = "Endpoints for sending system notifications and reminders")
 public class MailController {
