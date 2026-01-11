@@ -59,6 +59,23 @@ public class MedicalRecordController {
                 .body(recordService.addConsultationNote(request, doctorId));
     }
 
+
+
+    @DeleteMapping("/notes/{noteId}")
+    @PreAuthorize("hasAnyRole('MEDECIN', 'ADMIN')")
+    @Operation(summary = "Delete consultation note", description = "Delete a clinical note (Doctor can delete their own, Admin can delete any)")
+    public ResponseEntity<Void> deleteConsultationNote(
+            @PathVariable UUID noteId,
+            Authentication authentication) {
+        
+        UUID doctorId = getUserIdFromAuth(authentication);
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        recordService.deleteConsultationNote(noteId, doctorId, isAdmin);
+        return ResponseEntity.noContent().build();
+    }
+
     private void validatePatientAccess(UUID patientId, Authentication authentication) {
         // Patients can only see their own dossier
         String roles = authentication.getAuthorities().toString();

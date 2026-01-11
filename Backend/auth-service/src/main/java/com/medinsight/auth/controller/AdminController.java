@@ -66,4 +66,14 @@ public class AdminController {
         Page<UserResponse> response = users.map(userService::toUserResponse);
         return ResponseEntity.ok(response);
     }
+    @DeleteMapping("/users/{keycloakId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete user", description = "Admin-only endpoint to delete a user from both Keycloak and the database")
+    public ResponseEntity<Void> deleteUser(@PathVariable String keycloakId) {
+        log.info("Admin deleting user: {}", keycloakId);
+        adminUserService.deleteUser(keycloakId);
+        return ResponseEntity.noContent().build();
+    }
+
+
 }

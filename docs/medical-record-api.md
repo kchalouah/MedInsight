@@ -64,6 +64,20 @@ Base URL: `http://localhost:8084`
 }
 ```
 
+---
+
+### Delete Consultation Note
+**Gateway Path:** `DELETE /api/records/notes/{noteId}`
+**Service Path:** `DELETE /records/notes/{noteId}`
+**Access:** `ROLE_MEDECIN`, `ROLE_ADMIN`
+**Description:** Delete a specific consultation note. Doctors can only delete their own notes.
+
+**Response:** `204 No Content`
+
+**Errors:**
+- `403 Forbidden` - Trying to delete another doctor's note
+- `404 Not Found`
+
 ## Internal Communication
 This service uses **OpenFeign** to communicate with the `appointment-service`.
 - Interface: `AppointmentClient`

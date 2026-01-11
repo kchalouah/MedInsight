@@ -194,6 +194,69 @@ $GH_SECRET = $env:GITHUB_CLIENT_SECRET
 Create-IdP "google" $G_ID $G_SECRET
 Create-IdP "github" $GH_ID $GH_SECRET
 
+Write-Host "`n[7/8] Creating Default Users..." -ForegroundColor Cyan
+
+function New-KeycloakUser {
+    param($Email, $FirstName, $LastName, $Password, $Role)
+    
+    Write-Host "    Creating user: $Email..." -ForegroundColor Gray
+    $createUserUrl = "$KEYCLOAK_URL/admin/realms/$REALM/users"
+    $userBody = @{
+        username = $Email
+        email = $Email
+        firstName = $FirstName
+        lastName = $LastName
+        enabled = $true
+        emailVerified = $true
+    } | ConvertTo-Json
+    
+    try {
+        Invoke-RestMethod -Uri $createUserUrl -Method Post -Headers $headers -Body $userBody
+    } catch {
+        if ($_.Exception.Response.StatusCode -eq 409) {
+            Write-Host "    [OK] User already exists." -ForegroundColor Yellow
+        } else {
+            Write-Host "    [ERROR] Failed to create user: $_" -ForegroundColor Red
+            return
+        }
+    }
+    
+    # Get user ID
+    $getUserUrl = "$KEYCLOAK_URL/admin/realms/$REALM/users?username=$Email"
+    $users = Invoke-RestMethod -Uri $getUserUrl -Method Get -Headers $headers
+    $userId = $users[0].id
+    
+    # Set password
+    $setPasswordUrl = "$KEYCLOAK_URL/admin/realms/$REALM/users/$userId/reset-password"
+    $passwordBody = @{ type = "password"; value = $Password; temporary = $false } | ConvertTo-Json
+    Invoke-RestMethod -Uri $setPasswordUrl -Method Put -Headers $headers -Body $passwordBody | Out-Null
+    
+    # Assign role
+    $rolesUrl = "$KEYCLOAK_URL/admin/realms/$REALM/roles"
+    $availableRoles = Invoke-RestMethod -Uri $rolesUrl -Method Get -Headers $headers
+    $targetRole = $availableRoles | Where-Object { $_.name -eq $Role }
+    
+    if ($targetRole) {
+        $assignRoleUrl = "$KEYCLOAK_URL/admin/realms/$REALM/users/$userId/role-mappings/realm"
+        $roleBody = @(@{ id = $targetRole.id; name = $targetRole.name }) | ConvertTo-Json
+        Invoke-RestMethod -Uri $assignRoleUrl -Method Post -Headers $headers -Body $roleBody -ContentType "application/json" | Out-Null
+        Write-Host "    [OK] User '$Email' created with role $Role" -ForegroundColor Green
+    }
+}
+
+# Create default test users
+New-KeycloakUser "admin@medinsight.tn" "Admin" "MedInsight" "Admin123!" "ROLE_ADMIN"
+New-KeycloakUser "security@medinsight.tn" "Security" "Officer" "Security123!" "ROLE_RESPONSABLE_SECURITE"
+New-KeycloakUser "doctor@medinsight.tn" "Dr. Test" "Doctor" "Doctor123!" "ROLE_MEDECIN"
+New-KeycloakUser "patient@medinsight.tn" "Test" "Patient" "Patient123!" "ROLE_PATIENT"
+
 Write-Host "`n========================================" -ForegroundColor Green
 Write-Host "Keycloak is now fully configured for MedInsight!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
+
+Write-Host "`nTest Users Created:" -ForegroundColor Cyan
+Write-Host "  📧 admin@medinsight.tn      | Password: Admin123!     | Role: ADMIN (Admin Dashboard)" -ForegroundColor White
+Write-Host "  📧 security@medinsight.tn   | Password: Security123!  | Role: RESPONSABLE_SECURITE (Security)" -ForegroundColor White
+Write-Host "  📧 doctor@medinsight.tn     | Password: Doctor123!    | Role: MEDECIN (Doctor)" -ForegroundColor White
+Write-Host "  📧 patient@medinsight.tn    | Password: Patient123!   | Role: PATIENT (Patient)" -ForegroundColor White
+Write-Host "`nLogin at: http://localhost:3000/login" -ForegroundColor Green

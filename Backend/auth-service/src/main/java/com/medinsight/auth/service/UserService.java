@@ -136,4 +136,25 @@ public class UserService {
                 .available(profile.getAvailable())
                 .build();
     }
+    /**
+     * Delete user by ID.
+     */
+    @Transactional
+    public void deleteUser(UUID id) {
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException("User not found with ID: " + id);
+        }
+        userRepository.deleteById(id);
+    }
+
+    /**
+     * Delete user by Keycloak ID.
+     */
+    @Transactional
+    public void deleteUserByKeycloakId(String keycloakId) {
+        if (!userRepository.existsByKeycloakId(keycloakId)) {
+            throw new UserNotFoundException("User not found with Keycloak ID: " + keycloakId);
+        }
+        userRepository.deleteByKeycloakId(keycloakId);
+    }
 }

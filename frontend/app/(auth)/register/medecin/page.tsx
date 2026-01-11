@@ -14,6 +14,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import api from "@/lib/api"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
     firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
@@ -41,6 +43,8 @@ export default function RegisterMedecinPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
+    const { login } = useAuth()
+    const router = useRouter()
 
     const { register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(formSchema),
@@ -85,7 +89,43 @@ export default function RegisterMedecinPage() {
             };
 
             await api.post("/auth/register/medecin", payload)
-            setSuccess(true)
+
+            // Auto-login after successful registration
+            try {
+                const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8180";
+                const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "medinsight";
+                const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "medinsight-frontend";
+
+                const params = new URLSearchParams();
+                params.append("client_id", clientId);
+                params.append("grant_type", "password");
+                params.append("username", values.email);
+                params.append("password", values.password);
+                params.append("scope", "openid profile email");
+
+                const response = await fetch(`${keycloakUrl}/realms/${realm}/protocol/openid-connect/token`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: params
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Call auth context login to auto-redirect to medecin dashboard
+                    login(data.access_token);
+                } else {
+                    // If auto-login fails, show success message and redirect to login
+                    setSuccess(true)
+                    setTimeout(() => router.push("/login"), 3000)
+                }
+            } catch (loginErr) {
+                console.error("Auto-login failed:", loginErr);
+                setSuccess(true)
+                setTimeout(() => router.push("/login"), 3000)
+            }
         } catch (err: any) {
             console.error("Registration error:", err);
             setError(err.response?.data?.message || "Une erreur est survenue lors de l'inscription.");

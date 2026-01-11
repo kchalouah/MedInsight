@@ -235,6 +235,20 @@ The system supports 5 roles:
 
 ---
 
+### Delete User
+**Endpoint:** `DELETE /api/admin/users/{keycloakId}`
+**Access:** Requires `ROLE_ADMIN`
+**Description:** Permanently delete a user from Keycloak and the database.
+
+**Response:** `204 No Content`
+
+**Errors:**
+- `401 Unauthorized`
+- `403 Forbidden`
+- `404 Not Found`
+
+---
+
 ### Assign Role to User
 
 **Endpoint:** `PUT /api/admin/users/{keycloakId}/roles`

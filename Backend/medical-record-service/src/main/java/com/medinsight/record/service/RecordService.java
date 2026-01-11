@@ -107,6 +107,23 @@ public class RecordService {
                 .build();
     }
 
+    /**
+     * Delete a consultation note.
+     */
+    @Transactional
+    public void deleteConsultationNote(UUID noteId, UUID doctorId, boolean isAdmin) {
+        ConsultationNote note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consultation note not found with ID: " + noteId));
+
+        // Only the author (doctor) or an admin can delete
+        if (!isAdmin && !note.getDoctorId().equals(doctorId)) {
+             throw new RuntimeException("Access Denied: You can only delete your own notes");
+        }
+
+        noteRepository.delete(note);
+        log.info("Deleted consultation note: {}", noteId);
+    }
+
     private ConsultationNoteResponse toNoteResponse(ConsultationNote n) {
         return ConsultationNoteResponse.builder()
                 .id(n.getId())

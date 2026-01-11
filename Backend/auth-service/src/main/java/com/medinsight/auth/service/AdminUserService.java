@@ -76,4 +76,25 @@ public class AdminUserService {
         keycloakService.assignRoleToUser(user.getKeycloakId(), role);
         log.info("Assigned role {} to user {}", role, user.getEmail());
     }
+
+    /**
+     * Delete user by Keycloak ID (from both Keycloak and DB).
+     */
+    @Transactional
+    public void deleteUser(String keycloakId) {
+        // 1. Delete from Keycloak
+        try {
+            keycloakService.deleteUser(keycloakId);
+        } catch (Exception e) {
+            log.warn("Failed to delete user {} from Keycloak (might already be deleted): {}", keycloakId, e.getMessage());
+        }
+
+        // 2. Delete from Database
+        try {
+            userService.deleteUserByKeycloakId(keycloakId);
+            log.info("Successfully deleted user {} from system", keycloakId);
+        } catch (Exception e) {
+            log.warn("User {} deleted from Keycloak but not found in local DB (or deletion failed): {}", keycloakId, e.getMessage());
+        }
+    }
 }

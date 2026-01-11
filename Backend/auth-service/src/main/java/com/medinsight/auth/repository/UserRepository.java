@@ -20,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByEmail(String email);
 
     boolean existsByKeycloakId(String keycloakId);
+
+    void deleteByKeycloakId(String keycloakId);
 }

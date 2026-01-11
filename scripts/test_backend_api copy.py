@@ -23,23 +23,7 @@ logger = logging.getLogger("MedInsight-Populator")
 # --- Constants ---
 SPECIALIZATIONS = [
     "Cardiologie", "Dermatologie", "Pédiatrie", "Médecine Générale", 
-    "Neurologie", "Psychiatrie", "Ophtalmologie", "Gynécologie", "Orthopédie", "Radiologie"
-]
-
-TUNISIAN_MALE_NAMES = [
-    "Ahmed", "Mohamed", "Ibrahim", "Youssef", "Aziz", "Firas", "Karim", "Walid", "Sami", "Anis", 
-    "Bilel", "Hamdi", "Omar", "Mehdi", "Amine", "Nizar", "Rafik", "Skander", "Hassen", "Mourad"
-]
-
-TUNISIAN_FEMALE_NAMES = [
-    "Ameni", "Fatma", "Mariem", "Sarra", "Emna", "Hela", "Noura", "Rym", "Salma", "Yasmine", 
-    "Chaima", "Ines", "Siwar", "Khadija", "Lobna", "Meriem", "Zeineb", "Asma", "Mouna", "Dorra"
-]
-
-TUNISIAN_LAST_NAMES = [
-    "Trabelsi", "Gharbi", "Ben Ali", "Jaziri", "Bouazizi", "Hammami", "Dridi", "Mejri", "Saidi", 
-    "Ayari", "Riahi", "Mebarki", "Ben Ahmed", "Chebbi", "Mansouri", "Abidi", "Sassi", "Louhichi", 
-    "Bejaoui", "Triki", "Karray", "Zribi", "Elloumi", "Ben Amor"
+    "Neurologie", "Psychiatrie", "Ophtalmologie", "Gynécologie"
 ]
 
 class MedInsightDataPopulator:
@@ -49,16 +33,6 @@ class MedInsightDataPopulator:
         self.tokens = {"admin": None}
         self.users = {"doctors": [], "patients": []}
         self.appointments = []
-
-    def get_tunisian_name(self, gender=None):
-        if gender == "MALE":
-            first = random.choice(TUNISIAN_MALE_NAMES)
-        elif gender == "FEMALE":
-            first = random.choice(TUNISIAN_FEMALE_NAMES)
-        else:
-            first = random.choice(TUNISIAN_MALE_NAMES + TUNISIAN_FEMALE_NAMES)
-        last = random.choice(TUNISIAN_LAST_NAMES)
-        return first, last
 
     async def get_admin_token(self):
         """Login as super-admin to perform administrative tasks (like creating other admins)"""
@@ -101,8 +75,9 @@ class MedInsightDataPopulator:
         logger.info(f"--- Creating {count} Doctors ---")
         for _ in range(count):
             spec = random.choice(SPECIALIZATIONS)
-            first_name, last_name = self.get_tunisian_name() # Random gender for doctors
-            email = f"dr.{first_name.lower()}.{last_name.lower()}.{random.randint(100,999)}@medinsight.tn"
+            first_name = self.fake.first_name()
+            last_name = self.fake.last_name()
+            email = f"dr.{last_name.lower()}.{random.randint(100,999)}@medinsight.tn"
             password = "password123"
             
             payload = {
@@ -110,40 +85,41 @@ class MedInsightDataPopulator:
                 "password": password,
                 "firstName": first_name,
                 "lastName": last_name,
-                "phoneNumber": "+216" + str(random.randint(20, 99)) + str(random.randint(100000, 999999)),
+                "phoneNumber": self.fake.phone_number().replace(" ", "")[:15],
                 "addressLine": self.fake.street_address(),
-                "city": random.choice(["Tunis", "Sfax", "Sousse", "Bizerte", "Gabès", "Ariana", "Monastir"]),
+                "city": self.fake.city(),
                 "country": "Tunisie",
                 "specialization": spec,
                 "licenseNumber": f"TUN-{random.randint(10000, 99999)}",
                 "yearsOfExperience": random.randint(2, 30),
-                "consultationFee": float(random.choice([40, 50, 60, 70, 80, 90, 100]))
+                "consultationFee": float(random.choice([40, 50, 60, 70, 80]))
             }
 
-            try:
-                resp = await self.client.post(f"{GATEWAY_URL}/api/auth/register/medecin", json=payload)
-                if resp.status_code == 201:
-                    user_id = resp.json().get("id")
-                    logger.info(f"✅ Created Doctor: Dr. {first_name} {last_name} ({spec})")
-                    self.users["doctors"].append({
-                        "id": user_id, 
-                        "email": email, 
-                        "password": password, 
-                        "name": f"Dr. {first_name} {last_name}"
-                    })
-                elif resp.status_code == 409:
-                    logger.warning(f"⚠️ Doctor {email} already exists.")
-                else:
-                    logger.error(f"❌ Failed to create doctor: {resp.text}")
-            except Exception as e:
-                logger.error(f"Error creating doctor: {e}")
+            resp = await self.client.post(f"{GATEWAY_URL}/api/auth/register/medecin", json=payload)
+            if resp.status_code == 201:
+                user_id = resp.json().get("id")
+                logger.info(f"✅ Created Doctor: Dr. {last_name} ({spec})")
+                self.users["doctors"].append({
+                    "id": user_id, 
+                    "email": email, 
+                    "password": password, 
+                    "name": f"Dr. {first_name} {last_name}"
+                })
+            elif resp.status_code == 409:
+                logger.warning(f"⚠️ Doctor {email} already exists.")
+                # We can try to sign in if they exist to add them to our list?
+                # For simplicity, we skip adding to our active list if we don't know the password/ID easily 
+                # without an admin user lookup. 
+                # BUT, let's create a known doctor for testing if list is empty.
+            else:
+                logger.error(f"❌ Failed to create doctor: {resp.text}")
 
     async def create_patients(self, count=10):
         """Create realistic patient profiles"""
         logger.info(f"--- Creating {count} Patients ---")
         for _ in range(count):
-            gender_code = random.choice(["MALE", "FEMALE"])
-            first_name, last_name = self.get_tunisian_name(gender_code)
+            first_name = self.fake.first_name()
+            last_name = self.fake.last_name()
             email = f"{first_name.lower()}.{last_name.lower()}.{random.randint(100,999)}@example.com"
             password = "password123"
             
@@ -152,31 +128,28 @@ class MedInsightDataPopulator:
                 "password": password,
                 "firstName": first_name,
                 "lastName": last_name,
-                "phoneNumber": "+216" + str(random.randint(20, 99)) + str(random.randint(100000, 999999)),
-                "dateOfBirth": self.fake.date_of_birth(minimum_age=18, maximum_age=80).isoformat(),
+                "phoneNumber": self.fake.phone_number().replace(" ", "")[:15],
+                "dateOfBirth": self.fake.date_of_birth(minimum_age=18, maximum_age=90).isoformat(),
                 "addressLine": self.fake.street_address(),
-                "city": random.choice(["Tunis", "Sfax", "Sousse", "Bizerte", "Gabès", "Ariana", "Monastir", "Nabeul"]),
+                "city": self.fake.city(),
                 "country": "Tunisie",
-                "gender": gender_code
+                "gender": random.choice(["MALE", "FEMALE"])
             }
 
-            try:
-                resp = await self.client.post(f"{GATEWAY_URL}/api/auth/register/patient", json=payload)
-                if resp.status_code == 201:
-                    user_id = resp.json().get("id")
-                    logger.info(f"✅ Created Patient: {first_name} {last_name}")
-                    self.users["patients"].append({
-                        "id": user_id, 
-                        "email": email, 
-                        "password": password,
-                        "name": f"{first_name} {last_name}"
-                    })
-                elif resp.status_code == 409:
-                    logger.warning(f"⚠️ Patient {email} already exists.")
-                else:
-                    logger.error(f"❌ Failed to create patient: {resp.text}")
-            except Exception as e:
-                logger.error(f"Error creating patient: {e}")
+            resp = await self.client.post(f"{GATEWAY_URL}/api/auth/register/patient", json=payload)
+            if resp.status_code == 201:
+                user_id = resp.json().get("id")
+                logger.info(f"✅ Created Patient: {first_name} {last_name}")
+                self.users["patients"].append({
+                    "id": user_id, 
+                    "email": email, 
+                    "password": password,
+                    "name": f"{first_name} {last_name}"
+                })
+            elif resp.status_code == 409:
+                logger.warning(f"⚠️ Patient {email} already exists.")
+            else:
+                logger.error(f"❌ Failed to create patient: {resp.text}")
 
     async def create_admin_users(self):
         """Create platform admins if they don't exist"""

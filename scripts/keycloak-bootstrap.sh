@@ -127,7 +127,18 @@ main() {
     create_identity_provider "$TOKEN" "github" "$GITHUB_CLIENT_ID" "$GITHUB_CLIENT_SECRET"
   fi
 
+  echo "[INFO] Creating default test users"
+  create_default_users "$TOKEN"
+
   echo "[DONE] Keycloak bootstrap completed for realm '$KEYCLOAK_REALM'"
+  echo ""
+  echo "Test Users Created:"
+  echo "  📧 admin@medinsight.tn      | Password: Admin123!     | Role: ADMIN (Admin Dashboard)"
+  echo "  📧 security@medinsight.tn   | Password: Security123!  | Role: RESPONSABLE_SECURITE (Security)"
+  echo "  📧 doctor@medinsight.tn     | Password: Doctor123!    | Role: MEDECIN (Doctor)"
+  echo "  📧 patient@medinsight.tn    | Password: Patient123!   | Role: PATIENT (Patient)"
+  echo ""
+  echo "Login at: http://localhost:3000/login"
 }
 
 create_identity_provider() {
@@ -158,6 +169,64 @@ create_identity_provider() {
     
     # Create default role mapper for PATIENT role
     create_idp_role_mapper "$token" "$provider"
+  fi
+}
+
+create_default_users() {
+  local token="$1"
+  
+  create_user "$token" "admin@medinsight.tn" "Admin" "MedInsight" "Admin123!" "ADMIN"
+  create_user "$token" "security@medinsight.tn" "Security" "Officer" "Security123!" "RESPONSABLE_SECURITE"
+  create_user "$token" "doctor@medinsight.tn" "Dr. Test" "Doctor" "Doctor123!" "MEDECIN"
+  create_user "$token" "patient@medinsight.tn" "Test" "Patient" "Patient123!" "PATIENT"
+}
+
+create_user() {
+  local token="$1" email="$2" firstName="$3" lastName="$4" password="$5" role="$6"
+  echo "[INFO] Creating user: $email"
+  
+  # Create user
+  local user_data="{\"username\":\"$email\",\"email\":\"$email\",\"firstName\":\"$firstName\",\"lastName\":\"$lastName\",\"enabled\":true,\"emailVerified\":true}"
+  local create_response
+  create_response=$(curl -s -w "%{http_code}" -o /tmp/keycloak_create_user.log -X POST \
+    "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/users" \
+    -H "Authorization: Bearer Token" -H 'Content-Type: application/json' \
+    -d "$user_data")
+  
+  if [[ "$create_response" == "409" ]]; then
+    echo "[OK] User already exists"
+  elif [[ "$create_response" != "201" ]]; then
+    echo "[WARN] Failed to create user (HTTP $create_response)"
+    return
+  fi
+  
+  # Get user ID
+  local user_id
+  user_id=$(curl -s -H "Authorization: Bearer $token" \
+    "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/users?username=$email" | jq -r '.[0].id // empty')
+  
+  if [[ -z "$user_id" ]]; then
+    echo "[WARN] Could not retrieve user ID for $email"
+    return
+  fi
+  
+  # Set password
+  local password_data="{\"type\":\"password\",\"value\":\"$password\",\"temporary\":false}"
+  curl -s -X PUT "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/users/$user_id/reset-password" \
+    -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
+    -d "$password_data" > /dev/null
+  
+  # Assign role
+  local role_id
+  role_id=$(curl -s -H "Authorization: Bearer $token" \
+    "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/roles/$role" | jq -r '.id // empty')
+  
+  if [[ -n "$role_id" ]]; then
+    local role_mapping="[{\"id\":\"$role_id\",\"name\":\"$role\"}]"
+    curl -s -X POST "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/users/$user_id/role-mappings/realm" \
+      -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
+      -d "$role_mapping" > /dev/null
+    echo "[OK] User '$email' created with role $role"
   fi
 }
 

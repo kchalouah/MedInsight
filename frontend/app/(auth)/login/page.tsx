@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,6 +13,7 @@ import { motion } from "framer-motion"
 
 export default function LoginPage() {
     const router = useRouter();
+    const { login } = useAuth();
     const [isLoading, setIsLoading] = useState<string | null>(null);
     const [formData, setFormData] = useState({ email: "", password: "" });
     const [error, setError] = useState("");
@@ -59,13 +61,12 @@ export default function LoginPage() {
                 throw new Error(data.error_description || "Échec de la connexion");
             }
 
-            // Store tokens (in a real app, use a secure cookie or session)
-            localStorage.setItem("access_token", data.access_token);
+            // Use AuthProvider login function for auto-redirect
+            login(data.access_token);
+
+            // Store refresh token for future use
             localStorage.setItem("refresh_token", data.refresh_token);
             localStorage.setItem("id_token", data.id_token);
-
-            // Redirect to home
-            router.push("/");
 
         } catch (err: any) {
             console.error("Login failed", err);

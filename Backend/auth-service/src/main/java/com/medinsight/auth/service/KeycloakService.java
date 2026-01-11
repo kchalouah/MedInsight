@@ -225,4 +225,33 @@ public class KeycloakService {
             throw new KeycloakIntegrationException("Failed to update user in Keycloak", e);
         }
     }
+    /**
+     * Delete a user in Keycloak.
+     *
+     * @param keycloakUserId Keycloak user ID
+     */
+    public void deleteUser(String keycloakUserId) {
+        try {
+            String token = getAdminToken();
+            WebClient webClient = webClientBuilder.build();
+
+            String deleteUserUrl = String.format("%s/admin/realms/%s/users/%s",
+                    keycloakProperties.getServerUrl(),
+                    keycloakProperties.getRealm(),
+                    keycloakUserId);
+
+            webClient.delete()
+                    .uri(deleteUserUrl)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+
+            log.info("Deleted user {} from Keycloak", keycloakUserId);
+
+        } catch (WebClientResponseException e) {
+            log.error("Failed to delete user from Keycloak: {}", e.getMessage());
+            throw new KeycloakIntegrationException("Failed to delete user in Keycloak", e);
+        }
+    }
 }
