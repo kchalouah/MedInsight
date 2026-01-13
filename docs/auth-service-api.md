@@ -23,6 +23,7 @@ Base URL: `http://localhost:8081`
 
 - Auth: `http://localhost:8081/auth/**`
 - Admin: `http://localhost:8081/admin/**`
+- Medecins: `http://localhost:8081/medecins/**`
 
 ## Authentication
 
@@ -43,6 +44,9 @@ The system supports 5 roles:
 | `MEDECIN` | Doctor/physician | Self-registration |
 | `GESTIONNAIRE` | Manager | Admin-created only |
 | `RESPONSABLE_SECURITE` | Security officer | Admin-created only |
+
+> [!IMPORTANT]
+> **Role Case Sensitivity**: All roles are now standardized to **UPPERCASE** in the backend (e.g., `ROLE_ADMIN`). The system automatically converts incoming roles to uppercase for validation.
 
 ---
 
@@ -288,7 +292,7 @@ The system supports 5 roles:
 **Gateway Path:** `GET /api/admin/users`
 **Service Path:** `GET /admin/users`
 
-**Access:** Requires `ROLE_ADMIN`
+**Access:** Requires `ROLE_ADMIN` or `ROLE_GESTIONNAIRE`
 
 **Description:** Retrieve a paginated list of all users.
 
@@ -333,6 +337,20 @@ GET /api/admin/users?page=0&size=10&sort=createdAt,desc
 
 - `401 Unauthorized` - Missing or invalid JWT token
 - `403 Forbidden` - User does not have ADMIN role
+
+---
+
+## Medecin Endpoints
+
+### List All Doctors
+**Gateway Path:** `GET /api/medecins`
+**Service Path:** `GET /medecins`
+
+**Access:** Requires `ROLE_PATIENT`, `ROLE_MEDECIN`, `ROLE_ADMIN` or `ROLE_GESTIONNAIRE`
+
+**Description:** Retrieve a paginated list of all active doctors for appointment booking.
+
+**Response:** `200 OK` (UserResponse with medecinProfile)
 
 ---
 

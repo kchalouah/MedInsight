@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CalendarCheck, ShieldCheck, Stethoscope, FileText, BrainCircuit, Mail, ArrowRight, HeartPulse } from "lucide-react"
 import { motion, Variants } from "framer-motion"
 
+
 export default function Home() {
   const container: Variants = {
     hidden: { opacity: 0 },

@@ -10,34 +10,29 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import reactor.core.publisher.Mono;
+
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
+import org.springframework.core.convert.converter.Converter;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
+import java.util.stream.Stream;
 
 @Configuration
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-    /**
-     * Extract Keycloak realm roles from claim realm_access.roles and convert to ROLE_*
-     */
-    private Converter<Jwt, Collection<GrantedAuthority>> keycloakRealmRoleAuthoritiesConverter() {
-        return (jwt) -> {
-            // Default converter to include scope authorities as well (SCOPE_*)
-            JwtGrantedAuthoritiesConverter defaultScopes = new JwtGrantedAuthoritiesConverter();
-            Collection<GrantedAuthority> scopeAuthorities = defaultScopes.convert(jwt);
-
-            // Extract realm roles from Keycloak token
-            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+    private Converter<Jwt, Mono<AbstractAuthenticationToken>> reactiveJwtAuthenticationConverter() {
+        return jwt -> {
+            // Extract realm roles
+            Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
             Collection<String> roles = List.of();
-            if (realmAccess != null) {
+            if (realmAccess != null && realmAccess.containsKey("roles")) {
                 Object rolesObj = realmAccess.get("roles");
                 if (rolesObj instanceof Collection<?>) {
                     roles = ((Collection<?>) rolesObj).stream()
@@ -48,39 +43,45 @@ public class SecurityConfig {
             }
 
             Collection<GrantedAuthority> roleAuthorities = roles.stream()
-                    .map(role -> (GrantedAuthority) () -> "ROLE_" + role.toUpperCase())
+                    .map(role -> {
+                        String r = role.toUpperCase();
+                        return new SimpleGrantedAuthority(r.startsWith("ROLE_") ? r : "ROLE_" + r);
+                    })
                     .collect(Collectors.toList());
 
-            return new java.util.ArrayList<GrantedAuthority>() {{
-                addAll(scopeAuthorities);
-                addAll(roleAuthorities);
-            }};
-        };
-    }
+            // Extract scopes
+            JwtGrantedAuthoritiesConverter scopeConverter = new JwtGrantedAuthoritiesConverter();
+            Collection<GrantedAuthority> scopeAuthorities = scopeConverter.convert(jwt);
 
-    private Converter<Jwt, Mono<AbstractAuthenticationToken>> reactiveJwtAuthenticationConverter() {
-        JwtAuthenticationConverter delegate = new JwtAuthenticationConverter();
-        delegate.setJwtGrantedAuthoritiesConverter(keycloakRealmRoleAuthoritiesConverter());
-        return new ReactiveJwtAuthenticationConverterAdapter(delegate);
+            // Combine
+            Collection<GrantedAuthority> allAuthorities = Stream.concat(
+                    roleAuthorities.stream(),
+                    scopeAuthorities.stream()
+            ).collect(Collectors.toList());
+
+            return Mono.just(new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt, allAuthorities));
+        };
     }
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .cors(cors -> cors.disable()) // Disable Spring Security's default CORS to let the Gateway handle it
+                .cors(org.springframework.security.config.Customizer.withDefaults()) // Use property-based globalcors
                 .authorizeExchange(auth -> auth
                         // Public endpoints (Swagger and health)
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
                         .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()
-                        .pathMatchers("/api/*/v3/api-docs").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/auth/register/**").permitAll()
+                        .pathMatchers("/api/auth/**").permitAll()
+                        .pathMatchers("/api/auth/v3/api-docs").permitAll()
                         // RBAC rules for API routes
-                        .pathMatchers("/api/admin/**").hasRole("ADMIN")
-                        .pathMatchers("/api/patients/**").hasAnyRole("PATIENT", "ADMIN")
-                        .pathMatchers("/api/doctors/**").hasAnyRole("DOCTOR", "ADMIN")
-                        .pathMatchers("/api/appointments/**").authenticated()
+                        .pathMatchers("/api/admin/**").hasAnyRole("ADMIN", "GESTIONNAIRE")
+                        .pathMatchers("/api/medecins/**").hasAnyRole("PATIENT", "ADMIN", "MEDECIN", "GESTIONNAIRE")
+                        .pathMatchers("/api/appointments/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
+                        .pathMatchers("/api/records/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
+                        .pathMatchers("/api/audit/**").hasAnyRole("ADMIN", "RESPONSABLE_SECURITE")
+                        .pathMatchers("/api/mail/**").hasAnyRole("ADMIN", "GESTIONNAIRE", "MEDECIN")
+                        .pathMatchers("/api/ml/**").hasAnyRole("MEDECIN", "ADMIN")
                         // everything else requires authentication by default
                         .anyExchange().authenticated()
                 )

@@ -46,21 +46,27 @@ Base URL: `http://localhost:8085`
 ---
 
 ### 2. Query All Logs
-**Endpoint:** `GET /logs`
+**Gateway Path:** `GET /api/audit/logs`
+**Service Path:** `GET /audit/logs`
 **Access:** `ROLE_RESPONSABLE_SECURITE`, `ROLE_ADMIN`
 **Description:** Returns all audit logs stored in Elasticsearch.
 
 ---
 
 ### 3. Query Logs by User
-**Endpoint:** `GET /logs/user/{userId}`
+**Gateway Path:** `GET /api/audit/logs/user/{userId}`
+**Service Path:** `GET /audit/logs/user/{userId}`
 **Access:** `ROLE_RESPONSABLE_SECURITE`, `ROLE_ADMIN`
 
 ---
 
 ### 4. Query Logs by Service
-**Endpoint:** `GET /logs/service/{serviceName}`
+**Gateway Path:** `GET /api/audit/logs/service/{serviceName}`
+**Service Path:** `GET /audit/logs/service/{serviceName}`
 **Access:** `ROLE_RESPONSABLE_SECURITE`, `ROLE_ADMIN`
+
+> [!IMPORTANT]
+> **Role Case Sensitivity**: All roles are now standardized to **UPPERCASE** (e.g., `ROLE_ADMIN`).
 
 ## Infrastructure Integration
 

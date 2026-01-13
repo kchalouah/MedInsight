@@ -20,7 +20,7 @@ Base URL: `http://localhost:8084`
 ### Get Medical Dossier
 **Gateway Path:** `GET /api/records/patient/{patientId}/dossier`
 **Service Path:** `GET /records/patient/{patientId}/dossier`
-**Access:** `ROLE_PATIENT` (self), `ROLE_MEDECIN`, `ROLE_ADMIN`
+**Access:** `ROLE_PATIENT` (self), `ROLE_MEDECIN`, `ROLE_ADMIN`, `ROLE_GESTIONNAIRE`
 **Description:** Returns a complete view of the patient's health including:
 - Chronic conditions and allergies
 - Clinical notes from consultations
@@ -32,7 +32,7 @@ Base URL: `http://localhost:8084`
 ### Update Patient Clinical Data
 **Gateway Path:** `PUT /api/records/patient/{patientId}`
 **Service Path:** `PUT /records/patient/{patientId}`
-**Access:** `ROLE_MEDECIN`, `ROLE_ADMIN`
+**Access:** `ROLE_MEDECIN`, `ROLE_ADMIN`, `ROLE_GESTIONNAIRE`
 **Description:** Update permanent health data.
 
 **Request Body:**
@@ -81,4 +81,4 @@ Base URL: `http://localhost:8084`
 ## Internal Communication
 This service uses **OpenFeign** to communicate with the `appointment-service`.
 - Interface: `AppointmentClient`
-- Fetches: `/api/appointments/patient/{id}` and `/api/prescriptions/patient/{id}`
+- Fetches: `/appointments/patient/{id}` and `/prescriptions/patient/{id}` (Standardized paths)

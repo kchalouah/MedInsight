@@ -29,6 +29,10 @@ export default function AdminUsersPage() {
         firstName: '', lastName: '', email: '', password: '', role: 'PATIENT'
     })
 
+    // Edit/Delete State
+    const [isDeleting, setIsDeleting] = useState<string | null>(null)
+    const [isUpdatingRole, setIsUpdatingRole] = useState<string | null>(null)
+
     useEffect(() => {
         fetchUsers()
     }, [currentPage])
@@ -59,6 +63,36 @@ export default function AdminUsersPage() {
         } catch (err: any) {
             console.error(err)
             alert("Erreur lors de la création : " + (err.response?.data?.message || err.message))
+        }
+    }
+
+    async function handleDeleteUser(keycloakId: string) {
+        if (!confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.")) return
+
+        setIsDeleting(keycloakId)
+        try {
+            await adminApi.deleteUser(keycloakId)
+            fetchUsers()
+            alert("Utilisateur supprimé avec succès.")
+        } catch (err: any) {
+            console.error(err)
+            alert("Erreur lors de la suppression.")
+        } finally {
+            setIsDeleting(null)
+        }
+    }
+
+    async function handleRoleUpdate(keycloakId: string, newRole: string) {
+        setIsUpdatingRole(keycloakId)
+        try {
+            await adminApi.assignRole(keycloakId, newRole)
+            fetchUsers()
+            alert("Rôle mis à jour avec succès.")
+        } catch (err: any) {
+            console.error(err)
+            alert("Erreur lors de la mise à jour du rôle.")
+        } finally {
+            setIsUpdatingRole(null)
         }
     }
 
@@ -276,9 +310,18 @@ export default function AdminUsersPage() {
                                             </div>
                                         </td>
                                         <td className="py-4 px-6">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleBadge(user.role || 'ROLE_PATIENT')}`}>
-                                                {(user.role || 'PATIENT').replace('ROLE_', '')}
-                                            </span>
+                                            <select
+                                                className={`px-2 py-1 rounded-md text-xs font-medium border-none outline-none cursor-pointer ${getRoleBadge(user.role || 'ROLE_PATIENT')}`}
+                                                value={user.role?.startsWith('ROLE_') ? user.role : `ROLE_${user.role}`}
+                                                disabled={isUpdatingRole === user.keycloakId}
+                                                onChange={(e) => handleRoleUpdate(user.keycloakId, e.target.value.replace('ROLE_', ''))}
+                                            >
+                                                <option value="ROLE_PATIENT">Patient</option>
+                                                <option value="ROLE_MEDECIN">Médecin</option>
+                                                <option value="ROLE_GESTIONNAIRE">Gestionnaire</option>
+                                                <option value="ROLE_RESPONSABLE_SECURITE">Sécurité</option>
+                                                <option value="ROLE_ADMIN">Admin</option>
+                                            </select>
                                         </td>
                                         <td className="py-4 px-6">
                                             <div className="space-y-1">
@@ -308,9 +351,19 @@ export default function AdminUsersPage() {
                                             )}
                                         </td>
                                         <td className="py-4 px-6 text-right">
-                                            <button className="p-2 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
-                                                <MoreVertical className="w-5 h-5" />
-                                            </button>
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleDeleteUser(user.keycloakId)}
+                                                    disabled={isDeleting === user.keycloakId}
+                                                    className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                                                    title="Supprimer l'utilisateur"
+                                                >
+                                                    <XCircle className="w-5 h-5" />
+                                                </button>
+                                                <button className="p-2 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+                                                    <MoreVertical className="w-5 h-5" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </motion.tr>
                                 ))

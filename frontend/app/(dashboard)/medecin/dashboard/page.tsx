@@ -138,11 +138,22 @@ export default function MedecinDashboard() {
                                                 <p className="text-sm text-slate-600">{apt.reason}</p>
                                             </div>
                                         </div>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${apt.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                            'bg-orange-100 text-orange-700'
-                                            }`}>
-                                            {apt.status === 'COMPLETED' ? 'Terminé' : 'Prévu'}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${apt.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                                'bg-orange-100 text-orange-700'
+                                                }`}>
+                                                {apt.status === 'COMPLETED' ? 'Terminé' : 'Prévu'}
+                                            </span>
+                                            {apt.status !== 'COMPLETED' && (
+                                                <button
+                                                    onClick={() => router.push(`/medecin/consultation/${apt.id}`)}
+                                                    className="px-3 py-1 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-all flex items-center gap-1"
+                                                >
+                                                    <Activity className="w-3.5 h-3.5" />
+                                                    Démarrer
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -165,8 +176,12 @@ export default function MedecinDashboard() {
                             >
                                 📅 Voir tout le planning
                             </button>
-                            <button className="w-full p-3 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium text-left">
-                                🔍 Rechercher un dossier
+                            <button
+                                onClick={() => router.push('/medecin/patients')}
+                                className="w-full p-3 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium text-left flex items-center gap-2"
+                            >
+                                <Users className="w-4 h-4 text-slate-400" />
+                                Rechercher un patient
                             </button>
                         </div>
                     </div>

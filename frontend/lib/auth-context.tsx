@@ -39,6 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
                 // Decode JWT token (simple base64 decode for demo)
                 const payload = JSON.parse(atob(token.split('.')[1]))
+                const roles: string[] = payload.realm_access?.roles || []
+                const normalizedRoles = roles.map(r => r.toUpperCase().replace('ROLE_', ''))
+
+                const roleKey = normalizedRoles.find(r =>
+                    ['ADMIN', 'MEDECIN', 'GESTIONNAIRE', 'RESPONSABLE_SECURITE'].includes(r)
+                ) || normalizedRoles[0] || 'PATIENT'
+
                 const userData: User = {
                     id: payload.sub,
                     keycloakId: payload.sub,
@@ -46,9 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     name: `${payload.given_name || ''} ${payload.family_name || ''}`.trim(),
                     firstName: payload.given_name || '',
                     lastName: payload.family_name || '',
-                    role: payload.realm_access?.roles?.find((r: string) =>
-                        r.startsWith('ROLE_')
-                    ) || 'ROLE_PATIENT'
+                    role: `ROLE_${roleKey}`
                 }
                 setUser(userData)
             } catch (error) {
@@ -61,11 +66,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const login = (token: string) => {
         localStorage.setItem("token", token)
-        checkAuth()
 
-        // Redirect based on role
+        // Decode and find redirect role immediately
         const payload = JSON.parse(atob(token.split('.')[1]))
-        const role = payload.realm_access?.roles?.find((r: string) => r.startsWith('ROLE_'))
+        const roles: string[] = payload.realm_access?.roles || []
+        const normalizedRoles = roles.map(r => r.toUpperCase().replace('ROLE_', ''))
+
+        const roleKey = normalizedRoles.find(r =>
+            ['ADMIN', 'MEDECIN', 'GESTIONNAIRE', 'RESPONSABLE_SECURITE'].includes(r)
+        ) || normalizedRoles[0] || 'PATIENT'
+
+        const role = `ROLE_${roleKey}`
 
         const dashboardMap: Record<string, string> = {
             'ROLE_PATIENT': '/patient/dashboard',
@@ -76,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const redirectPath = dashboardMap[role] || '/patient/dashboard'
+
+        // Update user state and redirect
+        checkAuth()
         router.push(redirectPath)
     }
 

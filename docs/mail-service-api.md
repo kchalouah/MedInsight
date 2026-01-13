@@ -26,9 +26,13 @@ Base URL: `http://localhost:8086`
 - **Description**: Sends a basic text or HTML email.
 
 ### 2. Send Appointment Reminder
-**POST** `/send-appointment-reminder`
+**Gateway Path:** `POST /api/mail/send-appointment-reminder`
+**Service Path:** `POST /mail/send-appointment-reminder`
 - **Access**: Internal services (Appointment Service)
 - **Description**: Uses the `appointment-reminder.html` Thymeleaf template.
+
+> [!IMPORTANT]
+> **Role Case Sensitivity**: Roles (ADMIN, MEDECIN) are standardized to **UPPERCASE**.
 
 ## Environment Variables
 - `SMTP_HOST`: Gmail SMTP host (default: `smtp.gmail.com`).

@@ -3,158 +3,135 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import DashboardLayout from "@/components/layout/DashboardLayout"
-import { medicalRecordApi, appointmentApi } from "@/lib/api"
-import { ArrowLeft, FileText, Activity, AlertCircle, Plus, Calendar } from "lucide-react"
+import { medicalRecordApi } from "@/lib/api"
+import {
+    FileText, User, Activity, AlertCircle,
+    Droplet, Info, Calendar, ArrowLeft, Clipboard
+} from "lucide-react"
+import { motion } from "framer-motion"
 
-export default function PatientDossierPage() {
-    const params = useParams()
+export default function MedecinPatientDossier() {
+    const { id } = useParams()
     const router = useRouter()
-    const patientId = params.id as string
-
     const [dossier, setDossier] = useState<any>(null)
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState("")
 
     useEffect(() => {
-        if (patientId) {
+        if (id) {
             fetchDossier()
         }
-    }, [patientId])
+    }, [id])
 
     async function fetchDossier() {
         setLoading(true)
         try {
-            const data = await medicalRecordApi.getDossier(patientId)
+            const data = await medicalRecordApi.getDossier(id as string)
             setDossier(data)
         } catch (err) {
-            console.error("Failed to fetch dossier", err)
-            setError("Impossible de charger le dossier médical.")
+            console.error("Failed to fetch patient dossier", err)
         } finally {
             setLoading(false)
         }
     }
 
-    if (loading) return (
-        <DashboardLayout role="medecin">
-            <div className="flex items-center justify-center h-64">
-                <p className="text-slate-500">Chargement du dossier...</p>
-            </div>
-        </DashboardLayout>
-    )
-
-    if (error || !dossier) return (
-        <DashboardLayout role="medecin">
-            <div className="bg-red-50 p-4 rounded-lg text-red-700 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5" /> {error || "Dossier introuvable"}
-            </div>
-            <button onClick={() => router.back()} className="mt-4 text-primary hover:underline">
-                Retour
-            </button>
-        </DashboardLayout>
-    )
-
     return (
         <DashboardLayout role="medecin">
-            <div className="space-y-6">
-                <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4" /> Retour à la liste
-                </button>
-
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="space-y-8">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => router.back()}
+                        className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                    >
+                        <ArrowLeft className="w-6 h-6 text-slate-600" />
+                    </button>
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                            <FileText className="w-6 h-6 text-primary" />
-                            Dossier Médical
-                        </h1>
-                        <p className="text-slate-500">Patient: <span className="font-semibold text-slate-900">{dossier.patientName || "Inconnu"}</span></p>
+                        <h1 className="text-2xl font-bold text-slate-900">Dossier Médical Patient</h1>
+                        <p className="text-slate-500">
+                            {loading ? "Chargement..." : `${dossier?.patientProfile?.firstName} ${dossier?.patientProfile?.lastName}`}
+                        </p>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Clinical Profile */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-red-500" />
-                                Informations Cliniques
-                            </h3>
+                {loading ? (
+                    <div className="py-20 text-center text-slate-400">Récupération des données cliniques...</div>
+                ) : !dossier ? (
+                    <div className="bg-white p-12 rounded-3xl border border-slate-100 text-center">
+                        <AlertCircle className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                        <p className="text-slate-500">Dossier non trouvé.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Summary Sidebar */}
+                        <div className="space-y-6">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4"
+                            >
+                                <h3 className="text-lg font-bold text-slate-800 border-b border-slate-50 pb-3">Profil Patient</h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="flex items-center gap-2 text-sm text-slate-500">
+                                            <Droplet className="w-4 h-4 text-red-500" /> Groupe Sanguin
+                                        </span>
+                                        <span className="font-bold text-slate-800 bg-red-50 px-2 py-0.5 rounded text-sm">
+                                            {dossier.bloodType || "N/A"}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="flex items-center gap-2 text-sm text-slate-500">
+                                            <AlertCircle className="w-4 h-4 text-orange-500" /> Allergies
+                                        </span>
+                                        <p className="text-sm font-medium text-slate-800 bg-orange-50 p-2 rounded-lg mt-1">
+                                            {dossier.allergies || "Aucune allergie connue"}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="flex items-center gap-2 text-sm text-slate-500">
+                                            <Info className="w-4 h-4 text-blue-500" /> Antécédents
+                                        </span>
+                                        <p className="text-sm font-medium text-slate-800 bg-blue-50 p-2 rounded-lg mt-1">
+                                            {dossier.medicalHistory || "Pas d'antécédents majeurs"}
+                                        </p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        {/* Main Content */}
+                        <div className="lg:col-span-2 space-y-8">
                             <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase">Groupe Sanguin</label>
-                                    <p className="text-lg font-semibold text-slate-800">{dossier.bloodType || "Non renseigné"}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase">Allergies</label>
-                                    <div className="flex flex-wrap gap-2 mt-1">
-                                        {dossier.allergies ? (
-                                            dossier.allergies.split(',').map((a: string, i: number) => (
-                                                <span key={i} className="bg-red-50 text-red-700 px-2 py-1 rounded text-sm">{a.trim()}</span>
-                                            ))
-                                        ) : <span className="text-slate-500 text-sm">Aucune</span>}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase">Conditions Chroniques</label>
-                                    <ul className="mt-1 list-disc list-inside text-slate-700 text-sm">
-                                        {dossier.chronic_conditions ? (
-                                            dossier.chronic_conditions.split(',').map((c: string, i: number) => (
-                                                <li key={i}>{c.trim()}</li>
-                                            ))
-                                        ) : <li>Aucune condition signalée</li>}
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Recent Prescriptions */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <h3 className="font-bold text-slate-900 mb-4">Prescriptions Récentes</h3>
-                            {dossier.prescriptions && dossier.prescriptions.length > 0 ? (
-                                <ul className="space-y-3">
-                                    {dossier.prescriptions.slice(0, 3).map((p: any, i: number) => (
-                                        <li key={i} className="bg-slate-50 p-3 rounded-lg text-sm">
-                                            <p className="font-semibold text-slate-800">{p.medicationName}</p>
-                                            <p className="text-slate-500">{p.dosage} - {p.duration}</p>
-                                        </li>
+                                <h3 className="text-xl font-bold text-slate-800">Historique des Consultations</h3>
+                                <div className="space-y-4">
+                                    {dossier.consultationNotes?.map((note: any, idx: number) => (
+                                        <motion.div
+                                            key={note.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm"
+                                        >
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                                                        <Clipboard className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-slate-800">Note Médicale</p>
+                                                        <p className="text-xs text-slate-400">Consultation du 12/01/2026</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p className="text-slate-600 text-sm italic leading-relaxed bg-slate-50 p-4 rounded-xl">
+                                                "{note.noteContent}"
+                                            </p>
+                                        </motion.div>
                                     ))}
-                                </ul>
-                            ) : (
-                                <p className="text-slate-500 text-sm italic">Aucune prescription récente.</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Timeline / Notes */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="font-bold text-slate-900">Consultations & Notes</h3>
-                                <button className="text-primary text-sm font-medium hover:underline flex items-center gap-1">
-                                    <Plus className="w-4 h-4" /> Ajouter une note
-                                </button>
-                            </div>
-
-                            {/* Assuming dossier.appointments or dossier.notes contains history */}
-                            <div className="space-y-6">
-                                {dossier.medicalHistory ? (
-                                    <div className="relative border-l-2 border-slate-200 pl-6 pb-6">
-                                        <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-slate-200" />
-                                        <p className="text-slate-500 text-sm">Historique Initial</p>
-                                        <p className="text-slate-800 mt-1">{dossier.medicalHistory}</p>
-                                    </div>
-                                ) : null}
-
-                                {/* Only static rendering if array missing, checking if dossier.notes exists */}
-                                {(!dossier.notes || dossier.notes.length === 0) && (
-                                    <p className="text-center py-8 text-slate-500">Aucune note de consultation disponible.</p>
-                                )}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </DashboardLayout>
     )

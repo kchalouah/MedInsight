@@ -8,14 +8,10 @@ Ce document sert de guide de référence complet pour le développement du front
 - **Authentification** : Gestion par `Keycloak`. Le frontend utilise le `sub` (Keycloak ID) comme identifiant unique (`patientId`, `doctorId`).
 - **Persistance** : Token JWT stocké de manière sécurisée (NextAuth ou State persisté).
 
-### 👥 Rôles & Permissions
-| Rôle | Accès Dashboard | Capacités Principales |
-| :--- | :--- | :--- |
-| **PATIENT** | `/patient/dashboard` | Prendre RDV, Voir ses ordonnances, Gérer son profil. |
-| **MEDECIN** | `/medecin/dashboard` | Voir planning, Émettre ordonnances, Notes de consultation, Assistant IA. |
-| **GESTIONNAIRE**| `/manager/dashboard` | Supervision administrative (Liste utilisateurs), Gestion globale des dossiers médicaux, KPIs & Reporting. |
-| **ADMIN** | `/admin/dashboard` | Gestion des utilisateurs (CRUD), Configuration système. |
-| **RESP_SEC** | `/security/dashboard`| Consultation des logs d'audit Elasticsearch, Monitoring. |
+| **RESP_SEC** | `/security/dashboard`| [OK] Logs d'audit, Monitoring Infra. |
+
+> [!IMPORTANT]
+> **Logique de Redirection** : Le frontend lors du login privilégie les rôles de gestion (`ADMIN`, `GESTIONNAIRE`) avant les rôles métier (`PATIENT`). Les rôles sont standardisés en **MAJUSCULES**.
 
 ---
 
@@ -120,10 +116,13 @@ CMD ["nginx", "-g", "daemon off;"]
 ```
 
 ### Variables d'Environnement (Vercel/Docker)
-- `NEXT_PUBLIC_GATEWAY_URL`: `http://localhost:8080/api` (Toutes les requêtes passent par ce prefixe)
+- `NEXT_PUBLIC_GATEWAY_URL`: `http://localhost:8080/api`
 - `NEXT_PUBLIC_KEYCLOAK_URL`: `http://localhost:8180`
 - `NEXT_PUBLIC_REALM`: `medinsight`
 - `NEXT_PUBLIC_CLIENT_ID`: `medinsight-frontend`
+
+> [!NOTE]
+> Toutes les requêtes API doivent inclure le préfixe `/api` (ex: `/api/auth/register`). La Gateway se charge de retirer ce préfixe (`StripPrefix=1`) avant de transmettre au microservice.
 
 ---
 

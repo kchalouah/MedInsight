@@ -2,6 +2,7 @@
 
 import DashboardLayout from "@/components/layout/DashboardLayout"
 import StatsCard from "@/components/ui/StatsCard"
+import QuickLinks from "@/components/ui/QuickLinks"
 import { Shield, Search, AlertTriangle, Activity } from "lucide-react"
 import { motion } from "framer-motion"
 import { useAuth } from "@/lib/auth-context"
@@ -69,6 +70,15 @@ export default function SecurityDashboard() {
                     variant="success"
                 />
             </div>
+
+            {/* Infrastructure Quick Links */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8"
+            >
+                <QuickLinks />
+            </motion.div>
 
             {/* Recent Audit Logs */}
             <div className="grid grid-cols-1 gap-6 mb-8">

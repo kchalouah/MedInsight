@@ -36,12 +36,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.disable()) // Disable CORS in favor of Gateway handling
+                .cors(cors -> cors.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers(HttpMethod.POST, "/auth/register/patient").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/register/medecin").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         
                         // Swagger/OpenAPI endpoints (relative to stripped path)
                         .requestMatchers("/auth/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
@@ -77,7 +77,10 @@ public class SecurityConfig {
                 @SuppressWarnings("unchecked")
                 List<String> roles = (List<String>) realmAccess.get("roles");
                 realmRoles = roles.stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .map(role -> {
+                            String r = role.toUpperCase();
+                            return new SimpleGrantedAuthority(r.startsWith("ROLE_") ? r : "ROLE_" + r);
+                        })
                         .collect(Collectors.toList());
             }
 

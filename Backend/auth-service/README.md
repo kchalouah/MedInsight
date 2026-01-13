@@ -163,6 +163,16 @@ Content-Type: application/json
 }
 ```
 
+#### List All Medecins
+```http
+GET /api/medecins
+Authorization: Bearer {token}
+```
+**Access**: All authenticated roles
+**Description**: Retrieve a paginated list of doctors for appointment booking.
+
+---
+
 ### Protected Endpoints (Require Authentication)
 
 #### Get User Profile
@@ -183,13 +193,14 @@ Content-Type: application/json
 }
 ```
 
-### Admin Endpoints (ADMIN Role Required)
+### Admin Endpoints (ADMIN or GESTIONNAIRE Role Required)
 
 #### List All Users
 ```http
 GET /api/admin/users
-Authorization: Bearer {admin_token}
+Authorization: Bearer {token}
 ```
+**Access**: `ROLE_ADMIN`, `ROLE_GESTIONNAIRE`
 
 #### Create Admin User
 ```http

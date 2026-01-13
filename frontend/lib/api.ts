@@ -115,6 +115,22 @@ export const appointmentApi = {
             params: { page, size }
         });
         return response.data;
+    },
+
+    // Create a new appointment
+    createAppointment: async (data: { patientId: string, doctorId: string, appointmentDateTime: string, reason: string }) => {
+        const response = await api.post<AppointmentResponse>('/appointments', data);
+        return response.data;
+    }
+};
+
+export const medecinApi = {
+    // List all doctors (paginated)
+    getDoctors: async (page: number = 0, size: number = 10) => {
+        const response = await api.get<Page<UserResponse>>('/medecins', {
+            params: { page, size }
+        });
+        return response.data;
     }
 };
 
@@ -147,9 +163,60 @@ export const adminApi = {
         return response.data;
     },
 
-    // Assign role to user
+    // Assign role to user (can also be used to update status if backend supports it)
     assignRole: async (keycloakId: string, role: string) => {
         const response = await api.put<{ message: string }>(`/admin/users/${keycloakId}/roles`, { role });
+        return response.data;
+    },
+
+    // Delete user
+    deleteUser: async (keycloakId: string) => {
+        const response = await api.delete(`/admin/users/${keycloakId}`);
+        return response.data;
+    }
+};
+
+export const auditApi = {
+    // Get all audit logs
+    getLogs: async () => {
+        const response = await api.get<any[]>('/audit/logs');
+        return response.data;
+    },
+
+    // Get logs for a specific user
+    getUserLogs: async (userId: string) => {
+        const response = await api.get<any[]>(`/audit/logs/user/${userId}`);
+        return response.data;
+    },
+
+    // Get logs for a specific service
+    getServiceLogs: async (serviceName: string) => {
+        const response = await api.get<any[]>(`/audit/logs/service/${serviceName}`);
+        return response.data;
+    }
+};
+
+export const mlApi = {
+    // Predict diagnosis based on symptoms
+    predictDiagnosis: async (data: { symptoms: string }) => {
+        const response = await api.post('/ml/predict/diagnosis', data);
+        return response.data;
+    },
+
+    // Suggest treatment
+    suggestTreatment: async (data: { symptoms: string, diagnosis?: string }) => {
+        const response = await api.post('/ml/predict/treatment', {
+            symptoms: data.symptoms,
+            diagnosis: data.diagnosis
+        });
+        return response.data;
+    }
+};
+
+export const mailApi = {
+    // Send email
+    sendEmail: async (data: { to: string, subject: string, body: string, isHtml?: boolean }) => {
+        const response = await api.post('/mail/send', data);
         return response.data;
     }
 };

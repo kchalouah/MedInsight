@@ -18,14 +18,14 @@ app = FastAPI(
     docs_url=f"{settings.API_V1_STR}/swagger-ui.html",
 )
 
-# CORS Policy
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS Policy - Handled by Gateway
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # Audit/Logging Middleware
 @app.middleware("http")

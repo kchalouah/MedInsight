@@ -25,7 +25,7 @@ import java.util.Map;
  * Controller for admin-only user management endpoints.
  */
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Admin", description = "Admin-only user management endpoints")
@@ -37,7 +37,7 @@ public class AdminController {
 
     @PostMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create GESTIONNAIRE or RESPONSABLE_SECURITE user", 
+    @Operation(summary = "Create GESTIONNAIRE or RESPONSABLE_SECURITE user",
                description = "Admin-only endpoint to create users with GESTIONNAIRE or RESPONSABLE_SECURITE roles")
     public ResponseEntity<UserResponse> createAdminUser(@Valid @RequestBody AdminUserCreationRequest request) {
         log.info("Admin creating user with email: {} and role: {}", request.getEmail(), request.getRole());

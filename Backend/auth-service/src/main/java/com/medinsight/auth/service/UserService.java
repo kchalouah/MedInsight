@@ -60,6 +60,14 @@ public class UserService {
     }
 
     /**
+     * Get all doctors with pagination.
+     */
+    @Transactional(readOnly = true)
+    public Page<User> findDoctors(Pageable pageable) {
+        return userRepository.findAllByMedecinProfileIsNotNull(pageable);
+    }
+
+    /**
      * Create a new user.
      */
     @Transactional

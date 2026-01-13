@@ -19,8 +19,10 @@ Base URL: `http://localhost:8082`
 - Appointments: `http://localhost:8082/appointments/**`
 - Prescriptions: `http://localhost:8082/prescriptions/**`
 
-## Authentication
 Requires a valid JWT token from Keycloak. The token must contain appropriate realm roles: `ROLE_PATIENT`, `ROLE_MEDECIN`, or `ROLE_ADMIN`.
+
+> [!IMPORTANT]
+> **Role Case Sensitivity**: All roles are now standardized to **UPPERCASE** (e.g., `ROLE_ADMIN`). The backend automatically converts roles for comparison.
 
 ## Endpoints
 
@@ -119,6 +121,13 @@ Requires a valid JWT token from Keycloak. The token must contain appropriate rea
 
 ---
 
+## Internal Communication
+This service uses **OpenFeign** to communicate with the `appointment-service`.
+- Interface: `AppointmentClient`
+- Fetches: `/appointments/patient/{id}` and `/prescriptions/patient/{id}` (Standardized paths)
+
+---
+
 ## Prescription Management
 
 Prescriptions are medical orders issued by doctors for patients during appointments.
@@ -153,6 +162,7 @@ Prescriptions are medical orders issued by doctors for patients during appointme
 ---
 
 ### 3. Get Patient Prescription History
-**Endpoint:** `GET /api/prescriptions/patient/{patientId}`
+**Gateway Path:** `GET /api/prescriptions/patient/{patientId}`
+**Service Path:** `GET /prescriptions/patient/{patientId}`
 **Access:** `ROLE_PATIENT` (self), `ROLE_MEDECIN`, `ROLE_ADMIN`
 **Description:** Paginated history of all prescriptions for a patient across all appointments.

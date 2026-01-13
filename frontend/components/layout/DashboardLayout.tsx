@@ -31,10 +31,15 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     const actualRole = user ? mapKeycloakRoleToFrontendRole(user.role) : role
 
     useEffect(() => {
-        if (!loading && !user) {
-            router.push("/login")
+        if (!loading) {
+            if (!user) {
+                router.push("/login")
+            } else if (role && actualRole !== role) {
+                // Special case for GESTIONNAIRE role which maps to admin in mapping function
+                router.push("/forbidden")
+            }
         }
-    }, [user, loading, router])
+    }, [user, loading, router, role, actualRole])
 
     if (loading) {
         return (

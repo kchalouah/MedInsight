@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { toast } from "react-hot-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -63,6 +64,7 @@ export default function LoginPage() {
 
             // Use AuthProvider login function for auto-redirect
             login(data.access_token);
+            toast.success("Connexion réussie !");
 
             // Store refresh token for future use
             localStorage.setItem("refresh_token", data.refresh_token);
@@ -70,7 +72,9 @@ export default function LoginPage() {
 
         } catch (err: any) {
             console.error("Login failed", err);
-            setError("Email ou mot de passe incorrect.");
+            const errorMessage = err.message || "Email ou mot de passe incorrect.";
+            setError(errorMessage);
+            toast.error(errorMessage);
             setIsLoading(null);
         }
     };

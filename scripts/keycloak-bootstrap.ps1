@@ -131,20 +131,27 @@ foreach ($client in $CONFIDENTIAL_CLIENTS) {
 Write-Host "[5/6] Creating Public Frontend Client (Port 3001/3000)..." -ForegroundColor Cyan
 $existingFe = Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/clients?clientId=$FRONTEND_CLIENT_ID" -Headers $headers -Method Get
 
-if ($existingFe.Count -eq 0) {
-    Write-Host "    [INFO] Creating Client '$FRONTEND_CLIENT_ID'..." -ForegroundColor Green
-    $feBody = @{
-        clientId     = $FRONTEND_CLIENT_ID
-        enabled      = $true
-        protocol     = "openid-connect"
-        publicClient = $true
-        redirectUris = @("http://localhost:3001/*", "http://localhost:3000/*")
-        webOrigins   = @("http://localhost:3001", "http://localhost:3000")
-    } | ConvertTo-Json
-    Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/clients" -Headers $headers -Method Post -Body $feBody
-} else {
-    Write-Host "    [OK] Client '$FRONTEND_CLIENT_ID' already exists." -ForegroundColor Yellow
-}
+    if ($existingFe.Count -eq 0) {
+        Write-Host "    [INFO] Creating Client '$FRONTEND_CLIENT_ID'..." -ForegroundColor Green
+        $feBody = @{
+            clientId     = $FRONTEND_CLIENT_ID
+            enabled      = $true
+            protocol     = "openid-connect"
+            publicClient = $true
+            redirectUris = @("http://localhost:3001/*", "http://localhost:3000/*")
+            webOrigins   = @("http://localhost:3001", "http://localhost:3000")
+        } | ConvertTo-Json
+        Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/clients" -Headers $headers -Method Post -Body $feBody
+    } else {
+        Write-Host "    [INFO] Updating Client '$FRONTEND_CLIENT_ID' configuration..." -ForegroundColor Yellow
+        $feId = $existingFe[0].id
+        $updateBody = @{
+            redirectUris = @("http://localhost:3001/*", "http://localhost:3000/*")
+            webOrigins   = @("http://localhost:3001", "http://localhost:3000")
+        } | ConvertTo-Json
+        Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/clients/$feId" -Headers $headers -Method Put -Body $updateBody
+        Write-Host "    [OK] Client '$FRONTEND_CLIENT_ID' updated." -ForegroundColor Green
+    }
 
 Write-Host "[6/6] Configuring Social Identity Providers..." -ForegroundColor Cyan
 
@@ -255,8 +262,8 @@ Write-Host "Keycloak is now fully configured for MedInsight!" -ForegroundColor G
 Write-Host "========================================" -ForegroundColor Green
 
 Write-Host "`nTest Users Created:" -ForegroundColor Cyan
-Write-Host "  📧 admin@medinsight.tn      | Password: Admin123!     | Role: ADMIN (Admin Dashboard)" -ForegroundColor White
-Write-Host "  📧 security@medinsight.tn   | Password: Security123!  | Role: RESPONSABLE_SECURITE (Security)" -ForegroundColor White
-Write-Host "  📧 doctor@medinsight.tn     | Password: Doctor123!    | Role: MEDECIN (Doctor)" -ForegroundColor White
-Write-Host "  📧 patient@medinsight.tn    | Password: Patient123!   | Role: PATIENT (Patient)" -ForegroundColor White
+Write-Host "  - admin@medinsight.tn      | Pass: Admin123!     | Role: ADMIN" -ForegroundColor White
+Write-Host "  - security@medinsight.tn   | Pass: Security123!  | Role: GESTIONNAIRE" -ForegroundColor White
+Write-Host "  - doctor@medinsight.tn     | Pass: Doctor123!    | Role: MEDECIN" -ForegroundColor White
+Write-Host "  - patient@medinsight.tn    | Pass: Patient123!   | Role: PATIENT" -ForegroundColor White
 Write-Host "`nLogin at: http://localhost:3000/login" -ForegroundColor Green

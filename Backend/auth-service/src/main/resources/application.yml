@@ -70,9 +70,9 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: alpha
 
-# Logging
 logging:
   level:
     com.medinsight.auth: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG

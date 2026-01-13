@@ -1,28 +1,45 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS base
 
+# 1. Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Install dependencies
-COPY package*.json ./
-RUN npm install
-
-# Copy source and build
+# 2. Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Next.js collects completely anonymous telemetry regarding usage.
+# Learn more here: https://nextjs.org/telemetry
+ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
-# Stage 2: Serve with Nginx
-FROM nginx:alpine
+# 3. Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
 
-# Remove default nginx static assets
-RUN rm -rf /usr/share/nginx/html/*
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# Copy static assets from builder stage (Next.js export puts files in 'out')
-COPY --from=builder /app/out /usr/share/nginx/html
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/public ./public
 
-EXPOSE 80
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-CMD ["nginx", "-g", "daemon off;"]
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+# set hostname to localhost
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["node", "server.js"]

@@ -7,8 +7,9 @@ spring:
 
   cloud:
     gateway:
-      # default-filters:
-      #   - RemoveHopByHopHeaders=
+      default-filters:
+        - DeduplicateResponseHeader=Access-Control-Allow-Origin, RETAIN_LAST
+        - DeduplicateResponseHeader=Access-Control-Allow-Credentials, RETAIN_LAST
       routes:
         - id: appointments-route
           uri: lb://appointment-service
@@ -56,6 +57,12 @@ spring:
           uri: lb://ml-service
           predicates:
             - Path=/api/ml/**
+          filters:
+            - StripPrefix=1
+        - id: medecins-route
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/medecins/**
           filters:
             - StripPrefix=1
       globalcors:
@@ -135,3 +142,4 @@ logging:
     org.springframework.http.server.reactive: DEBUG
     org.springframework.web.reactive: DEBUG
     reactor.netty: DEBUG
+    org.springframework.security: DEBUG

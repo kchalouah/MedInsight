@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
+import { toast } from "react-hot-toast"
 
 const formSchema = z.object({
     firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
@@ -116,6 +117,7 @@ export default function RegisterMedecinPage() {
                 if (response.ok) {
                     // Call auth context login to auto-redirect to medecin dashboard
                     login(data.access_token);
+                    toast.success("Demande d'inscription envoyée avec succès !");
                 } else {
                     // If auto-login fails, show success message and redirect to login
                     setSuccess(true)
@@ -128,7 +130,9 @@ export default function RegisterMedecinPage() {
             }
         } catch (err: any) {
             console.error("Registration error:", err);
-            setError(err.response?.data?.message || "Une erreur est survenue lors de l'inscription.");
+            const msg = err.response?.data?.message || "Une erreur est survenue lors de l'inscription.";
+            setError(msg);
+            toast.error(msg);
         } finally {
             setIsLoading(false)
         }

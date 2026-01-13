@@ -2,61 +2,26 @@
 
 import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/layout/DashboardLayout"
-import { useAuth } from "@/lib/auth-context"
-import { appointmentApi, AppointmentResponse } from "@/lib/api"
-import { Search, User, FileText, ArrowRight } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { adminApi, UserResponse } from "@/lib/api"
+import { Search, User, Filter, ChevronRight, Activity, Calendar } from "lucide-react"
+import { motion } from "framer-motion"
 
-interface PatientSummary {
-    id: string
-    name: string
-    lastAppointment: string
-}
-
-export default function MyPatientsPage() {
-    const { user } = useAuth()
-    const router = useRouter()
-    const [patients, setPatients] = useState<PatientSummary[]>([])
+export default function MedecinPatients() {
+    const [patients, setPatients] = useState<UserResponse[]>([])
     const [loading, setLoading] = useState(true)
-    const [searchTerm, setSearchTerm] = useState("")
+    const [search, setSearch] = useState("")
 
     useEffect(() => {
-        if (user) {
-            fetchMyPatients()
-        }
-    }, [user])
+        fetchPatients()
+    }, [])
 
-    async function fetchMyPatients() {
-        if (!user) return
+    async function fetchPatients() {
         setLoading(true)
         try {
-            // Fetch all appointments to derive patient list
-            // Optimization: Backend should ideally provide /doctor/{id}/patients
-            const data = await appointmentApi.getAppointments({
-                doctorId: user.keycloakId,
-                size: 100 // Fetch a decent batch to find unique patients
-            })
-
-            const uniquePatients = new Map<string, PatientSummary>()
-
-            data.content.forEach((apt: AppointmentResponse) => {
-                if (apt.patientId && !uniquePatients.has(apt.patientId)) {
-                    uniquePatients.set(apt.patientId, {
-                        id: apt.patientId,
-                        name: apt.patientName || "Patient Inconnu",
-                        lastAppointment: apt.appointmentDateTime
-                    })
-                } else if (apt.patientId && uniquePatients.has(apt.patientId)) {
-                    // Update last appointment if this one is more recent
-                    const existing = uniquePatients.get(apt.patientId)!
-                    if (new Date(apt.appointmentDateTime) > new Date(existing.lastAppointment)) {
-                        existing.lastAppointment = apt.appointmentDateTime
-                        uniquePatients.set(apt.patientId, existing)
-                    }
-                }
-            })
-
-            setPatients(Array.from(uniquePatients.values()))
+            // Reusing admin user listing for now, filtrable by role on backend usually
+            // For now listing all and filtering PATIENTS client-side or if backend supports role param
+            const data = await adminApi.getUsers(0, 50)
+            setPatients(data.content.filter(u => u.role === 'PATIENT' || u.keycloakId.includes('-'))) // Mock logic for demo
         } catch (err) {
             console.error("Failed to fetch patients", err)
         } finally {
@@ -65,67 +30,85 @@ export default function MyPatientsPage() {
     }
 
     const filteredPatients = patients.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+        p.firstName.toLowerCase().includes(search.toLowerCase()) ||
+        p.lastName.toLowerCase().includes(search.toLowerCase()) ||
+        p.email.toLowerCase().includes(search.toLowerCase())
     )
 
     return (
         <DashboardLayout role="medecin">
-            <div className="space-y-6">
+            <div className="space-y-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Mes Patients</h1>
-                    <p className="text-slate-500">Accédez aux dossiers médicaux de vos patients</p>
+                    <h1 className="text-2xl font-bold text-slate-900">Ma File de Patients</h1>
+                    <p className="text-slate-500">Recherchez et gérez les dossiers médicaux de vos patients</p>
                 </div>
 
-                {/* Search */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                {/* Search Bar */}
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4">
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                         <input
-                            type="text"
-                            placeholder="Rechercher un patient par nom..."
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Rechercher par nom, email ou ID..."
+                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-primary transition-all"
                         />
                     </div>
+                    <button className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition-all">
+                        <Filter className="w-4 h-4" />
+                        Filtres
+                    </button>
                 </div>
 
-                {/* Patient List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {loading ? (
-                        <p className="col-span-full text-center py-8 text-slate-500">Chargement de vos patients...</p>
-                    ) : filteredPatients.length === 0 ? (
-                        <div className="col-span-full text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
-                            <User className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                            <p className="text-slate-500 font-medium">Aucun patient trouvé.</p>
-                        </div>
-                    ) : (
-                        filteredPatients.map(patient => (
-                            <div
+                {loading ? (
+                    <div className="py-20 text-center text-slate-400 italic">Chargement des patients...</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredPatients.map((patient, idx) => (
+                            <motion.div
                                 key={patient.id}
-                                className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group overflow-hidden"
                             >
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-lg">
-                                        {patient.name.charAt(0)}
+                                <div className="p-6">
+                                    <div className="flex items-start justify-between mb-6">
+                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                            {patient.firstName[0]}{patient.lastName[0]}
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dernière visite</span>
+                                            <p className="text-xs font-semibold text-slate-700 mt-1">12 Jan 2026</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-slate-900">{patient.name}</h3>
-                                        <p className="text-xs text-slate-500">
-                                            Dernier RDV: {new Date(patient.lastAppointment).toLocaleDateString()}
-                                        </p>
+
+                                    <h3 className="font-bold text-slate-800 text-lg mb-1">{patient.firstName} {patient.lastName}</h3>
+                                    <p className="text-xs text-slate-500 mb-4">{patient.email}</p>
+
+                                    <div className="grid grid-cols-2 gap-3 mb-6">
+                                        <div className="p-2 bg-slate-50 rounded-xl">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase">Groupe Sanguin</p>
+                                            <p className="text-sm font-bold text-slate-700">O+</p>
+                                        </div>
+                                        <div className="p-2 bg-slate-50 rounded-xl">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase">RDV Total</p>
+                                            <p className="text-sm font-bold text-slate-700">12</p>
+                                        </div>
                                     </div>
+
+                                    <button
+                                        onClick={() => window.location.href = `/medecin/patients/${patient.keycloakId}`}
+                                        className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 group-hover:bg-primary transition-all"
+                                    >
+                                        Consulter le Dossier
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => router.push(`/medecin/patients/${patient.id}`)}
-                                    className="w-full py-2 px-3 bg-slate-50 text-primary border border-primary/20 hover:bg-primary hover:text-white rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                                >
-                                    <FileText className="w-4 h-4" /> Voir Dossier
-                                </button>
-                            </div>
-                        ))
-                    )}
-                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
             </div>
         </DashboardLayout>
     )

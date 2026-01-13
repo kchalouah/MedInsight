@@ -3,28 +3,21 @@
 Ce document détaille la mise en œuvre du frontend pour la plateforme MedInsight, localisée pour le marché Tunisien (Interface en Français).
 
 ## 🌍 Phase 1 : Infrastructure & Design System
-- [ ] **Initialisation Technique**
-  - Framework : `Next.js 14` (App Router) pour le SEO et la performance.
-  - Langage : `TypeScript` pour la robustesse.
-  - Style : `TailwindCSS` avec une palette "Healthcare Premium" (Emerald-500, Slate-900).
-- [ ] **Configuration API & Proxy**
-  - Création d'un client `Axios` avec intercepteurs pour injecter le token JWT.
-  - Configuration du `next.config.js` pour gérer les rewrites vers la Gateway (`http://localhost:8080`).
-- [ ] **Internationalisation (i18n)**
-  - Localisation complète en Français (`fr-FR`).
-  - Préparation des fichiers de traduction (`JSON`) pour une future extension en Arabe.
+- [x] **Initialisation Technique**
+  - Framework : `Next.js 14` (App Router)
+  - Style : `TailwindCSS` "Healthcare Premium"
+- [x] **Configuration API & Proxy**
+  - Client `Axios` avec intercepteurs JWT.
+- [x] **Internationalisation (i18n)**
+  - Localisation complète en Français.
 
 ## 🔐 Phase 2 : Authentification OAuth2 & Keycloak
-- [ ] **Intégration Keycloak**
-  - Utilisation de `keycloak-js` ou `react-keycloak`.
-  - Configuration du flux OAuth2 (Authorization Code Flow with PKCE).
-- [ ] **Pages d'Accès**
-  - Page de connexion (Login) personnalisée avec boutons "Se connecter avec Google/GitHub".
-  - Parcours d'inscription (Sign-up) distincts :
-    - **Patient** : Date de naissance, Numéro de carte d'identité (facultatif), Téléphone.
-    - **Médecin** : Spécialité, Numéro d'ordre (License Number), Années d'expérience.
-- [ ] **Gestion des Rôles**
-  - Middleware de redirection automatique basés sur les rôles `ROLE_PATIENT`, `ROLE_MEDECIN`, `ROLE_GESTIONNAIRE`, `ROLE_RESPONSABLE_SECURITE`.
+- [x] **Intégration Keycloak**
+  - OAuth2 Flow avec PKCE.
+- [x] **Pages d'Accès**
+  - Login et Registration (Patient/Médecin).
+- [x] **Gestion des Rôles**
+  - Redirections Dashboard automatiques.
 
 ## 🧑‍⚕️ Phase 3 : Interface Médecin (Dashboard Médecin)
 - [ ] **Tableau de Bord Principal**
@@ -38,18 +31,18 @@ Ce document détaille la mise en œuvre du frontend pour la plateforme MedInsigh
   - Vue complète du parcours patient (Historique Feign du backend).
 
 ## 🏥 Phase 4 : Interface Patient (Espace Patient)
-- [ ] **Mon Agenda**
-  - Prise de rendez-vous avec choix du médecin et de la spécialité.
-- [ ] **Mes Documents**
-  - Accès sécurisé aux ordonnances (format PDF simule ou dynamique).
-  - Consultation de son propre dossier clinique (Allergies, Groupe Sanguin).
+- [x] **Mon Agenda**
+  - Dashboard récapitulatif.
+  - Formulaire de prise de RDV multi-étapes.
+- [x] **Mes Documents**
+  - Accès au Dossier Médical (Allergies, Antécédents).
+  - Consultation des notes et ordonnances.
 
 ## 🛡️ Phase 5 : Sécurité & Audit (Interface Responsable Sécurité)
-- [ ] **Explorateur d'Audit**
-  - Tableau de bord des logs Elasticsearch (consommation du `audit-service`).
-  - Filtres par utilisateur, service, et date.
-- [ ] **Monitoring Système**
-  - Visualisation des métriques Prometheus/Grafana via iframes ou widgets API.
+- [x] **Explorateur d'Audit**
+  - Reporting des logs Elasticsearch.
+- [x] **Monitoring Système**
+  - QuickLinks vers Grafana, Prometheus, Eureka, Keycloak, pgAdmin.
 
 ## 🐳 Phase 6 : DevOps & Dockerisation
 - [ ] **Dockerisation Avancée**

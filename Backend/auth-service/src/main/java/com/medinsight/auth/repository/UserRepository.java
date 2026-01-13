@@ -21,5 +21,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByKeycloakId(String keycloakId);
 
+    org.springframework.data.domain.Page<User> findAllByMedecinProfileIsNotNull(org.springframework.data.domain.Pageable pageable);
+
     void deleteByKeycloakId(String keycloakId);
 }
