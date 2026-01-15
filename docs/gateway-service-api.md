@@ -80,6 +80,8 @@ The gateway extracts roles from JWT tokens and enforces role-based access:
 
 - `http://localhost:3000` (Legacy/Optional)
 - `http://localhost:3001` (React/Next.js frontend)
+- `http://localhost:3002` (Additional frontend instance)
+- `http://localhost:3003` (Additional frontend instance)
 - `http://localhost:8080` (Gateway itself)
 
 ### Allowed Methods

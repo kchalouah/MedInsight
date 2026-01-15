@@ -35,7 +35,7 @@ export interface AdminUserCreationRequest {
     addressLine?: string;
     city?: string;
     country?: string;
-    role: 'GESTIONNAIRE' | 'RESPONSABLE_SECURITE' | 'MEDECIN' | 'PATIENT'; // Backend enum
+    role: 'ADMIN' | 'GESTIONNAIRE' | 'RESPONSABLE_SECURITE' | 'MEDECIN' | 'PATIENT'; // Backend enum
 }
 
 const api = axios.create({
@@ -134,6 +134,22 @@ export const medecinApi = {
     }
 };
 
+export const patientApi = {
+    // List all patients (paginated)
+    getPatients: async (page: number = 0, size: number = 10) => {
+        const response = await api.get<Page<UserResponse>>('/patients', {
+            params: { page, size }
+        });
+        return response.data;
+    },
+
+    // Get single patient by Keycloak ID
+    getPatient: async (id: string) => {
+        const response = await api.get<UserResponse>(`/patients/keycloak/${id}`);
+        return response.data;
+    }
+};
+
 export const medicalRecordApi = {
     // Get Patient Dossier
     getDossier: async (patientId: string) => {
@@ -144,6 +160,12 @@ export const medicalRecordApi = {
     // Add Consultation Note
     addNote: async (data: { appointmentId: string, patientId: string, noteContent: string }) => {
         const response = await api.post('/records/notes', data);
+        return response.data;
+    },
+
+    // Update Patient Dossier (Clinical Data)
+    updateDossier: async (patientId: string, data: { allergies: string, bloodType: string, medicalHistory: string, emergencyContactName?: string, emergencyContactPhone?: string }) => {
+        const response = await api.put(`/records/patient/${patientId}`, data);
         return response.data;
     }
 };

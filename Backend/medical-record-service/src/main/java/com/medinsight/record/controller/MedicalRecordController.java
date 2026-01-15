@@ -39,11 +39,14 @@ public class MedicalRecordController {
     }
 
     @PutMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('MEDECIN', 'ADMIN', 'GESTIONNAIRE')")
+    @PreAuthorize("hasAnyRole('MEDECIN', 'ADMIN', 'GESTIONNAIRE', 'PATIENT')")
     @Operation(summary = "Update patient clinical data", description = "Update allergies, blood type, and medical history")
     public ResponseEntity<PatientMedicalRecordResponse> updateMedicalRecord(
             @PathVariable UUID patientId,
-            @RequestBody MedicalRecordRequest request) {
+            @RequestBody MedicalRecordRequest request,
+            Authentication authentication) {
+        
+        validatePatientAccess(patientId, authentication);
         return ResponseEntity.ok(recordService.updateMedicalRecord(patientId, request));
     }
 

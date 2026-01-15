@@ -163,7 +163,7 @@ export default function AdminUsersPage() {
                                     <input
                                         required
                                         type="text"
-                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                                        className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
                                         value={newData.firstName}
                                         onChange={e => setNewData({ ...newData, firstName: e.target.value })}
                                     />
@@ -173,7 +173,7 @@ export default function AdminUsersPage() {
                                     <input
                                         required
                                         type="text"
-                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                                        className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
                                         value={newData.lastName}
                                         onChange={e => setNewData({ ...newData, lastName: e.target.value })}
                                     />
@@ -184,7 +184,7 @@ export default function AdminUsersPage() {
                                 <input
                                     required
                                     type="email"
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
                                     value={newData.email}
                                     onChange={e => setNewData({ ...newData, email: e.target.value })}
                                 />
@@ -194,7 +194,7 @@ export default function AdminUsersPage() {
                                 <input
                                     required
                                     type="password"
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
                                     value={newData.password}
                                     onChange={e => setNewData({ ...newData, password: e.target.value })}
                                 />
@@ -202,7 +202,7 @@ export default function AdminUsersPage() {
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Rôle</label>
                                 <select
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"
+                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
                                     value={newData.role}
                                     onChange={e => setNewData({ ...newData, role: e.target.value })}
                                 >
@@ -216,13 +216,13 @@ export default function AdminUsersPage() {
                                 <button
                                     type="button"
                                     onClick={() => setIsCreateModalOpen(false)}
-                                    className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg"
+                                    className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-xl"
                                 >
                                     Annuler
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-teal-700 shadow-md"
+                                    className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-teal-700 shadow-md"
                                 >
                                     Créer l'utilisateur
                                 </button>

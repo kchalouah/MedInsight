@@ -149,19 +149,19 @@ export default function DoctorAppointmentsPage() {
                                         <>
                                             <button
                                                 onClick={() => handleStatusUpdate(apt.id, 'COMPLETED')}
-                                                className="w-full py-2 px-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+                                                className="w-full py-2 px-3 bg-primary text-white text-sm font-medium rounded-xl hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <CheckCircle className="w-4 h-4" /> Terminer
                                             </button>
                                             <button
                                                 onClick={() => handleStatusUpdate(apt.id, 'CANCELLED')}
-                                                className="w-full py-2 px-3 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors"
+                                                className="w-full py-2 px-3 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors"
                                             >
                                                 Annuler
                                             </button>
                                         </>
                                     ) : (
-                                        <button className="w-full py-2 px-3 bg-slate-100 text-slate-500 text-sm font-medium rounded-lg cursor-not-allowed flex items-center justify-center gap-2">
+                                        <button className="w-full py-2 px-3 bg-slate-100 text-slate-500 text-sm font-medium rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
                                             <FileText className="w-4 h-4" /> Détails
                                         </button>
                                     )}

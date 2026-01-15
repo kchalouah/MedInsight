@@ -245,17 +245,34 @@ function New-KeycloakUser {
     
     if ($targetRole) {
         $assignRoleUrl = "$KEYCLOAK_URL/admin/realms/$REALM/users/$userId/role-mappings/realm"
-        $roleBody = @(@{ id = $targetRole.id; name = $targetRole.name }) | ConvertTo-Json
-        Invoke-RestMethod -Uri $assignRoleUrl -Method Post -Headers $headers -Body $roleBody -ContentType "application/json" | Out-Null
-        Write-Host "    [OK] User '$Email' created with role $Role" -ForegroundColor Green
+        # Force array format for Keycloak API (PowerShell can sometimes flatten single-item arrays)
+        $roleData = @{ id = $targetRole.id; name = $targetRole.name }
+        $jsonObj = $roleData | ConvertTo-Json -Compress
+        $roleBody = "[$jsonObj]"
+        
+        try {
+            Invoke-RestMethod -Uri $assignRoleUrl -Method Post -Headers $headers -Body $roleBody -ContentType "application/json" | Out-Null
+            Write-Host "    [OK] User '$Email' created with role $Role" -ForegroundColor Green
+        } catch {
+            Write-Host "    [ERROR] Failed to assign role $Role to $Email" -ForegroundColor Red
+            Write-Host "    Error: $_" -ForegroundColor Red
+            if ($_.Exception.Response) {
+                 $reader = New-Object System.IO.StreamReader $_.Exception.Response.GetResponseStream()
+                 $respBody = $reader.ReadToEnd()
+                 Write-Host "    Server Response: $respBody" -ForegroundColor Red
+            }
+        }
+    } else {
+        Write-Host "    [ERROR] Role '$Role' not found in Keycloak" -ForegroundColor Red
     }
 }
 
 # Create default test users
-New-KeycloakUser "admin@medinsight.tn" "Admin" "MedInsight" "Admin123!" "ROLE_ADMIN"
-New-KeycloakUser "security@medinsight.tn" "Security" "Officer" "Security123!" "ROLE_RESPONSABLE_SECURITE"
-New-KeycloakUser "doctor@medinsight.tn" "Dr. Test" "Doctor" "Doctor123!" "ROLE_MEDECIN"
-New-KeycloakUser "patient@medinsight.tn" "Test" "Patient" "Patient123!" "ROLE_PATIENT"
+# Create default test users
+New-KeycloakUser "admin@medinsight.tn" "Admin" "MedInsight" "Admin123!" "ADMIN"
+New-KeycloakUser "security@medinsight.tn" "Security" "Officer" "Security123!" "RESPONSABLE_SECURITE"
+New-KeycloakUser "doctor@medinsight.tn" "Dr. Test" "Doctor" "Doctor123!" "MEDECIN"
+New-KeycloakUser "patient@medinsight.tn" "Test" "Patient" "Patient123!" "PATIENT"
 
 Write-Host "`n========================================" -ForegroundColor Green
 Write-Host "Keycloak is now fully configured for MedInsight!" -ForegroundColor Green

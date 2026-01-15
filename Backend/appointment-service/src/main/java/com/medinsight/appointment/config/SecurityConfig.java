@@ -10,12 +10,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +38,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.disable())
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Swagger/OpenAPI endpoints
@@ -86,5 +88,27 @@ public class SecurityConfig {
                     .collect(Collectors.toList());
         });
         return converter;
+    }
+
+
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        String jwkSetUri = "http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs";
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+
+        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
+            new JwtTimestampValidator(),
+            jwt -> {
+                String issuer = jwt.getIssuer().toString();
+                if (issuer.contains("/realms/medinsight")) {
+                    return OAuth2TokenValidatorResult.success();
+                }
+                return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_issuer", "The issuer " + issuer + " is not trusted", null));
+            }
+        );
+
+        jwtDecoder.setJwtValidator(validator);
+        return jwtDecoder;
     }
 }

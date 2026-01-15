@@ -5,11 +5,16 @@ spring:
   application:
     name: gateway-service
 
+  main:
+    web-application-type: reactive
+
+  ############################################
+  # SPRING CLOUD GATEWAY
+  ############################################
   cloud:
     gateway:
-      default-filters:
-        - DeduplicateResponseHeader=Access-Control-Allow-Origin, RETAIN_LAST
-        - DeduplicateResponseHeader=Access-Control-Allow-Credentials, RETAIN_LAST
+      default-filters: []
+
       routes:
         - id: appointments-route
           uri: lb://appointment-service
@@ -17,86 +22,121 @@ spring:
             - Path=/api/appointments/**
           filters:
             - StripPrefix=1
+
         - id: prescriptions-route
           uri: lb://appointment-service
           predicates:
             - Path=/api/prescriptions/**
           filters:
             - StripPrefix=1
+
         - id: auth-route
           uri: lb://auth-service
           predicates:
             - Path=/api/auth/**
           filters:
             - StripPrefix=1
+
         - id: admin-route
           uri: lb://auth-service
           predicates:
             - Path=/api/admin/**
           filters:
             - StripPrefix=1
+
         - id: records-route
           uri: lb://medical-record-service
           predicates:
             - Path=/api/records/**
           filters:
             - StripPrefix=1
+
         - id: audit-route
           uri: lb://audit-service
           predicates:
             - Path=/api/audit/**
           filters:
             - StripPrefix=1
+
         - id: mail-route
           uri: lb://mail-service
           predicates:
             - Path=/api/mail/**
           filters:
             - StripPrefix=1
+
         - id: ml-route
           uri: lb://ml-service
           predicates:
             - Path=/api/ml/**
           filters:
             - StripPrefix=1
+
         - id: medecins-route
           uri: lb://auth-service
           predicates:
             - Path=/api/medecins/**
           filters:
             - StripPrefix=1
+
+        - id: patients-route
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/patients/**
+          filters:
+            - StripPrefix=1
+
+      ############################################
+      # GLOBAL CORS (Gateway-level)
+      ############################################
       globalcors:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
-              - "http://localhost:3000"
-              - "http://localhost:3001"
-              - "http://localhost:3002"
-              - "http://localhost:3003"
-            allowedMethods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
-            allowedHeaders: ["*"]
-            exposedHeaders: ["*"]
+              - http://localhost:3000
+              - http://localhost:3001
+              - http://localhost:3002
+              - http://localhost:3003
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "*"
             allowCredentials: true
             maxAge: 3600
 
+  ############################################
+  # SPRING SECURITY (KEYCLOAK RESOURCE SERVER)
+  ############################################
   security:
     oauth2:
       resourceserver:
         jwt:
-          # Provide your Keycloak realm issuer and JWK set URIs (Docker-friendly defaults)
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/medinsight}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/medinsight}
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs}
 
+############################################
+# EUREKA DISCOVERY
+############################################
 eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-service:8761/eureka/}
+
   instance:
     prefer-ip-address: true
 
-# Springdoc OpenAPI
+############################################
+# SPRINGDOC / SWAGGER (AGGREGATED)
+############################################
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -113,33 +153,41 @@ springdoc:
         url: /api/mail/v3/api-docs
       - name: ml-service
         url: /api/ml/v3/api-docs
+
   api-docs:
     path: /v3/api-docs
 
-# Actuator
+############################################
+# ACTUATOR
+############################################
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+
   endpoint:
     health:
       show-details: when_authorized
 
-# Custom app configuration
+############################################
+# CUSTOM APP CONFIG
+############################################
 app:
   cors:
-    # List of allowed origins for CORS (React frontend, etc.)
     allowed-origins:
       - http://localhost:3000
       - http://localhost:3001
       - http://localhost:3002
       - http://localhost:3003
 
+############################################
+# LOGGING (VERY USEFUL FOR DEBUG)
+############################################
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    org.springframework.http.server.reactive: DEBUG
     org.springframework.web.reactive: DEBUG
+    org.springframework.http.server.reactive: DEBUG
     reactor.netty: DEBUG
     org.springframework.security: DEBUG

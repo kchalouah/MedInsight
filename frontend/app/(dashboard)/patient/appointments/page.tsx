@@ -127,7 +127,8 @@ export default function PatientAppointments() {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-slate-800">Dr. {doc.firstName} {doc.lastName}</p>
-                                                <p className="text-xs text-slate-500">{doc.medecinProfile?.specialization || "Généraliste"}</p>
+                                                <p className="text-xs text-slate-500 mb-2">{doc.medecinProfile?.specialization || "Généraliste"}</p>
+                                                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Choisir</span>
                                             </div>
                                         </button>
                                     ))}
@@ -141,38 +142,44 @@ export default function PatientAppointments() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="p-8 space-y-6"
+                                className="p-8 space-y-6 flex-1 flex flex-col"
                             >
-                                <button onClick={prevStep} className="text-slate-400 hover:text-primary flex items-center gap-1 text-sm font-medium mb-4">
-                                    <ArrowLeft className="w-4 h-4" /> Retour
-                                </button>
-                                <h2 className="text-xl font-bold text-slate-800">Date et Heure</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">Date du rendez-vous</label>
-                                        <input
-                                            type="date"
-                                            className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20"
-                                            value={appointmentDate}
-                                            onChange={(e) => setAppointmentDate(e.target.value)}
-                                            min={new Date().toISOString().split('T')[0]}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700">Heure</label>
-                                        <input
-                                            type="time"
-                                            className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20"
-                                            value={appointmentTime}
-                                            onChange={(e) => setAppointmentTime(e.target.value)}
-                                        />
+                                <div className="flex-1 space-y-6">
+                                    <h2 className="text-xl font-bold text-slate-800">Date et Heure</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-slate-700">Date du rendez-vous</label>
+                                            <input
+                                                type="date"
+                                                className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20"
+                                                value={appointmentDate}
+                                                onChange={(e) => setAppointmentDate(e.target.value)}
+                                                min={new Date().toISOString().split('T')[0]}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-slate-700">Heure</label>
+                                            <input
+                                                type="time"
+                                                className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20"
+                                                value={appointmentTime}
+                                                onChange={(e) => setAppointmentTime(e.target.value)}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="pt-8 flex justify-end">
+                                <div className="pt-8 flex justify-between items-center bg-slate-50/50 -mx-8 -mb-8 p-8 border-t border-slate-100 mt-auto">
+                                    <button
+                                        onClick={prevStep}
+                                        className="text-slate-600 hover:text-slate-800 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 border border-slate-300 bg-white hover:bg-slate-50 shadow-sm"
+                                    >
+                                        <ArrowLeft className="w-4 h-4" />
+                                        Retour
+                                    </button>
                                     <button
                                         disabled={!appointmentDate || !appointmentTime}
                                         onClick={nextStep}
-                                        className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-teal-700 transition-all disabled:opacity-50 flex items-center gap-2"
+                                        className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-teal-700 transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-primary/20"
                                     >
                                         Suivant
                                         <ChevronRight className="w-5 h-5" />
@@ -187,42 +194,58 @@ export default function PatientAppointments() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="p-8 space-y-6"
+                                className="p-8 space-y-6 flex-1 flex flex-col"
                             >
-                                <button onClick={prevStep} className="text-slate-400 hover:text-primary flex items-center gap-1 text-sm font-medium mb-4">
-                                    <ArrowLeft className="w-4 h-4" /> Retour
-                                </button>
-                                <h2 className="text-xl font-bold text-slate-800">Confirmation</h2>
-                                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <User className="w-5 h-5 text-primary" />
-                                        <span className="font-medium text-slate-700">Médecin : Dr. {selectedDoctor?.firstName} {selectedDoctor?.lastName}</span>
+                                <div className="flex-1 space-y-6">
+                                    <h2 className="text-xl font-bold text-slate-800">Confirmation</h2>
+                                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <User className="w-5 h-5 text-primary" />
+                                            <span className="font-medium text-slate-700">Médecin : Dr. {selectedDoctor?.firstName} {selectedDoctor?.lastName}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <CalendarIcon className="w-5 h-5 text-primary" />
+                                            <span className="font-medium text-slate-700">Date : {new Date(appointmentDate).toLocaleDateString('fr-FR')}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Clock className="w-5 h-5 text-primary" />
+                                            <span className="font-medium text-slate-700">Heure : {appointmentTime}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <CalendarIcon className="w-5 h-5 text-primary" />
-                                        <span className="font-medium text-slate-700">Date : {new Date(appointmentDate).toLocaleDateString('fr-FR')}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Clock className="w-5 h-5 text-primary" />
-                                        <span className="font-medium text-slate-700">Heure : {appointmentTime}</span>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-slate-700">Motif de la consultation</label>
+                                        <textarea
+                                            placeholder="Décrivez brièvement votre besoin..."
+                                            className="w-full p-4 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 resize-none h-32"
+                                            value={reason}
+                                            onChange={(e) => setReason(e.target.value)}
+                                        />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-700">Motif de la consultation</label>
-                                    <textarea
-                                        placeholder="Décrivez brièvement votre besoin..."
-                                        className="w-full p-4 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 resize-none h-32"
-                                        value={reason}
-                                        onChange={(e) => setReason(e.target.value)}
-                                    />
-                                </div>
-                                <div className="pt-4">
+                                <div className="pt-8 flex gap-4 bg-slate-50/50 -mx-8 -mb-8 p-8 border-t border-slate-100 mt-auto">
+                                    <button
+                                        onClick={prevStep}
+                                        className="text-slate-500 hover:text-slate-700 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 border border-slate-200 bg-white hover:bg-slate-50"
+                                    >
+                                        <ArrowLeft className="w-4 h-4" />
+                                        Retour
+                                    </button>
                                     <button
                                         disabled={booking || !reason}
                                         onClick={handleBookAppointment}
-                                        className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg hover:bg-teal-700 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                                        className="flex-1 bg-primary text-white py-3 rounded-xl font-bold text-lg hover:bg-teal-700 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
-                                        {booking ? "Réservation en cours..." : "Confirmer le rendez-vous"}
+                                        {booking ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                Réservation...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckCircle className="w-5 h-5" />
+                                                Confirmer le rendez-vous
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </motion.div>

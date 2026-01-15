@@ -94,8 +94,8 @@ export default function MedecinDashboard() {
                     variant="warning"
                 />
                 <StatsCard
-                    title="Satisfaction"
-                    value="4.9/5"
+                    title="Taux de complétion"
+                    value={`${todayStats.patients > 0 ? Math.round((todayStats.completed / todayStats.patients) * 100) : 0}%`}
                     icon={TrendingUp}
                     variant="default"
                 />

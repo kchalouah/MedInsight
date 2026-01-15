@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import DashboardLayout from "@/components/layout/DashboardLayout"
-import { appointmentApi, medicalRecordApi, mlApi, mailApi, AppointmentResponse } from "@/lib/api"
+import { appointmentApi, medicalRecordApi, mlApi, mailApi, patientApi, AppointmentResponse } from "@/lib/api"
 import { toast } from "react-hot-toast"
 import {
     Activity, Clipboard, FileText, Send,
@@ -19,6 +19,7 @@ export default function ConsultationPage() {
     // State
     const [appointment, setAppointment] = useState<AppointmentResponse | null>(null)
     const [dossier, setDossier] = useState<any>(null)
+    const [patient, setPatient] = useState<any>(null) // New state for patient details
     const [notes, setNotes] = useState("")
     const [symptoms, setSymptoms] = useState("")
     const [loading, setLoading] = useState(true)
@@ -47,12 +48,26 @@ export default function ConsultationPage() {
 
             if (currentApt) {
                 setAppointment(currentApt)
-                // Fetch patient dossier
-                const patientData = await medicalRecordApi.getDossier(currentApt.patientId)
-                setDossier(patientData)
+
+                // Fetch patient dossier (Clinical Data)
+                try {
+                    const dossierData = await medicalRecordApi.getDossier(currentApt.patientId)
+                    setDossier(dossierData)
+                } catch (e) {
+                    console.error("Failed to fetch dossier", e)
+                }
+
+                // Fetch patient profile (Personal Info)
+                try {
+                    const patientData = await patientApi.getPatient(currentApt.patientId)
+                    setPatient(patientData)
+                } catch (e) {
+                    console.error("Failed to fetch patient profile", e)
+                }
             }
         } catch (err) {
             console.error("Failed to load consultation data", err)
+            toast.error("Impossible de charger les données de la consultation")
         } finally {
             setLoading(false)
         }
@@ -87,11 +102,13 @@ export default function ConsultationPage() {
         setSaving(true)
         try {
             // 1. Save consultation note
-            await medicalRecordApi.addNote({
-                appointmentId: appointment.id,
-                patientId: appointment.patientId,
-                noteContent: notes
-            })
+            if (notes.trim()) {
+                await medicalRecordApi.addNote({
+                    appointmentId: appointment.id,
+                    patientId: appointment.patientId,
+                    noteContent: notes
+                })
+            }
 
             // 2. Save prescriptions
             for (const pres of prescriptions) {
@@ -108,13 +125,13 @@ export default function ConsultationPage() {
             })
 
             // 4. Send Email Notification to Patient
-            const patientEmail = dossier?.patientProfile?.email
+            const patientEmail = patient?.email
             if (patientEmail) {
                 const prescriptionList = prescriptions.map(p => `- ${p.medicationName} (${p.dosage})`).join('\n')
                 mailApi.sendEmail({
                     to: patientEmail,
                     subject: "Nouvelles Ordonnances Disponibles - MedInsight",
-                    body: `Bonjour ${dossier?.patientProfile?.firstName},\n\nLe Dr. ${appointment.doctorName} vient de terminer votre consultation.\n\nVous trouverez vos nouvelles ordonnances dans votre espace patient :\n${prescriptionList}\n\nMerci de votre confiance,\nL'équipe MedInsight`,
+                    body: `Bonjour ${patient?.firstName || 'Patient'},\n\nLe Dr. ${appointment.doctorName || 'Médecin'} vient de terminer votre consultation.\n\nVous trouverez vos nouvelles ordonnances dans votre espace patient :\n${prescriptionList}\n\nMerci de votre confiance,\nL'équipe MedInsight`,
                     isHtml: false
                 }).catch(e => console.error("Consultation email failed", e))
             }
@@ -149,7 +166,7 @@ export default function ConsultationPage() {
                             <User className="w-7 h-7" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-slate-900">Consultation : {dossier?.patientProfile?.firstName} {dossier?.patientProfile?.lastName}</h1>
+                            <h1 className="text-xl font-bold text-slate-900">Consultation : {patient?.firstName} {patient?.lastName}</h1>
                             <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
                                 <span className="bg-slate-100 px-2 py-0.5 rounded">ID: {appointment?.patientId.substring(0, 8)}</span>
                                 <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {new Date().toLocaleDateString('fr-FR')}</span>
@@ -179,16 +196,16 @@ export default function ConsultationPage() {
                             <div className="space-y-4 text-sm">
                                 <div className="p-3 bg-red-50 rounded-xl border border-red-100">
                                     <p className="text-xs text-red-600 font-bold uppercase mb-1">Groupe Sanguin</p>
-                                    <p className="font-bold text-slate-800">{dossier?.bloodType || "N/A"}</p>
+                                    <p className="font-bold text-slate-800">{dossier?.medicalRecord?.bloodType || "Non renseigné"}</p>
                                 </div>
                                 <div className="p-3 bg-orange-50 rounded-xl border border-orange-100">
                                     <p className="text-xs text-orange-600 font-bold uppercase mb-1">Allergies</p>
-                                    <p className="font-medium text-slate-800 line-clamp-2">{dossier?.allergies || "Aucune connue"}</p>
+                                    <p className="font-medium text-slate-800 line-clamp-2">{dossier?.medicalRecord?.allergies || "Aucune connue"}</p>
                                 </div>
                                 <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                                    <p className="text-xs text-blue-600 font-bold uppercase mb-1">Dernières Notes</p>
-                                    <p className="text-slate-700 italic text-xs leading-relaxed">
-                                        {dossier?.consultationNotes?.[0]?.noteContent || "Aucun historique disponible"}
+                                    <p className="text-xs text-blue-600 font-bold uppercase mb-1">Antécédents</p>
+                                    <p className="text-slate-700 font-medium leading-relaxed">
+                                        {dossier?.medicalRecord?.medicalHistory || "Aucun antécédent majeur"}
                                     </p>
                                 </div>
                             </div>

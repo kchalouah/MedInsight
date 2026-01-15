@@ -167,7 +167,7 @@ services:
       KEYCLOAK_CLIENT_SECRET: auth-service-secret
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/medinsight
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
     ports:
@@ -193,8 +193,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-      SECURITY_OAUTH2_ISSUER_URI: http://keycloak:8080/realms/medinsight
-      SECURITY_OAUTH2_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/medinsight
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
     ports:
       - "8080:8080"
     depends_on:
@@ -219,7 +219,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/medinsight
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
     ports:
@@ -245,7 +245,7 @@ services:
       POSTGRES_DB: medinsight
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/medinsight
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
       EUREKA_URL: http://discovery-service:8761/eureka/
     ports:
       - "8084:8084"
@@ -269,7 +269,7 @@ services:
       EUREKA_URL: http://discovery-service:8761/eureka/
       ELASTICSEARCH_URIS: http://elasticsearch:9200
       LOKI_URL: http://loki:3100/loki/api/v1/push
-      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/medinsight
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
     ports:
       - "8085:8085"
     depends_on:
@@ -316,7 +316,7 @@ services:
     environment:
       - EUREKA_SERVER_URL=http://discovery-service:8761/eureka/
       - INSTANCE_HOST=ml-service
-      - KEYCLOAK_ISSUER=http://localhost:8180/realms/medinsight
+      - KEYCLOAK_ISSUER=http://keycloak:8080/realms/medinsight
     ports:
       - "8086:8086"
     depends_on:
@@ -342,7 +342,7 @@ services:
       - SMTP_PORT=587
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - KEYCLOAK_ISSUER_URI=http://localhost:8180/realms/medinsight
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/medinsight
     ports:
       - "8087:8087"
     depends_on:

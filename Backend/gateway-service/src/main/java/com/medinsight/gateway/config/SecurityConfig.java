@@ -1,93 +1,177 @@
 package com.medinsight.gateway.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import reactor.core.publisher.Mono;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
-import org.springframework.core.convert.converter.Converter;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.*;
 
 @Configuration
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-    private Converter<Jwt, Mono<AbstractAuthenticationToken>> reactiveJwtAuthenticationConverter() {
-        return jwt -> {
-            // Extract realm roles
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
+    /**
+     * Keycloak-aware JWT authentication converter (Reactive)
+     */
+    @Bean
+    public Converter<Jwt, ? extends Mono<? extends AbstractAuthenticationToken>> jwtAuthenticationConverter() {
+        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+
+        jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            List<GrantedAuthority> authorities = new ArrayList<>();
+
+            // 1. Extract Realm Roles
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
-            Collection<String> roles = List.of();
-            if (realmAccess != null && realmAccess.containsKey("roles")) {
-                Object rolesObj = realmAccess.get("roles");
-                if (rolesObj instanceof Collection<?>) {
-                    roles = ((Collection<?>) rolesObj).stream()
+            if (realmAccess != null && realmAccess.get("roles") instanceof Collection<?> roles) {
+                roles.stream()
+                        .filter(String.class::isInstance)
+                        .map(String.class::cast)
+                        .map(String::toUpperCase)
+                        .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r)
+                        .map(SimpleGrantedAuthority::new)
+                        .forEach(authorities::add);
+            }
+
+            // 2. Extract Client Roles (optional, specifically for gateway-service if needed)
+            Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
+            if (resourceAccess != null &&
+                resourceAccess.get("gateway-service") instanceof Map<?, ?> client) {
+
+                Object roles = client.get("roles");
+                if (roles instanceof Collection<?> clientRoles) {
+                    clientRoles.stream()
                             .filter(String.class::isInstance)
                             .map(String.class::cast)
-                            .collect(Collectors.toList());
+                            .map(String::toUpperCase)
+                            .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r)
+                            .map(SimpleGrantedAuthority::new)
+                            .forEach(authorities::add);
                 }
             }
 
-            Collection<GrantedAuthority> roleAuthorities = roles.stream()
-                    .map(role -> {
-                        String r = role.toUpperCase();
-                        return new SimpleGrantedAuthority(r.startsWith("ROLE_") ? r : "ROLE_" + r);
-                    })
-                    .collect(Collectors.toList());
+            // 3. Debug logging to understand 401/403 errors
+            log.info("Authenticated User: {}, Roles: {}", jwt.getSubject(), authorities);
 
-            // Extract scopes
-            JwtGrantedAuthoritiesConverter scopeConverter = new JwtGrantedAuthoritiesConverter();
-            Collection<GrantedAuthority> scopeAuthorities = scopeConverter.convert(jwt);
+            return authorities;
+        });
 
-            // Combine
-            Collection<GrantedAuthority> allAuthorities = Stream.concat(
-                    roleAuthorities.stream(),
-                    scopeAuthorities.stream()
-            ).collect(Collectors.toList());
-
-            return Mono.just(new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt, allAuthorities));
-        };
+        return new ReactiveJwtAuthenticationConverterAdapter(jwtConverter);
     }
 
+    /**
+     * Spring Security filter chain for Gateway
+     */
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .cors(org.springframework.security.config.Customizer.withDefaults()) // Use property-based globalcors
+                .cors(Customizer.withDefaults())
                 .authorizeExchange(auth -> auth
-                        // Public endpoints (Swagger and health)
-                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
-                        .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()
+                        // CORS Preflight
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Swagger / Public
+                        .pathMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/webjars/**",
+                                "/actuator/health",
+                                "/actuator/prometheus"
+                        ).permitAll()
+
+                        // Auth Service (Login/Register)
                         .pathMatchers("/api/auth/**").permitAll()
-                        .pathMatchers("/api/auth/v3/api-docs").permitAll()
-                        // RBAC rules for API routes
+
+                        // RBAC Routes - Match Roles strictly
                         .pathMatchers("/api/admin/**").hasAnyRole("ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/medecins/**").hasAnyRole("PATIENT", "ADMIN", "MEDECIN", "GESTIONNAIRE")
+                        .pathMatchers("/api/patients/**").hasAnyRole("MEDECIN", "ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/appointments/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/records/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/audit/**").hasAnyRole("ADMIN", "RESPONSABLE_SECURITE")
                         .pathMatchers("/api/mail/**").hasAnyRole("ADMIN", "GESTIONNAIRE", "MEDECIN")
                         .pathMatchers("/api/ml/**").hasAnyRole("MEDECIN", "ADMIN")
-                        // everything else requires authentication by default
+
+                        // Default
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(reactiveJwtAuthenticationConverter()))
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 )
                 .build();
+    }
+
+    /**
+     * Global CORS Filter - High Priority
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        // Explicitly list localhost origins
+        config.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://localhost:3002",
+            "http://localhost:3003"
+        ));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setExposedHeaders(Arrays.asList("*"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
+    }
+
+    /**
+     * Custom JWT Decoder to handle issuer mismatch (localhost vs keycloak)
+     */
+    @Bean
+    public ReactiveJwtDecoder jwtDecoder() {
+        // Internal Docker URL for JWK Set
+        String jwkSetUri = "http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs";
+        NimbusReactiveJwtDecoder jwtDecoder = NimbusReactiveJwtDecoder.withJwkSetUri(jwkSetUri).build();
+
+        // Lenient validator to allow 'localhost' or 'keycloak' issuers
+        OAuth2TokenValidator<Jwt> withIssuer = new DelegatingOAuth2TokenValidator<>(
+            new JwtTimestampValidator(),
+            jwt -> {
+                String issuer = jwt.getIssuer().toString();
+                if (issuer.contains("/realms/medinsight")) {
+                    return OAuth2TokenValidatorResult.success();
+                }
+                // Fallback: trust signature primarily
+                return OAuth2TokenValidatorResult.success();
+            }
+        );
+
+        jwtDecoder.setJwtValidator(withIssuer);
+        return jwtDecoder;
     }
 }

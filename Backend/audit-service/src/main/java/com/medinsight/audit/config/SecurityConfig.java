@@ -11,6 +11,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.oauth2.core.*;
+
 
 import java.util.Collection;
 import java.util.List;
@@ -26,6 +29,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(AbstractHttpConfigurer::disable)
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/audit/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/**").permitAll()
@@ -68,5 +72,27 @@ public class SecurityConfig {
                     .collect(Collectors.toList());
         });
         return converter;
+    }
+
+
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        String jwkSetUri = "http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs";
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+
+        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
+            new JwtTimestampValidator(),
+            jwt -> {
+                String issuer = jwt.getIssuer().toString();
+                if (issuer.contains("/realms/medinsight")) {
+                    return OAuth2TokenValidatorResult.success();
+                }
+                return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_issuer", "The issuer " + issuer + " is not trusted", null));
+            }
+        );
+
+        jwtDecoder.setJwtValidator(validator);
+        return jwtDecoder;
     }
 }

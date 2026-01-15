@@ -8,17 +8,23 @@ import { useAuth } from "@/lib/auth-context"
 
 interface DashboardLayoutProps {
     children: ReactNode
-    role: "patient" | "medecin" | "admin" | "security"
+    role: "patient" | "medecin" | "admin" | "security" | "gestionnaire"
 }
 
 // Map Keycloak roles to frontend role types
-function mapKeycloakRoleToFrontendRole(keycloakRole: string): "patient" | "medecin" | "admin" | "security" {
-    const roleMap: Record<string, "patient" | "medecin" | "admin" | "security"> = {
+function mapKeycloakRoleToFrontendRole(keycloakRole: string): "patient" | "medecin" | "admin" | "security" | "gestionnaire" {
+    const roleMap: Record<string, "patient" | "medecin" | "admin" | "security" | "gestionnaire"> = {
         'ROLE_PATIENT': 'patient',
         'ROLE_MEDECIN': 'medecin',
         'ROLE_ADMIN': 'admin',
-        'ROLE_GESTIONNAIRE': 'admin', // Legacy support
+        'ROLE_GESTIONNAIRE': 'gestionnaire',
         'ROLE_RESPONSABLE_SECURITE': 'security',
+        // Fallbacks for non-prefixed roles
+        'PATIENT': 'patient',
+        'MEDECIN': 'medecin',
+        'ADMIN': 'admin',
+        'GESTIONNAIRE': 'gestionnaire',
+        'RESPONSABLE_SECURITE': 'security',
     }
     return roleMap[keycloakRole] || 'patient'
 }
@@ -35,7 +41,6 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
             if (!user) {
                 router.push("/login")
             } else if (role && actualRole !== role) {
-                // Special case for GESTIONNAIRE role which maps to admin in mapping function
                 router.push("/forbidden")
             }
         }

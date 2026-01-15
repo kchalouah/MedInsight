@@ -2,160 +2,108 @@
 
 import DashboardLayout from "@/components/layout/DashboardLayout"
 import StatsCard from "@/components/ui/StatsCard"
-import QuickLinks from "@/components/ui/QuickLinks"
-import { Shield, Search, AlertTriangle, Activity } from "lucide-react"
+import { Activity, Shield, Server, FileText, Globe, AlertTriangle } from "lucide-react"
 import { motion } from "framer-motion"
-import { useAuth } from "@/lib/auth-context"
-
-const mockStats = {
-    totalLogs: 1247,
-    failedLogins: 3,
-    suspiciousActivities: 0,
-    activeAlerts: 0
-}
-
-const mockRecentLogs = [
-    { timestamp: "2026-01-11 14:25:30", user: "ahmed@example.com", action: "LOGIN_SUCCESS", service: "auth-service", result: "SUCCESS" },
-    { timestamp: "2026-01-11 14:20:15", user: "f.gharbi@medinsight.tn", action: "CONSULTATION_CREATED", service: "appointment-service", result: "SUCCESS" },
-    { timestamp: "2026-01-11 14:15:42", user: "sara@example.com", action: "PROFILE_UPDATE", service: "auth-service", result: "SUCCESS" },
-    { timestamp: "2026-01-11 14:10:03", user: "unknown@test.com", action: "LOGIN_FAILED", service: "auth-service", result: "FAILED" },
-    { timestamp: "2026-01-11 14:05:21", user: "k.mansour@medinsight.tn", action: "PRESCRIPTION_CREATED", service: "appointment-service", result: "SUCCESS" },
-]
 
 export default function SecurityDashboard() {
-    const { user } = useAuth()
-
-    if (!user) return null
-
     return (
         <DashboardLayout role="security">
-            {/* Welcome Section */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-8"
-            >
-                <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                    Centre de Sécurité 🛡️
-                </h1>
-                <p className="text-slate-600">
-                    Monitoring et supervision des logs d'audit
-                </p>
-            </motion.div>
+            <div className="space-y-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Sécurité & Monitoring</h1>
+                    <p className="text-slate-500">Vue d'ensemble de l'infrastructure et de la sécurité.</p>
+                </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <StatsCard
-                    title="Logs aujourd'hui"
-                    value={mockStats.totalLogs}
-                    icon={Activity}
-                    variant="primary"
-                />
-                <StatsCard
-                    title="Tentatives échouées"
-                    value={mockStats.failedLogins}
-                    icon={AlertTriangle}
-                    variant="warning"
-                />
-                <StatsCard
-                    title="Activités suspectes"
-                    value={mockStats.suspiciousActivities}
-                    icon={Shield}
-                    variant="success"
-                />
-                <StatsCard
-                    title="Alertes actives"
-                    value={mockStats.activeAlerts}
-                    icon={AlertTriangle}
-                    variant="success"
-                />
-            </div>
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <StatsCard
+                        title="Systèmes Actifs"
+                        value="8/8"
+                        icon={Server}
+                        variant="success"
+                    />
+                    <StatsCard
+                        title="Alertes Critiques"
+                        value="0"
+                        icon={AlertTriangle}
+                        variant="primary"
+                    />
+                    <StatsCard
+                        title="Tentatives Intrusion"
+                        value="2"
+                        icon={Shield}
+                        variant="warning"
+                    />
+                </div>
 
-            {/* Infrastructure Quick Links */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-8"
-            >
-                <QuickLinks />
-            </motion.div>
-
-            {/* Recent Audit Logs */}
-            <div className="grid grid-cols-1 gap-6 mb-8">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-6 shadow-card"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-slate-900">Logs d'Audit Récents</h3>
-                        <div className="flex gap-2">
-                            <button className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors">
-                                Filtrer
-                            </button>
-                            <button className="px-3 py-1.5 text-sm font-medium bg-primary text-white hover:bg-primary/90 rounded-lg transition-colors">
-                                <Search className="w-4 h-4 inline mr-1" />
-                                Recherche avancée
-                            </button>
+                {/* Monitoring Tools Links */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <a
+                        href="http://localhost:3000"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block p-6 bg-white rounded-2xl border border-slate-200 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 transition-all"
+                    >
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="p-3 bg-orange-100 text-orange-600 rounded-xl group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                                <Activity className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800">Grafana</h3>
+                                <p className="text-sm text-slate-500">Tableaux de bord visuels</p>
+                            </div>
                         </div>
-                    </div>
+                        <p className="text-slate-600 text-sm">Accéder aux dashboards de performance système, latence et erreurs.</p>
+                    </a>
 
-                    {/* Logs Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-slate-200">
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Timestamp</th>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Utilisateur</th>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Action</th>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Service</th>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Résultat</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {mockRecentLogs.map((log, index) => (
-                                    <tr key={index} className="border-b border-slate-100 hover:bg-slate-50">
-                                        <td className="py-3 px-4 text-sm text-slate-600">{log.timestamp}</td>
-                                        <td className="py-3 px-4 text-sm text-slate-900 font-medium">{log.user}</td>
-                                        <td className="py-3 px-4 text-sm text-slate-600">{log.action}</td>
-                                        <td className="py-3 px-4">
-                                            <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-medium">
-                                                {log.service}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${log.result === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {log.result}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </motion.div>
-            </div>
+                    <a
+                        href="http://localhost:9090"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block p-6 bg-white rounded-2xl border border-slate-200 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 transition-all"
+                    >
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="p-3 bg-red-100 text-red-600 rounded-xl group-hover:bg-red-600 group-hover:text-white transition-colors">
+                                <Activity className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800">Prometheus</h3>
+                                <p className="text-sm text-slate-500">Métriques brutes</p>
+                            </div>
+                        </div>
+                        <p className="text-slate-600 text-sm">Exploration directe des métriques et configuration des alertes.</p>
+                    </a>
 
-            {/* Quick Security Actions */}
-            <div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-4">Actions Rapides</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button className="p-6 text-left bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl hover:shadow-card-hover transition-all">
-                        <Search className="w-8 h-8 text-primary mb-3" />
-                        <h4 className="font-semibold text-slate-900 mb-1">Recherche avancée</h4>
-                        <p className="text-sm text-slate-600">Filtrer logs par critères</p>
-                    </button>
-                    <button className="p-6 text-left bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl hover:shadow-card-hover transition-all">
-                        <Activity className="w-8 h-8 text-green-600 mb-3" />
-                        <h4 className="font-semibold text-slate-900 mb-1">Rapport de sécurité</h4>
-                        <p className="text-sm text-slate-600">Générer rapport PDF</p>
-                    </button>
-                    <button className="p-6 text-left bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl hover:shadow-card-hover transition-all">
-                        <AlertTriangle className="w-8 h-8 text-orange-600 mb-3" />
-                        <h4 className="font-semibold text-slate-900 mb-1">Alertes actives</h4>
-                        <p className="text-sm text-slate-600">0 alertes en cours</p>
-                    </button>
+                    <a
+                        href="http://localhost:3100"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block p-6 bg-white rounded-2xl border border-slate-200 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10 transition-all"
+                    >
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="p-3 bg-blue-100 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <FileText className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800">Loki</h3>
+                                <p className="text-sm text-slate-500">Agrégation de logs</p>
+                            </div>
+                        </div>
+                        <p className="text-slate-600 text-sm">Recherche et analyse centralisée des journaux applicatifs.</p>
+                    </a>
+
+                    <div className="block p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                        <div className="flex items-center gap-4 mb-4 opacity-50">
+                            <div className="p-3 bg-slate-200 text-slate-500 rounded-xl">
+                                <Globe className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800">Zipkin / Jaeger</h3>
+                                <p className="text-sm text-slate-500">Tracing distribué</p>
+                            </div>
+                        </div>
+                        <p className="text-slate-400 text-sm italic">Service de tracing non détecté ou non configuré.</p>
+                    </div>
                 </div>
             </div>
         </DashboardLayout>

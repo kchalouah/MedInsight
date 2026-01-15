@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/layout/DashboardLayout"
-import { adminApi, UserResponse } from "@/lib/api"
+import { patientApi, UserResponse } from "@/lib/api"
 import { Search, User, Filter, ChevronRight, Activity, Calendar } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -18,10 +18,9 @@ export default function MedecinPatients() {
     async function fetchPatients() {
         setLoading(true)
         try {
-            // Reusing admin user listing for now, filtrable by role on backend usually
-            // For now listing all and filtering PATIENTS client-side or if backend supports role param
-            const data = await adminApi.getUsers(0, 50)
-            setPatients(data.content.filter(u => u.role === 'PATIENT' || u.keycloakId.includes('-'))) // Mock logic for demo
+            // Updated to use the secure patientApi
+            const data = await patientApi.getPatients(0, 50)
+            setPatients(data.content)
         } catch (err) {
             console.error("Failed to fetch patients", err)
         } finally {
@@ -66,7 +65,7 @@ export default function MedecinPatients() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredPatients.map((patient, idx) => (
                             <motion.div
-                                key={patient.id}
+                                key={patient.keycloakId}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
