@@ -37,12 +37,17 @@ public class AdminController {
 
     @PostMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create GESTIONNAIRE or RESPONSABLE_SECURITE user",
-               description = "Admin-only endpoint to create users with GESTIONNAIRE or RESPONSABLE_SECURITE roles")
+    @Operation(summary = "Create any user role", description = "Admin-only endpoint to create users with any role (ADMIN, MEDECIN, PATIENT, etc.)")
     public ResponseEntity<UserResponse> createAdminUser(@Valid @RequestBody AdminUserCreationRequest request) {
-        log.info("Admin creating user with email: {} and role: {}", request.getEmail(), request.getRole());
-        UserResponse response = adminUserService.createAdminUser(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        log.info("AdminController: Creating user with email: {} and role: {}", request.getEmail(), request.getRole());
+        try {
+            UserResponse response = adminUserService.createAdminUser(request);
+            log.info("AdminController: Successfully created user: {}", request.getEmail());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("AdminController: Error creating user: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     @PutMapping("/users/{keycloakId}/roles")
@@ -66,6 +71,31 @@ public class AdminController {
         Page<UserResponse> response = users.map(userService::toUserResponse);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/sync-keycloak")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Sync users from Keycloak", description = "Admin-only endpoint to synchronize users from Keycloak to the local database")
+    public ResponseEntity<Map<String, String>> syncKeycloak() {
+        log.info("AdminController: Triggering Keycloak synchronization");
+        try {
+            adminUserService.syncWithKeycloak();
+            log.info("AdminController: Synchronization successful");
+            return ResponseEntity.ok(Map.of("message", "Synchronization successful"));
+        } catch (Exception e) {
+            log.error("AdminController: Error during synchronization: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @GetMapping("/users/keycloak/{keycloakId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GESTIONNAIRE')")
+    @Operation(summary = "Get user by Keycloak ID", description = "Retrieve any user profile by their Keycloak ID.")
+    public ResponseEntity<UserResponse> getUserByKeycloakId(@PathVariable String keycloakId) {
+        log.info("Admin fetching user by Keycloak ID: {}", keycloakId);
+        User user = userService.findByKeycloakId(keycloakId);
+        return ResponseEntity.ok(userService.toUserResponse(user));
+    }
+
     @DeleteMapping("/users/{keycloakId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete user", description = "Admin-only endpoint to delete a user from both Keycloak and the database")
@@ -74,6 +104,4 @@ public class AdminController {
         adminUserService.deleteUser(keycloakId);
         return ResponseEntity.noContent().build();
     }
-
-
 }

@@ -16,6 +16,28 @@ export interface UserResponse {
     createdAt?: string;
     updatedAt?: string;
     role: string; // Derived from helper or payload usually, but let's assume we map it or get it
+    patientProfile?: PatientProfileResponse;
+    medecinProfile?: MedecinProfileResponse;
+}
+
+export interface PatientProfileResponse {
+    id: string;
+    dateOfBirth?: string;
+    gender?: string;
+    bloodType?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    insuranceProvider?: string;
+    insuranceNumber?: string;
+}
+
+export interface MedecinProfileResponse {
+    id: string;
+    specialization?: string;
+    licenseNumber?: string;
+    yearsOfExperience?: number;
+    consultationFee?: number;
+    available?: boolean;
 }
 
 export interface Page<T> {
@@ -50,6 +72,9 @@ api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log(`[API] Sending request to ${config.url} with token: ${token.substring(0, 20)}...`);
+    } else {
+        console.warn(`[API] Request to ${config.url} WITHOUT token`);
     }
     return config;
 });
@@ -195,13 +220,33 @@ export const adminApi = {
     deleteUser: async (keycloakId: string) => {
         const response = await api.delete(`/admin/users/${keycloakId}`);
         return response.data;
+    },
+
+    // Sync users from Keycloak
+    syncKeycloak: async () => {
+        const response = await api.post<{ message: string }>('/admin/sync-keycloak');
+        return response.data;
     }
 };
+
+export interface AuditLog {
+    id: string;
+    timestamp: string;
+    serviceName: string;
+    userId: string;
+    userEmail?: string;
+    userRole?: string;
+    action: string;
+    resourceId?: string;
+    status: string;
+    details?: string;
+    ipAddress?: string;
+}
 
 export const auditApi = {
     // Get all audit logs
     getLogs: async () => {
-        const response = await api.get<any[]>('/audit/logs');
+        const response = await api.get<AuditLog[]>('/audit/logs');
         return response.data;
     },
 

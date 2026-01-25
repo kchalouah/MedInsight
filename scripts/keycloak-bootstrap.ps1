@@ -273,14 +273,16 @@ New-KeycloakUser "admin@medinsight.tn" "Admin" "MedInsight" "Admin123!" "ADMIN"
 New-KeycloakUser "security@medinsight.tn" "Security" "Officer" "Security123!" "RESPONSABLE_SECURITE"
 New-KeycloakUser "doctor@medinsight.tn" "Dr. Test" "Doctor" "Doctor123!" "MEDECIN"
 New-KeycloakUser "patient@medinsight.tn" "Test" "Patient" "Patient123!" "PATIENT"
+New-KeycloakUser "gestionnaire@medinsight.tn" "Gestion" "Admin" "Gestion123!" "GESTIONNAIRE"
 
 Write-Host "`n========================================" -ForegroundColor Green
 Write-Host "Keycloak is now fully configured for MedInsight!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 
 Write-Host "`nTest Users Created:" -ForegroundColor Cyan
-Write-Host "  - admin@medinsight.tn      | Pass: Admin123!     | Role: ADMIN" -ForegroundColor White
-Write-Host "  - security@medinsight.tn   | Pass: Security123!  | Role: GESTIONNAIRE" -ForegroundColor White
-Write-Host "  - doctor@medinsight.tn     | Pass: Doctor123!    | Role: MEDECIN" -ForegroundColor White
-Write-Host "  - patient@medinsight.tn    | Pass: Patient123!   | Role: PATIENT" -ForegroundColor White
+Write-Host "  - admin@medinsight.tn       | Pass: Admin123!     | Role: ADMIN" -ForegroundColor White
+Write-Host "  - security@medinsight.tn    | Pass: Security123!  | Role: RESPONSABLE_SECURITE" -ForegroundColor White
+Write-Host "  - gestionnaire@medinsight.tn | Pass: Gestion123!   | Role: GESTIONNAIRE" -ForegroundColor White
+Write-Host "  - doctor@medinsight.tn      | Pass: Doctor123!    | Role: MEDECIN" -ForegroundColor White
+Write-Host "  - patient@medinsight.tn     | Pass: Patient123!   | Role: PATIENT" -ForegroundColor White
 Write-Host "`nLogin at: http://localhost:3000/login" -ForegroundColor Green

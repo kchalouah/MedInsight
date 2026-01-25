@@ -5,8 +5,8 @@ spring:
   mail:
     host: ${SMTP_HOST:smtp.gmail.com}
     port: ${SMTP_PORT:587}
-    username: ${SMTP_USERNAME:your-email@gmail.com}
-    password: ${SMTP_PASSWORD:your-app-password}
+    username: ${SMTP_USERNAME:Karim.chalouah2@gmail.com}
+    password: ${SMTP_PASSWORD:tlinfmofnjhtsoko}
     properties:
       mail:
         smtp:
@@ -20,7 +20,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/medinsight}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/medinsight}
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs}
 
 server:

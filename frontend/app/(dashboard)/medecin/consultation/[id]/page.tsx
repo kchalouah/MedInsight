@@ -77,7 +77,9 @@ export default function ConsultationPage() {
         if (!symptoms) return
         setIsAiLoading(true)
         try {
-            const result = await mlApi.predictDiagnosis({ symptoms })
+            // Split symptoms string into list as required by backend schema
+            const symptomsList = symptoms.split(',').map(s => s.trim()).filter(s => s !== "");
+            const result = await mlApi.predictDiagnosis({ symptoms: symptomsList } as any)
             setAiResults(result)
         } catch (err) {
             console.error("AI Assistant error", err)
@@ -114,7 +116,8 @@ export default function ConsultationPage() {
             for (const pres of prescriptions) {
                 await appointmentApi.createPrescription(appointment.id, {
                     patientId: appointment.patientId,
-                    ...pres
+                    ...pres,
+                    duration: pres.duration || "À déterminer"
                 })
             }
 

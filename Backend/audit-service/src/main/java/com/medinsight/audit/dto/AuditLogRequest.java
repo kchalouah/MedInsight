@@ -14,6 +14,8 @@ public class AuditLogRequest {
     @NotBlank
     private String serviceName;
     private String userId;
+    private String userEmail;
+    private String userRole;
     @NotBlank
     private String action;
     private String resourceId;

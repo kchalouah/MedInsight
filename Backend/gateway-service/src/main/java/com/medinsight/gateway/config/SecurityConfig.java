@@ -9,6 +9,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,6 +29,7 @@ import reactor.core.publisher.Mono;
 import java.util.*;
 
 @Configuration
+@EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
@@ -55,10 +57,11 @@ public class SecurityConfig {
                         .forEach(authorities::add);
             }
 
-            // 2. Extract Client Roles (optional, specifically for gateway-service if needed)
+            // 2. Extract Client Roles (optional, specifically for gateway-service if
+            // needed)
             Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
             if (resourceAccess != null &&
-                resourceAccess.get("gateway-service") instanceof Map<?, ?> client) {
+                    resourceAccess.get("gateway-service") instanceof Map<?, ?> client) {
 
                 Object roles = client.get("roles");
                 if (roles instanceof Collection<?> clientRoles) {
@@ -73,7 +76,7 @@ public class SecurityConfig {
             }
 
             // 3. Debug logging to understand 401/403 errors
-            log.info("Authenticated User: {}, Roles: {}", jwt.getSubject(), authorities);
+            log.info("Gateway Auth SUCCESS - User: {}, Roles: {}", jwt.getSubject(), authorities);
 
             return authorities;
         });
@@ -100,8 +103,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/webjars/**",
                                 "/actuator/health",
-                                "/actuator/prometheus"
-                        ).permitAll()
+                                "/actuator/prometheus")
+                        .permitAll()
 
                         // Auth Service (Login/Register)
                         .pathMatchers("/api/auth/**").permitAll()
@@ -112,16 +115,14 @@ public class SecurityConfig {
                         .pathMatchers("/api/patients/**").hasAnyRole("MEDECIN", "ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/appointments/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/records/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
-                        .pathMatchers("/api/audit/**").hasAnyRole("ADMIN", "RESPONSABLE_SECURITE")
+                        .pathMatchers("/api/audit/**").hasAnyRole("ADMIN", "RESPONSABLE_SECURITE", "GESTIONNAIRE")
                         .pathMatchers("/api/mail/**").hasAnyRole("ADMIN", "GESTIONNAIRE", "MEDECIN")
                         .pathMatchers("/api/ml/**").hasAnyRole("MEDECIN", "ADMIN")
 
                         // Default
-                        .anyExchange().authenticated()
-                )
+                        .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                )
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .build();
     }
 
@@ -134,11 +135,10 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         // Explicitly list localhost origins
         config.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "http://localhost:3002",
-            "http://localhost:3003"
-        ));
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://localhost:3002",
+                "http://localhost:3003"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setExposedHeaders(Arrays.asList("*"));
@@ -160,16 +160,21 @@ public class SecurityConfig {
 
         // Lenient validator to allow 'localhost' or 'keycloak' issuers
         OAuth2TokenValidator<Jwt> withIssuer = new DelegatingOAuth2TokenValidator<>(
-            new JwtTimestampValidator(),
-            jwt -> {
-                String issuer = jwt.getIssuer().toString();
-                if (issuer.contains("/realms/medinsight")) {
-                    return OAuth2TokenValidatorResult.success();
-                }
-                // Fallback: trust signature primarily
-                return OAuth2TokenValidatorResult.success();
-            }
-        );
+                new JwtTimestampValidator(),
+                jwt -> {
+                    String issuer = (jwt.getIssuer() != null) ? jwt.getIssuer().toString() : "unknown";
+                    log.info("Gateway validating token issuer: {}", issuer);
+
+                    // Allow both internal and external Keycloak references
+                    if (issuer.contains("/realms/medinsight")) {
+                        return OAuth2TokenValidatorResult.success();
+                    }
+
+                    // If mismatch, still log but fail explicitly with error
+                    log.error("Gateway INVALID issuer: {}", issuer);
+                    return OAuth2TokenValidatorResult.failure(
+                            new OAuth2Error("invalid_issuer", "The issuer " + issuer + " is not trusted", null));
+                });
 
         jwtDecoder.setJwtValidator(withIssuer);
         return jwtDecoder;

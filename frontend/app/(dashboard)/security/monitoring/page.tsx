@@ -25,9 +25,20 @@ export default function SecurityMonitoringPage() {
         <DashboardLayout role="security">
             <div className="space-y-6">
                 {/* Header */}
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Monitoring Système</h1>
-                    <p className="text-slate-600 mt-1">Surveillance en temps réel des services</p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-900">Monitoring Système</h1>
+                        <p className="text-slate-600 mt-1">Surveillance en temps réel des services</p>
+                    </div>
+                    <a
+                        href="http://localhost:8180/admin/master/console/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                        <Server className="w-4 h-4" />
+                        Administration Keycloak
+                    </a>
                 </div>
 
                 {/* System Health Overview */}
@@ -135,7 +146,6 @@ export default function SecurityMonitoringPage() {
                             {[
                                 { name: "PostgreSQL (Auth)", status: "Connected", size: "2.4 GB", connections: "12/100" },
                                 { name: "PostgreSQL (Records)", status: "Connected", size: "5.8 GB", connections: "23/100" },
-                                { name: "Elasticsearch", status: "Connected", size: "1.2 GB", indices: "4" },
                             ].map((db, index) => (
                                 <div key={index} className="p-3 bg-slate-50 rounded-lg">
                                     <div className="flex items-center justify-between mb-2">
@@ -147,7 +157,6 @@ export default function SecurityMonitoringPage() {
                                     <div className="flex gap-4 text-xs text-slate-600">
                                         <span>Taille: {db.size}</span>
                                         {db.connections && <span>Connexions: {db.connections}</span>}
-                                        {db.indices && <span>Indices: {db.indices}</span>}
                                     </div>
                                 </div>
                             ))}

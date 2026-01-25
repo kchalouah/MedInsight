@@ -266,38 +266,24 @@ services:
     container_name: medinsight-audit-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       EUREKA_URL: http://discovery-service:8761/eureka/
-      ELASTICSEARCH_URIS: http://elasticsearch:9200
       LOKI_URL: http://loki:3100/loki/api/v1/push
       KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
     ports:
       - "8085:8085"
     depends_on:
-      discovery-service:
+      postgres:
         condition: service_healthy
-      elasticsearch:
+      discovery-service:
         condition: service_healthy
       loki:
         condition: service_started
     networks:
       - medinsight-network
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
-    container_name: medinsight-elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
-    networks:
-      - medinsight-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
   loki:
     image: grafana/loki:2.8.2

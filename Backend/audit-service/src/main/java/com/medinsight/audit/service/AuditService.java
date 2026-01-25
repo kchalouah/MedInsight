@@ -21,11 +21,13 @@ public class AuditService {
 
     public AuditLog storeLog(AuditLogRequest request) {
         log.info("Storing audit log for action: {} from service: {}", request.getAction(), request.getServiceName());
-        
+
         AuditLog auditLog = AuditLog.builder()
                 .timestamp(LocalDateTime.now())
                 .serviceName(request.getServiceName())
                 .userId(request.getUserId())
+                .userEmail(request.getUserEmail())
+                .userRole(request.getUserRole())
                 .action(request.getAction())
                 .resourceId(request.getResourceId())
                 .status(request.getStatus())

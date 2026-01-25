@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion"
 import { useAuth } from "@/lib/auth-context"
 import { appointmentApi } from "@/lib/api"
+import PatientAppointments from "@/components/PatientAppointments"
 import Link from "next/link"
 
 export default function PatientDashboard() {
@@ -146,6 +147,9 @@ export default function PatientDashboard() {
                                 ))
                             )}
                         </div>
+
+                        {/* Use PatientAppointments Component */}
+                        <PatientAppointments />
                     </div>
 
                     {/* Quick Access Sidebar */}

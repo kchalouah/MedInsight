@@ -23,6 +23,7 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final KeycloakService keycloakService;
 
     /**
      * Find user by ID.
@@ -49,6 +50,14 @@ public class UserService {
     public User findByKeycloakId(String keycloakId) {
         return userRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with Keycloak ID: " + keycloakId));
+    }
+
+    /**
+     * Check if user exists by Keycloak ID.
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByKeycloakId(String keycloakId) {
+        return userRepository.existsByKeycloakId(keycloakId);
     }
 
     /**
@@ -103,6 +112,9 @@ public class UserService {
      * Convert User entity to UserResponse DTO.
      */
     public UserResponse toUserResponse(User user) {
+        // Fetch role from Keycloak
+        String role = keycloakService.getUserPrimaryRole(user.getKeycloakId());
+
         UserResponse.UserResponseBuilder builder = UserResponse.builder()
                 .id(UUID.fromString(user.getKeycloakId()))
                 .keycloakId(user.getKeycloakId())
@@ -114,6 +126,7 @@ public class UserService {
                 .city(user.getCity())
                 .country(user.getCountry())
                 .enabled(user.getEnabled())
+                .role(role) // Add role from Keycloak
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt());
 
@@ -126,6 +139,73 @@ public class UserService {
         }
 
         return builder.build();
+    }
+
+    /**
+     * Update user profile (self-service).
+     */
+    @Transactional
+    public UserResponse updateProfile(String keycloakId, ProfileUpdateRequest request) {
+        User user = findByKeycloakId(keycloakId);
+
+        // Update general fields
+        if (request.getPhoneNumber() != null) {
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+        if (request.getAddressLine() != null) {
+            user.setAddressLine(request.getAddressLine());
+        }
+        if (request.getCity() != null) {
+            user.setCity(request.getCity());
+        }
+        if (request.getCountry() != null) {
+            user.setCountry(request.getCountry());
+        }
+
+        // Update patient profile if exists
+        if (user.getPatientProfile() != null) {
+            var profile = user.getPatientProfile();
+            if (request.getDateOfBirth() != null)
+                profile.setDateOfBirth(request.getDateOfBirth());
+            if (request.getGender() != null)
+                profile.setGender(request.getGender());
+            if (request.getBloodType() != null)
+                profile.setBloodType(request.getBloodType());
+            if (request.getEmergencyContactName() != null)
+                profile.setEmergencyContactName(request.getEmergencyContactName());
+            if (request.getEmergencyContactPhone() != null)
+                profile.setEmergencyContactPhone(request.getEmergencyContactPhone());
+            if (request.getInsuranceProvider() != null)
+                profile.setInsuranceProvider(request.getInsuranceProvider());
+            if (request.getInsuranceNumber() != null)
+                profile.setInsuranceNumber(request.getInsuranceNumber());
+        }
+
+        // Update medecin profile if exists
+        if (user.getMedecinProfile() != null) {
+            var profile = user.getMedecinProfile();
+            if (request.getSpecialization() != null)
+                profile.setSpecialization(request.getSpecialization());
+            if (request.getLicenseNumber() != null)
+                profile.setLicenseNumber(request.getLicenseNumber());
+            if (request.getYearsOfExperience() != null)
+                profile.setYearsOfExperience(request.getYearsOfExperience());
+            if (request.getConsultationFee() != null)
+                profile.setConsultationFee(request.getConsultationFee());
+        }
+
+        user = userRepository.save(user);
+        log.info("Updated profile for user: {}", user.getEmail());
+        return toUserResponse(user);
+    }
+
+    /**
+     * Get user by Keycloak ID and convert to response.
+     */
+    @Transactional(readOnly = true)
+    public UserResponse getUserByKeycloakId(String keycloakId) {
+        User user = findByKeycloakId(keycloakId);
+        return toUserResponse(user);
     }
 
     private PatientProfileResponse toPatientProfileResponse(com.medinsight.auth.entity.PatientProfile profile) {
@@ -151,6 +231,7 @@ public class UserService {
                 .available(profile.getAvailable())
                 .build();
     }
+
     /**
      * Delete user by ID.
      */

@@ -33,21 +33,21 @@ public class AuditController {
     }
 
     @GetMapping("/logs")
-    @PreAuthorize("hasAnyRole('RESPONSABLE_SECURITE', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE_SECURITE', 'ADMIN', 'GESTIONNAIRE')")
     @Operation(summary = "Query all audit logs", description = "Restricted to security officers and admins")
     public ResponseEntity<List<AuditLog>> getAllLogs() {
         return ResponseEntity.ok(auditService.getAllLogs());
     }
 
     @GetMapping("/logs/user/{userId}")
-    @PreAuthorize("hasAnyRole('RESPONSABLE_SECURITE', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE_SECURITE', 'ADMIN', 'GESTIONNAIRE')")
     @Operation(summary = "Query logs by user ID")
     public ResponseEntity<List<AuditLog>> getLogsByUser(@PathVariable String userId) {
         return ResponseEntity.ok(auditService.getLogsByUser(userId));
     }
 
     @GetMapping("/logs/service/{serviceName}")
-    @PreAuthorize("hasAnyRole('RESPONSABLE_SECURITE', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('RESPONSABLE_SECURITE', 'ADMIN', 'GESTIONNAIRE')")
     @Operation(summary = "Query logs by service name")
     public ResponseEntity<List<AuditLog>> getLogsByService(@PathVariable String serviceName) {
         return ResponseEntity.ok(auditService.getLogsByService(serviceName));

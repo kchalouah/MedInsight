@@ -10,12 +10,10 @@ scrape_configs:
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: 
-        - 'gateway-service:8080'
-        - 'patient-service:8081'
-        - 'medecin-service:8082'
-        - 'prediction-service:8083'
-        - 'gestion-service:8084'
-        - 'security-service:8085'
-        - 'supervision-service:8086'
-        - 'eureka-server:8761'
-        - 'config-service:8888'
+        - 'medinsight-gateway:8080'
+        - 'medinsight-auth-service:8081'
+        - 'medinsight-appointment-service:8082'
+        - 'medinsight-medical-record-service:8084'
+        - 'medinsight-audit-service:8085'
+        - 'medinsight-mail-service:8087'
+        - 'medinsight-discovery:8761'

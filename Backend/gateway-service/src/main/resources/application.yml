@@ -89,27 +89,7 @@ spring:
       ############################################
       # GLOBAL CORS (Gateway-level)
       ############################################
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins:
-              - http://localhost:3000
-              - http://localhost:3001
-              - http://localhost:3002
-              - http://localhost:3003
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-              - OPTIONS
-            allowedHeaders:
-              - "*"
-            exposedHeaders:
-              - "*"
-            allowCredentials: true
-            maxAge: 3600
+      # (Moved to SecurityConfig.java bean to avoid conflicts)
 
   ############################################
   # SPRING SECURITY (KEYCLOAK RESOURCE SERVER)
@@ -164,11 +144,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
-
+        include: health,info,metrics,prometheus
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: always
+    prometheus:
+      enabled: true
 
 ############################################
 # CUSTOM APP CONFIG

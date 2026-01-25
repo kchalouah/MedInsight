@@ -21,6 +21,8 @@ public class AppointmentResponse {
     private UUID id;
     private UUID patientId;
     private UUID doctorId;
+    private String patientName; // Patient's full name
+    private String doctorName; // Doctor's full name
     private LocalDateTime appointmentDateTime;
     private AppointmentStatus status;
     private String reason;

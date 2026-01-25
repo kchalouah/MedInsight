@@ -1,14 +1,12 @@
 package com.medinsight.audit.entity;
 
+import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.time.LocalDateTime;
 
-@Document(indexName = "audit_logs")
+@Entity
+@Table(name = "audit_logs")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,29 +15,27 @@ import java.time.LocalDateTime;
 public class AuditLog {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Field(type = FieldType.Date)
+    @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    @Field(type = FieldType.Keyword)
+    @Column(nullable = false)
     private String serviceName;
 
-    @Field(type = FieldType.Keyword)
     private String userId;
+    private String userEmail;
+    private String userRole;
 
-    @Field(type = FieldType.Keyword)
     private String action;
 
-    @Field(type = FieldType.Keyword)
     private String resourceId;
 
-    @Field(type = FieldType.Keyword)
     private String status; // SUCCESS, FAILURE
 
-    @Field(type = FieldType.Text)
+    @Column(columnDefinition = "TEXT")
     private String details;
 
-    @Field(type = FieldType.Keyword)
     private String ipAddress;
 }

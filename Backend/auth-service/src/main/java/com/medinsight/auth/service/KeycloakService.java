@@ -35,7 +35,7 @@ public class KeycloakService {
     private String getAdminToken() {
         try {
             WebClient webClient = webClientBuilder.build();
-            
+
             MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
             formData.add("grant_type", "password");
             formData.add("client_id", "admin-cli");
@@ -63,10 +63,10 @@ public class KeycloakService {
     /**
      * Create a user in Keycloak.
      *
-     * @param email User email
-     * @param password User password
+     * @param email     User email
+     * @param password  User password
      * @param firstName First name
-     * @param lastName Last name
+     * @param lastName  Last name
      * @return Keycloak user ID
      */
     public String createUser(String email, String password, String firstName, String lastName) {
@@ -84,9 +84,7 @@ public class KeycloakService {
                     "credentials", List.of(Map.of(
                             "type", "password",
                             "value", password,
-                            "temporary", false
-                    ))
-            );
+                            "temporary", false)));
 
             String createUserUrl = String.format("%s/admin/realms/%s/users",
                     keycloakProperties.getServerUrl(),
@@ -126,7 +124,8 @@ public class KeycloakService {
                     .uri(searchUrl)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                     .retrieve()
-                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {
+                    })
                     .collectList()
                     .block();
 
@@ -144,7 +143,7 @@ public class KeycloakService {
      * Assign a role to a user in Keycloak.
      *
      * @param keycloakUserId Keycloak user ID
-     * @param role Role to assign
+     * @param role           Role to assign
      */
     public void assignRoleToUser(String keycloakUserId, RoleEnum role) {
         try {
@@ -195,7 +194,7 @@ public class KeycloakService {
      * Enable or disable a user in Keycloak.
      *
      * @param keycloakUserId Keycloak user ID
-     * @param enabled Enable or disable
+     * @param enabled        Enable or disable
      */
     public void setUserEnabled(String keycloakUserId, boolean enabled) {
         try {
@@ -225,6 +224,7 @@ public class KeycloakService {
             throw new KeycloakIntegrationException("Failed to update user in Keycloak", e);
         }
     }
+
     /**
      * Delete a user in Keycloak.
      *
@@ -252,6 +252,158 @@ public class KeycloakService {
         } catch (WebClientResponseException e) {
             log.error("Failed to delete user from Keycloak: {}", e.getMessage());
             throw new KeycloakIntegrationException("Failed to delete user in Keycloak", e);
+        }
+    }
+
+    /**
+     * Fetch all users from Keycloak realm.
+     */
+    public List<Map<String, Object>> getAllUsers() {
+        try {
+            String token = getAdminToken();
+            WebClient webClient = webClientBuilder.build();
+            String getUsersUrl = String.format("%s/admin/realms/%s/users",
+                    keycloakProperties.getServerUrl(),
+                    keycloakProperties.getRealm());
+
+            return webClient.get()
+                    .uri(getUsersUrl)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {
+                    })
+                    .collectList()
+                    .block();
+        } catch (Exception e) {
+            log.error("Failed to fetch all users from Keycloak: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Get user's realm roles from Keycloak.
+     *
+     * @param keycloakUserId Keycloak user ID
+     * @return Primary role name (e.g., "ROLE_PATIENT")
+     */
+    public String getUserPrimaryRole(String keycloakUserId) {
+        try {
+            String token = getAdminToken();
+            WebClient webClient = webClientBuilder.build();
+
+            String getRolesUrl = String.format("%s/admin/realms/%s/users/%s/role-mappings/realm",
+                    keycloakProperties.getServerUrl(),
+                    keycloakProperties.getRealm(),
+                    keycloakUserId);
+
+            List<Map<String, Object>> roles = webClient.get()
+                    .uri(getRolesUrl)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {
+                    })
+                    .collectList()
+                    .block();
+
+            if (roles != null && !roles.isEmpty()) {
+                log.info("Fetched {} roles for user {}: {}", roles.size(), keycloakUserId,
+                        roles.stream().map(r -> r.get("name")).toList());
+
+                // Return the first role found (prioritize non-default roles)
+                for (Map<String, Object> role : roles) {
+                    String roleName = (String) role.get("name");
+                    // Skip default Keycloak roles
+                    if (roleName != null && !roleName.equals("uma_authorization") && !roleName.equals("offline_access")
+                            && !roleName.equals("default-roles-medinsight")) {
+                        String finalRole = "ROLE_" + roleName;
+                        log.info("Selected primary role for user {}: {}", keycloakUserId, finalRole);
+                        return finalRole;
+                    }
+                }
+            }
+
+            log.warn("No suitable role found for user {}, defaulting to ROLE_PATIENT", keycloakUserId);
+            // Default to PATIENT if no role found
+            return "ROLE_PATIENT";
+
+        } catch (WebClientResponseException e) {
+            log.error("Failed to get user roles for {}: {}. Response: {}",
+                    keycloakUserId, e.getMessage(), e.getResponseBodyAsString());
+            return "ROLE_PATIENT"; // Default fallback
+        }
+    }
+
+    /**
+     * Change user password in Keycloak.
+     */
+    public void changeUserPassword(String keycloakUserId, String oldPassword, String newPassword) {
+        try {
+            // First verify old password by attempting to get a token
+            WebClient webClient = webClientBuilder.build();
+
+            // Get user's email first
+            String token = getAdminToken();
+            String getUserUrl = String.format("%s/admin/realms/%s/users/%s",
+                    keycloakProperties.getServerUrl(),
+                    keycloakProperties.getRealm(),
+                    keycloakUserId);
+
+            Map<String, Object> userInfo = webClient.get()
+                    .uri(getUserUrl)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+
+            String email = (String) userInfo.get("email");
+
+            // Verify old password by attempting login
+            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+            formData.add("grant_type", "password");
+            formData.add("client_id", "frontend");
+            formData.add("username", email);
+            formData.add("password", oldPassword);
+
+            try {
+                webClient.post()
+                        .uri(keycloakProperties.getServerUrl() + "/realms/" + keycloakProperties.getRealm()
+                                + "/protocol/openid-connect/token")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .body(BodyInserters.fromFormData(formData))
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+            } catch (WebClientResponseException e) {
+                throw new KeycloakIntegrationException("Old password is incorrect");
+            }
+
+            // Now update password with admin token
+            String resetPasswordUrl = String.format("%s/admin/realms/%s/users/%s/reset-password",
+                    keycloakProperties.getServerUrl(),
+                    keycloakProperties.getRealm(),
+                    keycloakUserId);
+
+            Map<String, Object> credentialRepresentation = Map.of(
+                    "type", "password",
+                    "value", newPassword,
+                    "temporary", false);
+
+            webClient.put()
+                    .uri(resetPasswordUrl)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(credentialRepresentation)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+
+            log.info("Successfully changed password for user: {}", keycloakUserId);
+
+        } catch (KeycloakIntegrationException e) {
+            throw e;
+        } catch (WebClientResponseException e) {
+            log.error("Failed to change password: {} - {}", e.getMessage(), e.getResponseBodyAsString());
+            throw new KeycloakIntegrationException("Failed to change password in Keycloak", e);
         }
     }
 }

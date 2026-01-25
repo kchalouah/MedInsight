@@ -1,5 +1,7 @@
 package com.medinsight.appointment.service;
 
+import com.medinsight.appointment.client.AuditClient;
+import com.medinsight.appointment.client.MailClient;
 import com.medinsight.appointment.dto.*;
 import com.medinsight.appointment.entity.Appointment;
 import com.medinsight.appointment.entity.AppointmentStatus;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -30,6 +33,9 @@ import java.util.UUID;
 public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
+    private final org.springframework.web.reactive.function.client.WebClient.Builder webClientBuilder;
+    private final AuditClient auditClient;
+    private final MailClient mailClient;
 
     /**
      * Create a new appointment.
@@ -54,8 +60,7 @@ public class AppointmentService {
                         request.getDoctorId(),
                         startWindow,
                         endWindow,
-                        AppointmentStatus.CANCELLED
-                );
+                        AppointmentStatus.CANCELLED);
 
         if (!conflicts.isEmpty()) {
             throw new AppointmentConflictException("Doctor is not available at the requested time");
@@ -72,6 +77,33 @@ public class AppointmentService {
 
         appointment = appointmentRepository.save(appointment);
         log.info("Created appointment with ID: {}", appointment.getId());
+
+        // Fetch names and emails for the notification
+        String patientName = fetchUserName(request.getPatientId());
+        String doctorName = fetchUserName(request.getDoctorId());
+        String patientEmail = fetchUserEmail(request.getPatientId());
+
+        // Audit Log
+        auditClient.log(
+                "appointment-service",
+                "CREATE_APPOINTMENT",
+                authenticatedUserId.toString(),
+                "app-user@medinsight.tn",
+                "UNKNOWN",
+                "SUCCESS",
+                "Appointment created for patient " + request.getPatientId());
+
+        // Send Email Confirmation
+        if (patientEmail != null) {
+            mailClient.sendAppointmentEmail(MailClient.AppointmentReminderRequest.builder()
+                    .to(patientEmail)
+                    .patientName(patientName != null ? patientName : "Patient")
+                    .appointmentDate(request.getAppointmentDateTime().toLocalDate().toString())
+                    .appointmentTime(request.getAppointmentDateTime().toLocalTime().toString())
+                    .doctorName(doctorName != null ? doctorName : "Docteur")
+                    .location("Clinique MedInsight, Tunis")
+                    .build());
+        }
 
         return toResponse(appointment);
     }
@@ -94,11 +126,13 @@ public class AppointmentService {
      * Update appointment.
      */
     @Transactional
-    public AppointmentResponse updateAppointment(UUID id, AppointmentUpdateRequest request, Authentication authentication) {
+    public AppointmentResponse updateAppointment(UUID id, AppointmentUpdateRequest request,
+            Authentication authentication) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new AppointmentNotFoundException("Appointment not found with ID: " + id));
 
         // Check access permissions
+        UUID authenticatedUserId = getUserIdFromAuth(authentication);
         validateUpdateAccess(appointment, authentication);
 
         if (request.getAppointmentDateTime() != null) {
@@ -116,6 +150,16 @@ public class AppointmentService {
 
         appointment = appointmentRepository.save(appointment);
         log.info("Updated appointment with ID: {}", id);
+
+        // Audit Log
+        auditClient.log(
+                "appointment-service",
+                "UPDATE_APPOINTMENT",
+                authenticatedUserId.toString(),
+                "app-user@medinsight.tn",
+                "UNKNOWN",
+                "SUCCESS",
+                "Appointment " + id + " updated to status: " + request.getStatus());
 
         return toResponse(appointment);
     }
@@ -136,13 +180,24 @@ public class AppointmentService {
 
         appointmentRepository.delete(appointment);
         log.info("Deleted appointment with ID: {}", id);
+
+        // Audit Log
+        auditClient.log(
+                "appointment-service",
+                "DELETE_APPOINTMENT",
+                authenticatedUserId.toString(),
+                "app-user@medinsight.tn",
+                "UNKNOWN",
+                "SUCCESS",
+                "Appointment " + id + " deleted");
     }
 
     /**
      * Get all appointments with filtering.
      */
     @Transactional(readOnly = true)
-    public Page<AppointmentResponse> getAppointments(AppointmentFilterRequest filter, Pageable pageable, Authentication authentication) {
+    public Page<AppointmentResponse> getAppointments(AppointmentFilterRequest filter, Pageable pageable,
+            Authentication authentication) {
         UUID authenticatedUserId = getUserIdFromAuth(authentication);
         boolean isAdmin = hasRole(authentication, "ADMIN");
         boolean isDoctor = hasRole(authentication, "MEDECIN");
@@ -152,14 +207,14 @@ public class AppointmentService {
         if (isAdmin) {
             // Admin can see all appointments with filters
             appointments = applyFilters(filter, pageable);
-        } else if (isDoctor && filter.getDoctorId() != null && filter.getDoctorId().equals(authenticatedUserId)) {
-            // Doctor can see their own appointments
-            appointments = applyFilters(filter, pageable);
-        } else if (filter.getPatientId() != null && filter.getPatientId().equals(authenticatedUserId)) {
-            // Patient can see their own appointments
+        } else if (isDoctor) {
+            // Doctor can only see their own appointments
+            filter.setDoctorId(authenticatedUserId);
             appointments = applyFilters(filter, pageable);
         } else {
-            throw new UnauthorizedAccessException("You do not have permission to view these appointments");
+            // Patient can only see their own appointments
+            filter.setPatientId(authenticatedUserId);
+            appointments = applyFilters(filter, pageable);
         }
 
         return appointments.map(this::toResponse);
@@ -169,9 +224,10 @@ public class AppointmentService {
      * Get appointments for a specific patient.
      */
     @Transactional(readOnly = true)
-    public Page<AppointmentResponse> getPatientAppointments(UUID patientId, Pageable pageable, Authentication authentication) {
+    public Page<AppointmentResponse> getPatientAppointments(UUID patientId, Pageable pageable,
+            Authentication authentication) {
         UUID authenticatedUserId = getUserIdFromAuth(authentication);
-        
+
         if (!hasRole(authentication, "ADMIN") && !patientId.equals(authenticatedUserId)) {
             throw new UnauthorizedAccessException("You can only view your own appointments");
         }
@@ -184,9 +240,10 @@ public class AppointmentService {
      * Get appointments for a specific doctor.
      */
     @Transactional(readOnly = true)
-    public Page<AppointmentResponse> getDoctorAppointments(UUID doctorId, Pageable pageable, Authentication authentication) {
+    public Page<AppointmentResponse> getDoctorAppointments(UUID doctorId, Pageable pageable,
+            Authentication authentication) {
         UUID authenticatedUserId = getUserIdFromAuth(authentication);
-        
+
         if (!hasRole(authentication, "ADMIN") && !hasRole(authentication, "MEDECIN")) {
             throw new UnauthorizedAccessException("Only doctors and admins can view doctor appointments");
         }
@@ -207,9 +264,11 @@ public class AppointmentService {
         } else if (filter.getDoctorId() != null && filter.getStatus() != null) {
             return appointmentRepository.findByDoctorIdAndStatus(filter.getDoctorId(), filter.getStatus(), pageable);
         } else if (filter.getPatientId() != null && filter.getStartDate() != null && filter.getEndDate() != null) {
-            return appointmentRepository.findByPatientIdAndDateRange(filter.getPatientId(), filter.getStartDate(), filter.getEndDate(), pageable);
+            return appointmentRepository.findByPatientIdAndDateRange(filter.getPatientId(), filter.getStartDate(),
+                    filter.getEndDate(), pageable);
         } else if (filter.getDoctorId() != null && filter.getStartDate() != null && filter.getEndDate() != null) {
-            return appointmentRepository.findByDoctorIdAndDateRange(filter.getDoctorId(), filter.getStartDate(), filter.getEndDate(), pageable);
+            return appointmentRepository.findByDoctorIdAndDateRange(filter.getDoctorId(), filter.getStartDate(),
+                    filter.getEndDate(), pageable);
         } else if (filter.getPatientId() != null) {
             return appointmentRepository.findByPatientId(filter.getPatientId(), pageable);
         } else if (filter.getDoctorId() != null) {
@@ -225,7 +284,7 @@ public class AppointmentService {
 
     private void validateAccess(Appointment appointment, Authentication authentication) {
         UUID authenticatedUserId = getUserIdFromAuth(authentication);
-        
+
         if (hasRole(authentication, "ADMIN")) {
             return; // Admin can access all
         }
@@ -243,7 +302,7 @@ public class AppointmentService {
 
     private void validateUpdateAccess(Appointment appointment, Authentication authentication) {
         UUID authenticatedUserId = getUserIdFromAuth(authentication);
-        
+
         if (hasRole(authentication, "ADMIN")) {
             return; // Admin can update all
         }
@@ -282,10 +341,16 @@ public class AppointmentService {
     }
 
     private AppointmentResponse toResponse(Appointment appointment) {
+        // Fetch patient and doctor names from auth-service
+        String patientName = fetchUserName(appointment.getPatientId());
+        String doctorName = fetchUserName(appointment.getDoctorId());
+
         return AppointmentResponse.builder()
                 .id(appointment.getId())
                 .patientId(appointment.getPatientId())
                 .doctorId(appointment.getDoctorId())
+                .patientName(patientName)
+                .doctorName(doctorName)
                 .appointmentDateTime(appointment.getAppointmentDateTime())
                 .status(appointment.getStatus())
                 .reason(appointment.getReason())
@@ -293,5 +358,36 @@ public class AppointmentService {
                 .createdAt(appointment.getCreatedAt())
                 .updatedAt(appointment.getUpdatedAt())
                 .build();
+    }
+
+    private String fetchUserName(UUID keycloakId) {
+        Map<String, Object> userData = fetchUserData(keycloakId);
+        if (userData != null && userData.get("firstName") != null && userData.get("lastName") != null) {
+            return userData.get("firstName") + " " + userData.get("lastName");
+        }
+        return null;
+    }
+
+    private String fetchUserEmail(UUID keycloakId) {
+        Map<String, Object> userData = fetchUserData(keycloakId);
+        if (userData != null && userData.get("email") != null) {
+            return (String) userData.get("email");
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> fetchUserData(UUID keycloakId) {
+        try {
+            org.springframework.web.reactive.function.client.WebClient webClient = webClientBuilder.build();
+            return webClient.get()
+                    .uri("http://auth-service:8081/api/internal/users/keycloak/" + keycloakId)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+        } catch (Exception e) {
+            log.warn("Failed to fetch user data for ID {}: {}", keycloakId, e.getMessage());
+        }
+        return null;
     }
 }

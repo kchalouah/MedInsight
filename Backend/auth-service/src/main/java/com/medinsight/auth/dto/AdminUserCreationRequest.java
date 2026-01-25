@@ -40,4 +40,19 @@ public class AdminUserCreationRequest {
 
     @NotNull(message = "Role is required")
     private RoleEnum role;
+
+    // Patient Profile Fields
+    private java.time.LocalDate dateOfBirth;
+    private com.medinsight.auth.entity.Gender gender;
+    private String bloodType;
+    private String emergencyContactName;
+    private String emergencyContactPhone;
+    private String insuranceProvider;
+    private String insuranceNumber;
+
+    // Medecin Profile Fields
+    private String specialization;
+    private String licenseNumber;
+    private Integer yearsOfExperience;
+    private java.math.BigDecimal consultationFee;
 }

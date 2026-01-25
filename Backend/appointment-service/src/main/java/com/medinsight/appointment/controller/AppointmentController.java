@@ -16,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.medinsight.appointment.entity.AppointmentStatus;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -32,7 +34,7 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PATIENT', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'ADMIN', 'GESTIONNAIRE')")
     @Operation(summary = "Create a new appointment", description = "Patients can create appointments for themselves, admins can create for anyone")
     public ResponseEntity<AppointmentResponse> createAppointment(
             @Valid @RequestBody AppointmentRequest request,
@@ -89,14 +91,15 @@ public class AppointmentController {
     }
 
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('PATIENT', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('PATIENT', 'ADMIN', 'GESTIONNAIRE')")
     @Operation(summary = "Get patient appointments", description = "Get all appointments for a specific patient")
     public ResponseEntity<Page<AppointmentResponse>> getPatientAppointments(
             @PathVariable UUID patientId,
             Pageable pageable,
             Authentication authentication) {
         log.info("Fetching appointments for patient: {}", patientId);
-        Page<AppointmentResponse> response = appointmentService.getPatientAppointments(patientId, pageable, authentication);
+        Page<AppointmentResponse> response = appointmentService.getPatientAppointments(patientId, pageable,
+                authentication);
         return ResponseEntity.ok(response);
     }
 
@@ -108,7 +111,27 @@ public class AppointmentController {
             Pageable pageable,
             Authentication authentication) {
         log.info("Fetching appointments for doctor: {}", doctorId);
-        Page<AppointmentResponse> response = appointmentService.getDoctorAppointments(doctorId, pageable, authentication);
+        Page<AppointmentResponse> response = appointmentService.getDoctorAppointments(doctorId, pageable,
+                authentication);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/complete")
+    @PreAuthorize("hasRole('MEDECIN')")
+    @Operation(summary = "Complete consultation", description = "Mark appointment as completed (doctors only)")
+    public ResponseEntity<AppointmentResponse> completeAppointment(
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, String> notes,
+            Authentication authentication) {
+        log.info("Completing consultation for appointment: {}", id);
+
+        AppointmentUpdateRequest updateRequest = new AppointmentUpdateRequest();
+        updateRequest.setStatus(AppointmentStatus.COMPLETED);
+        if (notes != null && notes.containsKey("notes")) {
+            updateRequest.setNotes(notes.get("notes"));
+        }
+
+        AppointmentResponse response = appointmentService.updateAppointment(id, updateRequest, authentication);
         return ResponseEntity.ok(response);
     }
 }

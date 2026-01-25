@@ -49,7 +49,7 @@ export default function MedecinPatientDossier() {
     }
 
     return (
-        <DashboardLayout role="medecin">
+        <DashboardLayout role={["medecin", "gestionnaire"]}>
             <div className="space-y-8">
                 <div className="flex items-center gap-4">
                     <button

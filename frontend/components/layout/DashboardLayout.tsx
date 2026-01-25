@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 
 interface DashboardLayoutProps {
     children: ReactNode
-    role: "patient" | "medecin" | "admin" | "security" | "gestionnaire"
+    role: "patient" | "medecin" | "admin" | "security" | "gestionnaire" | Array<"patient" | "medecin" | "admin" | "security" | "gestionnaire">
 }
 
 // Map Keycloak roles to frontend role types
@@ -34,14 +34,18 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     const router = useRouter()
 
     // Derive actual role from user's Keycloak role
-    const actualRole = user ? mapKeycloakRoleToFrontendRole(user.role) : role
+    const actualRole = user ? mapKeycloakRoleToFrontendRole(user.role) : 'patient'
 
     useEffect(() => {
         if (!loading) {
             if (!user) {
                 router.push("/login")
-            } else if (role && actualRole !== role) {
-                router.push("/forbidden")
+            } else if (role) {
+                const allowedRoles = Array.isArray(role) ? role : [role];
+                if (!allowedRoles.includes(actualRole as any)) {
+                    console.warn(`Access Denied. User role: ${actualRole}, Allowed: ${allowedRoles}`);
+                    router.push("/forbidden")
+                }
             }
         }
     }, [user, loading, router, role, actualRole])

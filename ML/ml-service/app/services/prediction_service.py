@@ -11,16 +11,22 @@ class PredictionService:
         # Mock ML Logic
         predictions = [
             DiagnosisPrediction(
-                disease_name="Common Cold",
-                probability=0.85 if "cough" in [s.lower() for s in data.symptoms] else 0.1,
-                confidence_level="High",
-                suggested_specialists=["General Practitioner"]
+                disease_name="Rhume banal",
+                probability=0.85 if "toux" in [s.lower() for s in data.symptoms] or "fièvre" in [s.lower() for s in data.symptoms] else 0.1,
+                confidence_level="Haute",
+                suggested_specialists=["Généraliste"]
             ),
             DiagnosisPrediction(
-                disease_name="Seasonal Allergy",
-                probability=0.65,
-                confidence_level="Medium",
-                suggested_specialists=["Allergist"]
+                disease_name="Grippe Saisonnière",
+                probability=0.72 if "fièvre" in [s.lower() for s in data.symptoms] else 0.05,
+                confidence_level="Moyenne",
+                suggested_specialists=["Généraliste", "Infectiologue"]
+            ),
+            DiagnosisPrediction(
+                disease_name="Allergie Respiratoire",
+                probability=0.45 if "éternuement" in [s.lower() for s in data.symptoms] else 0.2,
+                confidence_level="Moyenne",
+                suggested_specialists=["Allergologue"]
             )
         ]
         

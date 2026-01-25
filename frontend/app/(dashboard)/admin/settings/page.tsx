@@ -7,8 +7,10 @@ import {
     Database, Cpu, HardDrive, Zap, Info
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { useAuth } from "@/lib/auth-context"
 
 export default function AdminSettingsPage() {
+    const { user } = useAuth()
     const [systemStatus, setSystemStatus] = useState({
         gateway: "ONLINE",
         authService: "ONLINE",
@@ -58,7 +60,7 @@ export default function AdminSettingsPage() {
     ]
 
     return (
-        <DashboardLayout role="admin">
+        <DashboardLayout role={user?.role === 'ROLE_GESTIONNAIRE' ? 'gestionnaire' : 'admin'}>
             <div className="space-y-6">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">

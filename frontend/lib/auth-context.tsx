@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const dashboardMap: Record<string, string> = {
             'ROLE_PATIENT': '/patient/dashboard',
             'ROLE_MEDECIN': '/medecin/dashboard',
-            'ROLE_GESTIONNAIRE': '/admin/dashboard',
+            'ROLE_GESTIONNAIRE': '/gestionnaire/dashboard',
             'ROLE_RESPONSABLE_SECURITE': '/security/dashboard',
             'ROLE_ADMIN': '/admin/dashboard'
         }

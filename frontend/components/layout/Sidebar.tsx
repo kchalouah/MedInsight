@@ -33,7 +33,9 @@ const navigationConfig = {
     ],
     gestionnaire: [
         { name: "Tableau de bord", href: "/gestionnaire/dashboard", icon: Home },
-        { name: "Rapports d'Activité", href: "/admin/reports", icon: BarChart3 }, // Reusing admin reports page if compatible
+        { name: "Gestion Patients", href: "/gestionnaire/patients", icon: Users },
+        { name: "Gestion Médecins", href: "/gestionnaire/medecins", icon: Stethoscope },
+        { name: "Rapports d'Activité", href: "/admin/reports", icon: BarChart3 },
         { name: "Configuration Système", href: "/admin/settings", icon: Settings },
     ],
     security: [
@@ -42,6 +44,7 @@ const navigationConfig = {
         { name: "Monitoring (Grafana)", href: "/security/grafana", icon: BarChart3 },
         { name: "Logs (Loki)", href: "/security/loki", icon: FileText },
         { name: "Métriques (Prometheus)", href: "/security/prometheus", icon: Activity },
+        { name: "Keycloak Console", href: "http://localhost:8180/admin/master/console/", icon: Shield },
     ],
 }
 

@@ -1,5 +1,6 @@
 package com.medinsight.appointment.service;
 
+import com.medinsight.appointment.client.AuditClient;
 import com.medinsight.appointment.dto.PrescriptionRequest;
 import com.medinsight.appointment.dto.PrescriptionResponse;
 import com.medinsight.appointment.entity.Appointment;
@@ -29,16 +30,18 @@ public class PrescriptionService {
 
     private final PrescriptionRepository prescriptionRepository;
     private final AppointmentRepository appointmentRepository;
+    private final AuditClient auditClient;
 
     @Transactional
-    public PrescriptionResponse createPrescription(UUID appointmentId, PrescriptionRequest request, Authentication authentication) {
+    public PrescriptionResponse createPrescription(UUID appointmentId, PrescriptionRequest request,
+            Authentication authentication) {
         log.info("Creating prescription for appointment: {}", appointmentId);
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentNotFoundException("Appointment not found: " + appointmentId));
 
         UUID authenticatedUserId = getUserIdFromAuth(authentication);
-        
+
         // Only the assigned doctor or admin can issue a prescription
         if (!hasRole(authentication, "ADMIN") && !appointment.getDoctorId().equals(authenticatedUserId)) {
             throw new UnauthorizedAccessException("Only the assigned doctor can issue prescriptions");
@@ -57,6 +60,16 @@ public class PrescriptionService {
         prescription = prescriptionRepository.save(prescription);
         log.info("Issued prescription with ID: {}", prescription.getId());
 
+        // Send Audit Log
+        auditClient.log(
+                "appointment-service",
+                "ISSUE_PRESCRIPTION",
+                authenticatedUserId.toString(),
+                "doctor@medinsight.tn",
+                "ROLE_MEDECIN",
+                "SUCCESS",
+                "Prescription issued for appointment " + appointmentId);
+
         return toResponse(prescription);
     }
 
@@ -73,10 +86,12 @@ public class PrescriptionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PrescriptionResponse> getPatientPrescriptions(UUID patientId, Pageable pageable, Authentication authentication) {
+    public Page<PrescriptionResponse> getPatientPrescriptions(UUID patientId, Pageable pageable,
+            Authentication authentication) {
         UUID authenticatedUserId = getUserIdFromAuth(authentication);
 
-        if (!hasRole(authentication, "ADMIN") && !patientId.equals(authenticatedUserId) && !hasRole(authentication, "MEDECIN")) {
+        if (!hasRole(authentication, "ADMIN") && !patientId.equals(authenticatedUserId)
+                && !hasRole(authentication, "MEDECIN")) {
             throw new UnauthorizedAccessException("You cannot view these prescriptions");
         }
 

@@ -1,5 +1,6 @@
 package com.medinsight.appointment.config;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,30 +33,30 @@ import java.util.stream.Stream;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Swagger/OpenAPI endpoints
-                        .requestMatchers("/appointments/v3/api-docs/**", "/prescriptions/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        
+                        .requestMatchers("/appointments/v3/api-docs/**", "/prescriptions/v3/api-docs/**",
+                                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                        .permitAll()
+
                         // Actuator health endpoint
                         .requestMatchers("/actuator/health").permitAll()
-                        
+
                         // Authenticated endpoints
                         .requestMatchers("/appointments/**", "/prescriptions/**").authenticated()
-                        
+
                         // All other endpoints require authentication
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                );
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
     }
@@ -67,7 +68,7 @@ public class SecurityConfig {
             // Extract realm roles from Keycloak JWT
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
             Collection<GrantedAuthority> realmRoles = List.of();
-            
+
             if (realmAccess != null && realmAccess.containsKey("roles")) {
                 @SuppressWarnings("unchecked")
                 List<String> roles = (List<String>) realmAccess.get("roles");
@@ -84,13 +85,14 @@ public class SecurityConfig {
             Collection<GrantedAuthority> scopeAuthorities = scopeConverter.convert(jwt);
 
             // Combine both
-            return Stream.concat(realmRoles.stream(), scopeAuthorities.stream())
+            Collection<GrantedAuthority> authorities = Stream.concat(realmRoles.stream(), scopeAuthorities.stream())
                     .collect(Collectors.toList());
+
+            log.info("Appointment Service SUCCESS - User: {}, Roles: {}", jwt.getSubject(), authorities);
+            return authorities;
         });
         return converter;
     }
-
-
 
     @Bean
     public JwtDecoder jwtDecoder() {
@@ -98,15 +100,16 @@ public class SecurityConfig {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
 
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
-            new JwtTimestampValidator(),
-            jwt -> {
-                String issuer = jwt.getIssuer().toString();
-                if (issuer.contains("/realms/medinsight")) {
-                    return OAuth2TokenValidatorResult.success();
-                }
-                return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_issuer", "The issuer " + issuer + " is not trusted", null));
-            }
-        );
+                new JwtTimestampValidator(),
+                jwt -> {
+                    String issuer = jwt.getIssuer().toString();
+                    log.info("Appointment Service validating token issuer: {}", issuer);
+                    if (issuer.contains("/realms/medinsight")) {
+                        return OAuth2TokenValidatorResult.success();
+                    }
+                    return OAuth2TokenValidatorResult.failure(
+                            new OAuth2Error("invalid_issuer", "The issuer " + issuer + " is not trusted", null));
+                });
 
         jwtDecoder.setJwtValidator(validator);
         return jwtDecoder;

@@ -1,5 +1,6 @@
 package com.medinsight.auth.config;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +11,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.jwt.*;
@@ -32,37 +35,46 @@ import java.util.stream.Stream;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers(new AntPathRequestMatcher("/api/internal/**"))
+                .requestMatchers(new AntPathRequestMatcher("/h2-console/**"))
+                .requestMatchers(new AntPathRequestMatcher("/actuator/**"));
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
 
-
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        
+
                         // Swagger/OpenAPI endpoints (relative to stripped path)
-                        .requestMatchers("/auth/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        
+                        .requestMatchers("/auth/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**",
+                                "/swagger-ui.html")
+                        .permitAll()
+
                         // Actuator health endpoint
                         .requestMatchers("/actuator/health").permitAll()
-                        
+
                         // Admin endpoints require ADMIN role
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "GESTIONNAIRE")
+
                         // Internal endpoints
-                        .requestMatchers("/internal/**").permitAll()
-                        
+                        .requestMatchers("/api/internal/**").permitAll()
+
                         // All other endpoints require authentication
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                );
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
     }
@@ -74,7 +86,7 @@ public class SecurityConfig {
             // Extract realm roles from Keycloak JWT
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
             Collection<GrantedAuthority> realmRoles = List.of();
-            
+
             if (realmAccess != null && realmAccess.containsKey("roles")) {
                 @SuppressWarnings("unchecked")
                 List<String> roles = (List<String>) realmAccess.get("roles");
@@ -91,13 +103,14 @@ public class SecurityConfig {
             Collection<GrantedAuthority> scopeAuthorities = scopeConverter.convert(jwt);
 
             // Combine both
-            return Stream.concat(realmRoles.stream(), scopeAuthorities.stream())
+            Collection<GrantedAuthority> authorities = Stream.concat(realmRoles.stream(), scopeAuthorities.stream())
                     .collect(Collectors.toList());
+
+            log.info("Auth Service SUCCESS - User: {}, Roles: {}", jwt.getSubject(), authorities);
+            return authorities;
         });
         return converter;
     }
-
-
 
     @Bean
     public JwtDecoder jwtDecoder() {
@@ -105,15 +118,16 @@ public class SecurityConfig {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
 
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
-            new JwtTimestampValidator(),
-            jwt -> {
-                String issuer = jwt.getIssuer().toString();
-                if (issuer.contains("/realms/medinsight")) {
-                    return OAuth2TokenValidatorResult.success();
-                }
-                return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_issuer", "The issuer " + issuer + " is not trusted", null));
-            }
-        );
+                new JwtTimestampValidator(),
+                jwt -> {
+                    String issuer = jwt.getIssuer().toString();
+                    log.info("Auth Service validating token issuer: {}", issuer);
+                    if (issuer.contains("/realms/medinsight")) {
+                        return OAuth2TokenValidatorResult.success();
+                    }
+                    return OAuth2TokenValidatorResult.failure(
+                            new OAuth2Error("invalid_issuer", "The issuer " + issuer + " is not trusted", null));
+                });
 
         jwtDecoder.setJwtValidator(validator);
         return jwtDecoder;

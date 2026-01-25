@@ -2,13 +2,13 @@ from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 
 class clinicalData(BaseModel):
-    age: int
-    gender: str
+    age: Optional[int] = None
+    gender: Optional[str] = None
     symptoms: List[str]
-    blood_pressure_systolic: int
-    blood_pressure_diastolic: int
-    heart_rate: int
-    temperature: float
+    blood_pressure_systolic: Optional[int] = None
+    blood_pressure_diastolic: Optional[int] = None
+    heart_rate: Optional[int] = None
+    temperature: Optional[float] = None
     existing_conditions: Optional[List[str]] = []
 
 class DiagnosisPrediction(BaseModel):

@@ -1,6 +1,8 @@
 package com.medinsight.record.service;
 
 import com.medinsight.record.client.AppointmentClient;
+import com.medinsight.record.client.AuditClient;
+import com.medinsight.record.client.MailClient;
 import com.medinsight.record.dto.*;
 import com.medinsight.record.entity.ConsultationNote;
 import com.medinsight.record.entity.PatientMedicalRecord;
@@ -27,21 +29,23 @@ public class RecordService {
     private final MedicalRecordRepository recordRepository;
     private final ConsultationNoteRepository noteRepository;
     private final AppointmentClient appointmentClient;
+    private final AuditClient auditClient;
+    private final MailClient mailClient;
 
     @Transactional(readOnly = true)
     public MedicalDossierResponse getDetailedDossier(UUID patientId, Authentication authentication) {
         log.info("Fetching detailed dossier for patient: {}", patientId);
-        
+
         // 1. Get Local Clinical Data
         PatientMedicalRecord record = recordRepository.findByPatientId(patientId)
                 .orElseGet(() -> createEmptyRecord(patientId));
-        
+
         List<ConsultationNote> notes = noteRepository.findByPatientId(patientId);
 
         // 2. Fetch Remote Data via Feign
         List<ExternalAppointmentResponse> appointments = List.of();
         List<ExternalPrescriptionResponse> prescriptions = List.of();
-        
+
         try {
             appointments = appointmentClient.getPatientAppointments(patientId);
             prescriptions = appointmentClient.getPatientPrescriptions(patientId);
@@ -71,7 +75,25 @@ public class RecordService {
         record.setEmergencyContactPhone(request.getEmergencyContactPhone());
         record.setMedicalHistory(request.getMedicalHistory());
 
-        return toRecordResponse(recordRepository.save(record));
+        PatientMedicalRecord saved = recordRepository.save(record);
+
+        auditClient.log(
+                "medical-record-service",
+                "UPDATE_RECORD",
+                patientId.toString(),
+                "patient-profile@medinsight.tn", // Placeholder/lookup needed for real, but using placeholder for now
+                "ROLE_PATIENT",
+                "SUCCESS",
+                "Medical record updated for patient");
+
+        // Send Notification Email
+        mailClient.sendMail(
+                "patient-profile@medinsight.tn",
+                "Mise à jour de votre dossier médical",
+                "Bonjour,\n\nDes informations ont été mises à jour dans votre dossier médical sur MedInsight.\n\nCordialement,\nL'équipe MedInsight",
+                false);
+
+        return toRecordResponse(saved);
     }
 
     @Transactional
@@ -83,7 +105,18 @@ public class RecordService {
                 .noteContent(request.getNoteContent())
                 .build();
 
-        return toNoteResponse(noteRepository.save(note));
+        ConsultationNote savedNote = noteRepository.save(note);
+
+        auditClient.log(
+                "medical-record-service",
+                "ADD_NOTE",
+                doctorId.toString(),
+                "doctor@medinsight.tn",
+                "ROLE_MEDECIN",
+                "SUCCESS",
+                "Consultation note added for patient " + request.getPatientId());
+
+        return toNoteResponse(savedNote);
     }
 
     private PatientMedicalRecord createEmptyRecord(UUID patientId) {
@@ -117,7 +150,7 @@ public class RecordService {
 
         // Only the author (doctor) or an admin can delete
         if (!isAdmin && !note.getDoctorId().equals(doctorId)) {
-             throw new RuntimeException("Access Denied: You can only delete your own notes");
+            throw new RuntimeException("Access Denied: You can only delete your own notes");
         }
 
         noteRepository.delete(note);

@@ -27,6 +27,7 @@ public class UserResponse {
     private String city;
     private String country;
     private Boolean enabled;
+    private String role; // Keycloak role (e.g., "ROLE_PATIENT", "ROLE_MEDECIN")
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private PatientProfileResponse patientProfile;
