@@ -116,7 +116,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/appointments/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/records/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/audit/**").hasAnyRole("ADMIN", "RESPONSABLE_SECURITE", "GESTIONNAIRE")
-                        .pathMatchers("/api/mail/**").hasAnyRole("ADMIN", "GESTIONNAIRE", "MEDECIN")
+                        .pathMatchers("/api/mail/**").hasAnyRole("ADMIN", "GESTIONNAIRE", "MEDECIN", "PATIENT")
                         .pathMatchers("/api/ml/**").hasAnyRole("MEDECIN", "ADMIN")
 
                         // Default
