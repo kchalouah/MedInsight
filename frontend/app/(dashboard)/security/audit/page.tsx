@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/layout/DashboardLayout"
 import { auditApi, AuditLog } from "@/lib/api"
+import { toast } from "react-hot-toast"
 import {
     Search, Filter, Shield, Activity,
     Calendar, User, Server, Clock, Download, Tag
@@ -14,6 +15,7 @@ export default function SecurityAuditPage() {
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
     const [serviceFilter, setServiceFilter] = useState("ALL")
+    const [seeding, setSeeding] = useState(false)
 
     useEffect(() => {
         fetchLogs()
@@ -28,6 +30,20 @@ export default function SecurityAuditPage() {
             console.error("Failed to fetch logs", err)
         } finally {
             setLoading(false)
+        }
+    }
+
+    async function handleSeedLogs() {
+        setSeeding(true)
+        try {
+            await auditApi.seedLogs()
+            toast.success("20 journaux de test générés !")
+            fetchLogs()
+        } catch (err) {
+            console.error("Failed to seed logs", err)
+            toast.error("Erreur lors de la génération des logs")
+        } finally {
+            setSeeding(false)
         }
     }
 
@@ -62,13 +78,23 @@ export default function SecurityAuditPage() {
                         </h1>
                         <p className="text-slate-500">Extraction des traces d'activité système centralisée</p>
                     </div>
-                    <button
-                        onClick={fetchLogs}
-                        className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors shadow-sm text-slate-600 font-medium"
-                    >
-                        <Clock className="w-5 h-5" />
-                        Rafraîchir
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleSeedLogs}
+                            disabled={seeding}
+                            className="flex items-center gap-2 bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-lg transition-colors shadow-sm font-medium disabled:opacity-50"
+                        >
+                            {seeding ? <Activity className="w-5 h-5 animate-spin" /> : <Tag className="w-5 h-5" />}
+                            Générer des logs de test
+                        </button>
+                        <button
+                            onClick={fetchLogs}
+                            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors shadow-sm text-slate-600 font-medium"
+                        >
+                            <Clock className="w-5 h-5" />
+                            Rafraîchir
+                        </button>
+                    </div>
                 </div>
 
                 {/* Filters */}

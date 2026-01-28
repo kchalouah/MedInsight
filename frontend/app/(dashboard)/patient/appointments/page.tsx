@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/layout/DashboardLayout"
+import AppointmentSlotPicker from "@/components/appointments/AppointmentSlotPicker"
 import { medecinApi, appointmentApi, mailApi } from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "react-hot-toast"
@@ -144,29 +145,18 @@ export default function PatientAppointments() {
                                 exit={{ opacity: 0, x: -20 }}
                                 className="p-8 space-y-6 flex-1 flex flex-col"
                             >
-                                <div className="flex-1 space-y-6">
-                                    <h2 className="text-xl font-bold text-slate-800">Date et Heure</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-slate-700">Date du rendez-vous</label>
-                                            <input
-                                                type="date"
-                                                className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20"
-                                                value={appointmentDate}
-                                                onChange={(e) => setAppointmentDate(e.target.value)}
-                                                min={new Date().toISOString().split('T')[0]}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-semibold text-slate-700">Heure</label>
-                                            <input
-                                                type="time"
-                                                className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20"
-                                                value={appointmentTime}
-                                                onChange={(e) => setAppointmentTime(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
+                                <div className="flex-1 space-y-6 overflow-y-auto">
+                                    <h2 className="text-xl font-bold text-slate-800">Choisissez un créneau</h2>
+                                    <AppointmentSlotPicker
+                                        doctorId={selectedDoctor?.keycloakId}
+                                        selectedSlot={appointmentDate && appointmentTime ? new Date(`${appointmentDate}T${appointmentTime}:00`) : undefined}
+                                        onSlotSelect={(slot) => {
+                                            const dateStr = slot.toISOString().split('T')[0];
+                                            const timeStr = slot.toTimeString().slice(0, 5);
+                                            setAppointmentDate(dateStr);
+                                            setAppointmentTime(timeStr);
+                                        }}
+                                    />
                                 </div>
                                 <div className="pt-8 flex justify-between items-center bg-slate-50/50 -mx-8 -mb-8 p-8 border-t border-slate-100 mt-auto">
                                     <button

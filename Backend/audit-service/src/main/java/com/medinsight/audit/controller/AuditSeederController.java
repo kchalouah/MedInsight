@@ -23,7 +23,7 @@ public class AuditSeederController {
     private final Random random = new Random();
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RESPONSABLE_SECURITE')")
     @Operation(summary = "Seed sample audit logs", description = "Generates 20 random logs for testing the dashboard")
     public ResponseEntity<String> seedLogs() {
         String[] services = { "auth-service", "appointment-service", "medical-record-service", "mail-service" };

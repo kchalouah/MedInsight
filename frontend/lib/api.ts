@@ -156,6 +156,44 @@ export const medecinApi = {
             params: { page, size }
         });
         return response.data;
+    },
+
+    // Get doctor's schedule
+    getSchedule: async (doctorId: string) => {
+        const response = await api.get<any[]>(`/appointments/schedule/${doctorId}`);
+        return response.data;
+    },
+
+    // Create or update doctor schedule
+    updateSchedule: async (data: { doctorId: string, dayOfWeek: string, startTime: string, endTime: string, slotDurationMinutes?: number, isActive?: boolean }) => {
+        const response = await api.post('/appointments/schedule', data);
+        return response.data;
+    },
+
+    // Create default schedule for a doctor
+    createDefaultSchedule: async (doctorId: string) => {
+        const response = await api.post(`/appointments/schedule/${doctorId}/default`);
+        return response.data;
+    },
+
+    // Add unavailability period
+    addUnavailability: async (params: { doctorId: string, startDateTime: string, endDateTime: string, reason?: string }) => {
+        const response = await api.post('/appointments/schedule/unavailability', null, {
+            params: params
+        });
+        return response.data;
+    },
+
+    // Get future unavailability periods
+    getUnavailability: async (doctorId: string) => {
+        const response = await api.get<any[]>(`/appointments/schedule/unavailability/${doctorId}`);
+        return response.data;
+    },
+
+    // Delete unavailability period
+    deleteUnavailability: async (unavailabilityId: string) => {
+        const response = await api.delete(`/appointments/schedule/unavailability/${unavailabilityId}`);
+        return response.data;
     }
 };
 
@@ -259,6 +297,12 @@ export const auditApi = {
     // Get logs for a specific service
     getServiceLogs: async (serviceName: string) => {
         const response = await api.get<any[]>(`/audit/logs/service/${serviceName}`);
+        return response.data;
+    },
+
+    // Seed sample audit logs
+    seedLogs: async () => {
+        const response = await api.post<string>('/audit/seed');
         return response.data;
     }
 };

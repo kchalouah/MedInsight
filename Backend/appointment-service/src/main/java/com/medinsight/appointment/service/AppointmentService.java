@@ -36,6 +36,7 @@ public class AppointmentService {
     private final org.springframework.web.reactive.function.client.WebClient.Builder webClientBuilder;
     private final AuditClient auditClient;
     private final MailClient mailClient;
+    private final AppointmentSlotService appointmentSlotService;
 
     /**
      * Create a new appointment.
@@ -50,8 +51,22 @@ public class AppointmentService {
             throw new UnauthorizedAccessException("Patients can only create appointments for themselves");
         }
 
-        // Check for doctor availability (simple conflict check)
         LocalDateTime appointmentTime = request.getAppointmentDateTime();
+
+        // NEW: Validate appointment is during working hours
+        if (!appointmentSlotService.isDuringWorkingHours(request.getDoctorId(), appointmentTime)) {
+            throw new com.medinsight.appointment.exception.OutsideWorkingHoursException(
+                    "Appointment must be scheduled during doctor's working hours");
+        }
+
+        // NEW: Validate time slot is available
+        int slotDuration = 30; // Default slot duration, could be configurable
+        if (!appointmentSlotService.isTimeSlotAvailable(request.getDoctorId(), appointmentTime, slotDuration)) {
+            throw new com.medinsight.appointment.exception.InvalidTimeSlotException(
+                    "Selected time slot is not available. Please choose from available slots.");
+        }
+
+        // Check for doctor availability (conflict check)
         LocalDateTime startWindow = appointmentTime.minusMinutes(30);
         LocalDateTime endWindow = appointmentTime.plusMinutes(30);
 
