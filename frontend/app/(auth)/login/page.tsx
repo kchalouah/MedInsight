@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { auditApi } from "@/lib/api"
 import { toast } from "react-hot-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -65,6 +66,27 @@ export default function LoginPage() {
             // Use AuthProvider login function for auto-redirect
             login(data.access_token);
             toast.success("Connexion réussie !");
+
+            // --- Audit Logging ---
+            try {
+                const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+                const roles = payload.realm_access?.roles || [];
+                const primaryRole = roles.find((r: string) => ['MEDECIN', 'PATIENT', 'ADMIN', 'GESTIONNAIRE', 'RESPONSABLE_SECURITE'].includes(r));
+
+                await auditApi.storeLog({
+                    serviceName: "auth-service",
+                    action: "LOGIN",
+                    userId: payload.sub,
+                    userEmail: payload.email || formData.email,
+                    userRole: primaryRole || "UNKNOWN",
+                    status: "SUCCESS",
+                    details: `Connexion réussie via email`,
+                    ipAddress: "client-side"
+                });
+            } catch (auditErr) {
+                console.warn("Failed to log login event", auditErr);
+            }
+            // ---------------------
 
             // Store refresh token for future use
             localStorage.setItem("refresh_token", data.refresh_token);

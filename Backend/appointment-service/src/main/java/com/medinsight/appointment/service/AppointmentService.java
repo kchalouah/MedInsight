@@ -103,8 +103,8 @@ public class AppointmentService {
                 "appointment-service",
                 "CREATE_APPOINTMENT",
                 authenticatedUserId.toString(),
-                "app-user@medinsight.tn",
-                "UNKNOWN",
+                getUserEmailFromAuth(authentication),
+                getPrimaryRoleFromAuth(authentication),
                 "SUCCESS",
                 "Appointment created for patient " + request.getPatientId());
 
@@ -171,8 +171,8 @@ public class AppointmentService {
                 "appointment-service",
                 "UPDATE_APPOINTMENT",
                 authenticatedUserId.toString(),
-                "app-user@medinsight.tn",
-                "UNKNOWN",
+                getUserEmailFromAuth(authentication),
+                getPrimaryRoleFromAuth(authentication),
                 "SUCCESS",
                 "Appointment " + id + " updated to status: " + request.getStatus());
 
@@ -201,8 +201,8 @@ public class AppointmentService {
                 "appointment-service",
                 "DELETE_APPOINTMENT",
                 authenticatedUserId.toString(),
-                "app-user@medinsight.tn",
-                "UNKNOWN",
+                getUserEmailFromAuth(authentication),
+                getPrimaryRoleFromAuth(authentication),
                 "SUCCESS",
                 "Appointment " + id + " deleted");
     }
@@ -347,6 +347,22 @@ public class AppointmentService {
             }
         }
         throw new UnauthorizedAccessException("Invalid authentication");
+    }
+
+    private String getUserEmailFromAuth(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getClaimAsString("email");
+        }
+        return "system@medinsight.tn";
+    }
+
+    private String getPrimaryRoleFromAuth(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(auth -> auth.replace("ROLE_", ""))
+                .filter(role -> !role.equals("OFFLINE_ACCESS") && !role.equals("UMA_AUTHORIZATION"))
+                .findFirst()
+                .orElse("UNKNOWN");
     }
 
     private boolean hasRole(Authentication authentication, String role) {

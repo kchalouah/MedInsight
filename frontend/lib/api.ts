@@ -300,6 +300,22 @@ export const auditApi = {
         return response.data;
     },
 
+    // Store an audit log
+    storeLog: async (logData: {
+        serviceName: string,
+        action: string,
+        userId: string,
+        userEmail?: string,
+        userRole?: string,
+        status: string,
+        details?: string,
+        resourceId?: string,
+        ipAddress?: string
+    }) => {
+        const response = await api.post<AuditLog>('/audit/logs', logData);
+        return response.data;
+    },
+
     // Seed sample audit logs
     seedLogs: async () => {
         const response = await api.post<string>('/audit/seed');
