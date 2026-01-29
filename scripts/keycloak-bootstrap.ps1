@@ -1,3 +1,7 @@
+param(
+    [string]$KEYCLOAK_URL
+)
+
 # MedInsight Keycloak Bootstrap Script (PowerShell 5.1+ Compatible)
 # This script configures the medinsight realm, roles, and clients.
 
@@ -18,7 +22,9 @@ if (Test-Path $envPath) {
     }
 }
 
-$KEYCLOAK_URL = $env:KEYCLOAK_URL
+if (-not $KEYCLOAK_URL) {
+    $KEYCLOAK_URL = $env:KEYCLOAK_URL
+}
 if (-not $KEYCLOAK_URL -or $KEYCLOAK_URL -like "*keycloak:8080*") { 
     $KEYCLOAK_URL = "http://localhost:8180" 
 }
