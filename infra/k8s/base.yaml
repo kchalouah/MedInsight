@@ -135,6 +135,8 @@ spec:
           value: "edge"
         - name: KC_HTTP_RELATIVE_PATH
           value: "/auth"
+        - name: KC_HEALTH_ENABLED
+          value: "true"
         - name: KC_DB_SCHEMA
           value: "public"
         - name: KC_LOG_LEVEL
@@ -146,13 +148,13 @@ spec:
           httpGet:
             path: /auth/health/live
             port: 8080
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 20
         readinessProbe:
           httpGet:
             path: /auth/health/ready
             port: 8080
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 20
         resources:
           requests:

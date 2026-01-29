@@ -8,14 +8,15 @@ spec:
     spec:
       containers:
       - name: bootstrap
-        image: curlimages/curl:latest
+        image: alpine:latest
         command: ["/bin/sh", "-c"]
         args:
           - |
+            apk add --no-cache curl jq
             # Wait for Keycloak to be ready
             echo "Waiting for Keycloak to be ready..."
             until curl -s http://keycloak:8080/auth/health/ready | grep -q 'UP'; do
-              sleep 5
+              sleep 10
             done
             echo "Keycloak is ready!"
 
@@ -25,7 +26,7 @@ spec:
               -d "username=admin" \
               -d "password=admin" \
               -d "grant_type=password" \
-              -d "client_id=admin-cli" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+              -d "client_id=admin-cli" | jq -r '.access_token')
 
             if [ -z "$TOKEN" ]; then echo "Failed to get token"; exit 1; fi
 

@@ -32,6 +32,7 @@ jobs:
           ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/base.yaml"
           # Wait for Keycloak to start before bootstrapping
           sleep 10
+          ssh $USER@$HOST "sudo k3s kubectl delete job keycloak-bootstrap -n medinsight --ignore-not-found"
           ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/bootstrap-job.yaml"
           ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/backend-services.yaml"
           ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/frontend.yaml"
