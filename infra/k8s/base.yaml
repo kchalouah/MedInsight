@@ -142,6 +142,18 @@ spec:
         ports:
         - containerPort: 8080
           name: http
+        livenessProbe:
+          httpGet:
+            path: /auth/health/live
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /auth/health/ready
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 20
         resources:
           requests:
             memory: "512Mi"

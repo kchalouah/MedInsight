@@ -1,0 +1,66 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-bootstrap
+  namespace: medinsight
+spec:
+  template:
+    spec:
+      containers:
+      - name: bootstrap
+        image: curlimages/curl:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # Wait for Keycloak to be ready
+            echo "Waiting for Keycloak to be ready..."
+            until curl -s http://keycloak:8080/auth/health/ready | grep -q 'UP'; do
+              sleep 5
+            done
+            echo "Keycloak is ready!"
+
+            # 1. Get Token
+            echo "Getting admin token..."
+            TOKEN=$(curl -s -X POST "http://keycloak:8080/auth/realms/master/protocol/openid-connect/token" \
+              -d "username=admin" \
+              -d "password=admin" \
+              -d "grant_type=password" \
+              -d "client_id=admin-cli" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+
+            if [ -z "$TOKEN" ]; then echo "Failed to get token"; exit 1; fi
+
+            # 2. Create Realm
+            echo "Creating realm medinsight..."
+            curl -s -X POST "http://keycloak:8080/auth/admin/realms" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{"realm":"medinsight","enabled":true}'
+
+            # 3. Create Roles
+            for role in ADMIN MEDECIN PATIENT RESPONSABLE_SECURITE GESTION_ADMIN; do
+              echo "Creating role $role..."
+              curl -s -X POST "http://keycloak:8080/auth/admin/realms/medinsight/roles" \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "{\"name\":\"$role\"}"
+            done
+
+            # 4. Create Confidential Clients
+            for client in medinsight-gateway auth-service; do
+              echo "Creating client $client..."
+              curl -s -X POST "http://keycloak:8080/auth/admin/realms/medinsight/clients" \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "{\"clientId\":\"$client\",\"enabled\":true,\"secret\":\"${client}-secret\",\"serviceAccountsEnabled\":true,\"publicClient\":false,\"redirectUris\":[\"*\"],\"webOrigins\":[\"*\"]}"
+            done
+
+            # 5. Create Public Client
+            echo "Creating client medinsight-frontend..."
+            curl -s -X POST "http://keycloak:8080/auth/admin/realms/medinsight/clients" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{"clientId":"medinsight-frontend","enabled":true,"publicClient":true,"protocol":"openid-connect","redirectUris":["*"],"webOrigins":["*"]}'
+
+            echo "Bootstrap complete!"
+      restartPolicy: OnFailure
+  backoffLimit: 4

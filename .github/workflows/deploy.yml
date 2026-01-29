@@ -30,8 +30,9 @@ jobs:
 
           # Apply manifests
           ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/base.yaml"
-          # Wait a bit for CRDs / Namespace if needed
-          sleep 5
+          # Wait for Keycloak to start before bootstrapping
+          sleep 10
+          ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/bootstrap-job.yaml"
           ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/backend-services.yaml"
           ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/frontend.yaml"
           ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/ingress.yaml"
