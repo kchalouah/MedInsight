@@ -8,11 +8,10 @@ spec:
     spec:
       containers:
       - name: bootstrap
-        image: alpine:latest
+        image: badouralix/curl-jq:latest
         command: ["/bin/sh", "-c"]
         args:
           - |
-            apk add --no-cache curl jq
             # Wait for Keycloak to be ready
             echo "Waiting for Keycloak to be ready..."
             until curl -s http://keycloak:8080/auth/health/ready | grep -q 'UP'; do
