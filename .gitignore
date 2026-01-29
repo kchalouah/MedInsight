@@ -61,3 +61,9 @@ temp/
 !frontend/lib/
 
 !frontend/lib/
+*.tfvars
+*.pem
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl

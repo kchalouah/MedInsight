@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: medinsight
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: <DOCKERHUB_USERNAME>/medinsight-frontend:latest
+        env:
+        - name: NEXT_PUBLIC_GATEWAY_URL
+          value: "http://medinsight.local/api"
+        - name: NEXT_PUBLIC_API_URL
+          value: "http://medinsight.local/api"
+        - name: NEXT_PUBLIC_KEYCLOAK_URL
+          value: "http://medinsight.local/auth"
+        - name: NEXT_PUBLIC_KEYCLOAK_REALM
+          value: "medinsight"
+        - name: NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
+          value: "medinsight-frontend"
+        - name: NEXT_PUBLIC_REALM
+          value: "medinsight"
+        - name: NEXT_PUBLIC_CLIENT_ID
+          value: "medinsight-frontend"
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: medinsight
+spec:
+  ports:
+  - port: 3000
+  selector:
+    app: frontend

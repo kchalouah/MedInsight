@@ -1,0 +1,37 @@
+name: Deploy to K3s
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'infra/k8s/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to K3s Server
+        env:
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+          KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+
+          # Copy manifests
+          scp -r infra/k8s $USER@$HOST:/home/$USER/
+
+          # Apply manifests
+          ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/base.yaml"
+          # Wait a bit for CRDs / Namespace if needed
+          sleep 5
+          ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/backend-services.yaml"
+          ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/frontend.yaml"
+          ssh $USER@$HOST "sudo k3s kubectl apply -f /home/$USER/k8s/ingress.yaml"
