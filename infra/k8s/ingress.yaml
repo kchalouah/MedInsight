@@ -8,8 +8,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-  - host: medinsight.local
-    http:
+  - http:
       paths:
       - path: /
         pathType: Prefix

@@ -125,12 +125,16 @@ spec:
             secretKeyRef:
               name: keycloak-credentials
               key: KEYCLOAK_ADMIN_PASSWORD
-        - name: KC_HOSTNAME_URL
-          value: "http://medinsight.local:8080" # Update with real Ingress
+        - name: KC_HOSTNAME_STRICT
+          value: "false"
+        - name: KC_HOSTNAME_STRICT_HTTPS
+          value: "false"
         - name: KC_HTTP_ENABLED
           value: "true"
         - name: KC_PROXY
           value: "edge"
+        - name: KC_LOG_LEVEL
+          value: "DEBUG"
         ports:
         - containerPort: 8080
           name: http
