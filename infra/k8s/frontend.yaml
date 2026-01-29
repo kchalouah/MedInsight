@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: <DOCKERHUB_USERNAME>/medinsight-frontend:latest
+        image: kchalouah/medinsight-frontend:latest
         env:
         - name: NEXT_PUBLIC_GATEWAY_URL
           value: "http://medinsight.local/api"

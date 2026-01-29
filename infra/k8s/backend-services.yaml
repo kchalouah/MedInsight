@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: <DOCKERHUB_USERNAME>/medinsight-auth-service:latest
+        image: kchalouah/medinsight-auth-service:latest
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "docker"
@@ -79,7 +79,7 @@ spec:
     spec:
       containers:
       - name: gateway-service
-        image: <DOCKERHUB_USERNAME>/medinsight-gateway-service:latest
+        image: kchalouah/medinsight-gateway-service:latest
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "docker"
@@ -122,7 +122,7 @@ spec:
     spec:
       containers:
       - name: appointment-service
-        image: <DOCKERHUB_USERNAME>/medinsight-appointment-service:latest
+        image: kchalouah/medinsight-appointment-service:latest
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "docker"
@@ -173,7 +173,7 @@ spec:
     spec:
       containers:
       - name: medical-record-service
-        image: <DOCKERHUB_USERNAME>/medinsight-medical-record-service:latest
+        image: kchalouah/medinsight-medical-record-service:latest
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "docker"
@@ -222,7 +222,7 @@ spec:
     spec:
       containers:
       - name: audit-service
-        image: <DOCKERHUB_USERNAME>/medinsight-audit-service:latest
+        image: kchalouah/medinsight-audit-service:latest
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "docker"
@@ -271,7 +271,7 @@ spec:
     spec:
       containers:
       - name: mail-service
-        image: <DOCKERHUB_USERNAME>/medinsight-mail-service:latest
+        image: kchalouah/medinsight-mail-service:latest
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "docker"
@@ -320,7 +320,7 @@ spec:
     spec:
       containers:
       - name: ml-service
-        image: <DOCKERHUB_USERNAME>/medinsight-ml-service:latest
+        image: kchalouah/medinsight-ml-service:latest
         env:
         - name: EUREKA_SERVER_URL
           value: "http://discovery-service:8761/eureka/"

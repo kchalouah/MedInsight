@@ -166,7 +166,7 @@ spec:
     spec:
       containers:
       - name: discovery-service
-        image: <DOCKERHUB_USERNAME>/medinsight-discovery-service:latest # PLACEHOLDER
+        image: kchalouah/medinsight-discovery-service:latest # PLACEHOLDER
         ports:
         - containerPort: 8761
 ---
