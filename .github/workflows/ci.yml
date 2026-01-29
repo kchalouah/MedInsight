@@ -32,8 +32,8 @@ jobs:
           file: ./Backend/${{ matrix.service }}/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/medinsight-${{ matrix.service }}:v1.0.0
-            ${{ secrets.DOCKER_USERNAME }}/medinsight-${{ matrix.service }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/medinsight-${{ matrix.service }}:v1.0.0
+            ${{ secrets.DOCKERHUB_USERNAME }}/medinsight-${{ matrix.service }}:latest
 
   build-and-push-frontend:
     runs-on: ubuntu-latest
@@ -57,8 +57,8 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/medinsight-frontend:v1.0.0
-            ${{ secrets.DOCKER_USERNAME }}/medinsight-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/medinsight-frontend:v1.0.0
+            ${{ secrets.DOCKERHUB_USERNAME }}/medinsight-frontend:latest
 
   build-and-push-ml:
     runs-on: ubuntu-latest
@@ -82,5 +82,5 @@ jobs:
           file: ./ML/ml-service/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/medinsight-ml-service:v1.0.0
-            ${{ secrets.DOCKER_USERNAME }}/medinsight-ml-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/medinsight-ml-service:v1.0.0
+            ${{ secrets.DOCKERHUB_USERNAME }}/medinsight-ml-service:latest
