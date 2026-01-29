@@ -133,11 +133,20 @@ spec:
           value: "true"
         - name: KC_PROXY
           value: "edge"
+        - name: KC_DB_SCHEMA
+          value: "public"
         - name: KC_LOG_LEVEL
-          value: "DEBUG"
+          value: "INFO"
         ports:
         - containerPort: 8080
           name: http
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1024Mi"
+            cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
