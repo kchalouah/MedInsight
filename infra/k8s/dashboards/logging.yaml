@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-logging
+  namespace: medinsight
+  labels:
+    grafana_dashboard: "1"
+data:
+  logging.json: |-
+    {
+      "panels": [
+        {
+          "title": "Error Logs Count (5m)", "type": "stat", "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+          "targets": [ { "expr": "sum(count_over_time({namespace=\"medinsight\"} |= \"error\"[5m]))", "datasource": "Loki" } ]
+        },
+        {
+          "title": "Warning Logs (5m)", "type": "stat", "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
+          "targets": [ { "expr": "sum(count_over_time({namespace=\"medinsight\"} |= \"warn\"[5m]))", "datasource": "Loki" } ]
+        },
+        {
+          "title": "Logs Volume per Service", "type": "timeseries", "gridPos": { "h": 6, "w": 8, "x": 16, "y": 0 },
+          "targets": [ { "expr": "sum by (app) (count_over_time({namespace=\"medinsight\"}[5m]))", "datasource": "Loki", "legendFormat": "{{app}}" } ]
+        },
+        {
+          "title": "Live Logs Stream", "type": "logs", "gridPos": { "h": 12, "w": 24, "x": 0, "y": 6 },
+          "targets": [ { "expr": "{namespace=\"medinsight\"}", "datasource": "Loki" } ]
+        }
+      ],
+      "refresh": "10s", "schemaVersion": 36, "style": "dark", "tags": ["logging"], "title": "4. Logging Dashboard (Loki)", "uid": "logging-04"
+    }

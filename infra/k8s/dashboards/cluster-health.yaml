@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-cluster-health
+  namespace: medinsight
+  labels:
+    grafana_dashboard: "1"
+data:
+  cluster-health.json: |-
+    {
+      "annotations": { "list": [ { "builtIn": 1, "datasource": "-- Grafana --", "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard" } ] },
+      "editable": true, "fiscalYearStartMonth": 0, "graphTooltip": 0, "links": [], "liveNow": false,
+      "panels": [
+        {
+          "title": "Node CPU Usage %", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [ { "expr": "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "{{instance}}" } ]
+        },
+        {
+          "title": "Node Memory Usage %", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [ { "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100", "legendFormat": "Memory Used %" } ]
+        },
+        {
+          "title": "Running Pods Count", "type": "stat", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+          "targets": [ { "expr": "count(kube_pod_status_phase{phase=\"Running\"})", "legendFormat": "Running Pods" } ]
+        },
+        {
+          "title": "Pod Restarts (10m Increase)", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "targets": [ { "expr": "sum(increase(kube_pod_container_status_restarts_total[10m])) by (pod)", "legendFormat": "{{pod}}" } ]
+        },
+        {
+          "title": "Disk Usage %", "type": "gauge", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "targets": [ { "expr": "100 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"} * 100)", "legendFormat": "Root Disk" } ]
+        }
+      ],
+      "refresh": "10s", "schemaVersion": 36, "style": "dark", "tags": ["infra"], "templating": { "list": [] }, "time": { "from": "now-1h", "to": "now" }, "title": "1. Kubernetes Cluster Health", "uid": "cluster-health-01"
+    }

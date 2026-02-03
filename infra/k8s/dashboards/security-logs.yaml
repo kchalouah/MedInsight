@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-security
+  namespace: medinsight
+  labels:
+    grafana_dashboard: "1"
+data:
+  security-logs.json: |-
+    {
+      "panels": [
+        {
+          "title": "Keycloak: Failed Logins Count", "type": "stat", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [ { "expr": "sum(count_over_time({app=\"keycloak\"} |= \"login failed\"[15m]))", "datasource": "Loki" } ]
+        },
+        {
+          "title": "Keycloak: Auth Errors", "type": "stat", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [ { "expr": "sum(count_over_time({app=\"keycloak\"} |= \"error\"[15m]))", "datasource": "Loki" } ]
+        },
+        {
+          "title": "Security-Related Log Stream", "type": "logs", "gridPos": { "h": 12, "w": 24, "x": 0, "y": 8 },
+          "targets": [ { "expr": "{namespace=\"medinsight\"} |~ \"(?i)error|login|security\"", "datasource": "Loki" } ]
+        }
+      ],
+      "refresh": "10s", "schemaVersion": 36, "style": "dark", "tags": ["security"], "title": "6. Security / Keycloak Logs", "uid": "security-06"
+    }

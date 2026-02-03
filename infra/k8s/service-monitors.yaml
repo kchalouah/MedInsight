@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: medinsight-microservices
+  namespace: medinsight
+  labels:
+    release: kube-stack
+    prometheus: kube-stack
+spec:
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - auth-service
+          - gateway-service
+          - appointment-service
+          - medical-record-service
+          - audit-service
+          - mail-service
+          - discovery-service
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+  namespaceSelector:
+    matchNames:
+      - medinsight

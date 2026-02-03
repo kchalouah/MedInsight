@@ -4,6 +4,8 @@ kind: Deployment
 metadata:
   name: auth-service
   namespace: medinsight
+  labels:
+    app: auth-service
 spec:
   replicas: 1
   selector:
@@ -54,9 +56,12 @@ kind: Service
 metadata:
   name: auth-service
   namespace: medinsight
+  labels:
+    app: auth-service
 spec:
   ports:
-  - port: 8081
+  - name: http
+    port: 8081
   selector:
     app: auth-service
 
@@ -67,6 +72,8 @@ kind: Deployment
 metadata:
   name: gateway-service
   namespace: medinsight
+  labels:
+    app: gateway-service
 spec:
   replicas: 1
   selector:
@@ -106,9 +113,12 @@ kind: Service
 metadata:
   name: gateway-service
   namespace: medinsight
+  labels:
+    app: gateway-service
 spec:
   ports:
-  - port: 8080
+  - name: http
+    port: 8080
   selector:
     app: gateway-service
 
@@ -119,6 +129,8 @@ kind: Deployment
 metadata:
   name: appointment-service
   namespace: medinsight
+  labels:
+    app: appointment-service
 spec:
   replicas: 1
   selector:
@@ -157,9 +169,12 @@ kind: Service
 metadata:
   name: appointment-service
   namespace: medinsight
+  labels:
+    app: appointment-service
 spec:
   ports:
-  - port: 8082
+  - name: http
+    port: 8082
   selector:
     app: appointment-service
 
@@ -170,6 +185,8 @@ kind: Deployment
 metadata:
   name: medical-record-service
   namespace: medinsight
+  labels:
+    app: medical-record-service
 spec:
   replicas: 1
   selector:
@@ -210,9 +227,12 @@ kind: Service
 metadata:
   name: medical-record-service
   namespace: medinsight
+  labels:
+    app: medical-record-service
 spec:
   ports:
-  - port: 8084
+  - name: http
+    port: 8084
   selector:
     app: medical-record-service
 
@@ -223,6 +243,8 @@ kind: Deployment
 metadata:
   name: audit-service
   namespace: medinsight
+  labels:
+    app: audit-service
 spec:
   replicas: 1
   selector:
@@ -265,9 +287,12 @@ kind: Service
 metadata:
   name: audit-service
   namespace: medinsight
+  labels:
+    app: audit-service
 spec:
   ports:
-  - port: 8085
+  - name: http
+    port: 8085
   selector:
     app: audit-service
 
@@ -278,6 +303,8 @@ kind: Deployment
 metadata:
   name: mail-service
   namespace: medinsight
+  labels:
+    app: mail-service
 spec:
   replicas: 1
   selector:
@@ -322,9 +349,12 @@ kind: Service
 metadata:
   name: mail-service
   namespace: medinsight
+  labels:
+    app: mail-service
 spec:
   ports:
-  - port: 8087
+  - name: http
+    port: 8087
   selector:
     app: mail-service
 
@@ -335,6 +365,8 @@ kind: Deployment
 metadata:
   name: ml-service
   namespace: medinsight
+  labels:
+    app: ml-service
 spec:
   replicas: 1
   selector:
@@ -376,8 +408,11 @@ kind: Service
 metadata:
   name: ml-service
   namespace: medinsight
+  labels:
+    app: ml-service
 spec:
   ports:
-  - port: 8086
+  - name: http
+    port: 8086
   selector:
     app: ml-service
