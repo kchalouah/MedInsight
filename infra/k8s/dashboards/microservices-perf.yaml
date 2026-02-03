@@ -11,19 +11,19 @@ data:
       "panels": [
         {
           "title": "Request Rate (RPS)", "type": "timeseries", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
-          "targets": [ { "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (uri)", "legendFormat": "{{uri}}" } ]
+          "targets": [ { "datasource": "prometheus", "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (job)", "legendFormat": "{{job}}" } ]
         },
         {
           "title": "Latency P95 (Seconds)", "type": "timeseries", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
-          "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))", "legendFormat": "{{uri}}" } ]
+          "targets": [ { "datasource": "prometheus", "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job))", "legendFormat": "{{job}}" } ]
         },
         {
           "title": "Error Rate %", "type": "timeseries", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-          "targets": [ { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m])) * 100", "legendFormat": "5xx Errors %" } ]
+          "targets": [ { "datasource": "prometheus", "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) * 100", "legendFormat": "{{job}} 5xx %" } ]
         },
         {
           "title": "Service Availability (Up)", "type": "stat", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-          "targets": [ { "expr": "avg(up) by (job)", "legendFormat": "{{job}}" } ]
+          "targets": [ { "datasource": "prometheus", "expr": "avg(up) by (job)", "legendFormat": "{{job}}" } ]
         }
       ],
       "refresh": "10s", "schemaVersion": 36, "style": "dark", "tags": ["apps"], "title": "2. Microservices Performance", "uid": "micro-perf-02"

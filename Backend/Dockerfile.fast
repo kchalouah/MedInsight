@@ -1,0 +1,16 @@
+# Optimized for fast local development
+FROM eclipse-temurin:21-jre-jammy
+
+WORKDIR /app
+
+# Create a system user for security
+RUN addgroup --system spring && adduser --system spring --ingroup spring
+USER spring
+
+# Expects the JAR path as a build argument
+ARG JAR_FILE
+COPY ${JAR_FILE} app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-Xmx512m", "-Xms256m", "-jar", "app.jar"]

@@ -50,6 +50,12 @@ management:
       show-details: always
     prometheus:
       enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
 
 springdoc:
   api-docs:

@@ -1,8 +1,6 @@
-# Optimized values for kube-prometheus-stack on Minikube/Small Clusters
-
+# Optimized values for kube-prometheus-stack on Minikube
 prometheus:
   prometheusSpec:
-    # Adjusted for resource-constrained environments
     resources:
       requests:
         memory: "256Mi"
@@ -22,7 +20,6 @@ prometheus:
   ingress:
     enabled: true
     ingressClassName: nginx
-    annotations:
     hosts:
       - medinsight.local
     paths:
@@ -61,78 +58,7 @@ grafana:
         maxLines: 1000
 
 alertmanager:
-  enabled: false # Disable to save resources if not needed locally
-
-prometheusOperator:
-  resources:
-    limits:
-      cpu: 200m
-      memory: 200Mi
-    requests:
-# Optimized values for kube-prometheus-stack on Minikube/Small Clusters
-
-prometheus:
-  prometheusSpec:
-    # Adjusted for resource-constrained environments
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "100m"
-      limits:
-        memory: "512Mi"
-        cpu: "250m"
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 2Gi
-    externalUrl: http://medinsight.local/prometheus
-    routePrefix: /prometheus
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    annotations:
-    hosts:
-      - medinsight.local
-    paths:
-      - /prometheus
-    pathType: Prefix
-
-grafana:
-  enabled: true
-  adminPassword: admin
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    hosts:
-      - medinsight.local
-    path: /grafana
-    pathType: Prefix
-  grafana.ini:
-    server:
-      root_url: http://medinsight.local/grafana/
-      serve_from_sub_path: true
-  serviceMonitor:
-    enabled: true
-    path: /grafana/metrics
-  sidecar:
-    dashboards:
-      enabled: true
-      label: grafana_dashboard
-      searchNamespace: ALL
-  additionalDataSources:
-    - name: Loki
-      type: loki
-      url: http://loki:3100
-      access: proxy
-      isDefault: false
-      jsonData:
-        maxLines: 1000
-
-alertmanager:
-  enabled: false # Disable to save resources if not needed locally
+  enabled: false
 
 prometheusOperator:
   resources:

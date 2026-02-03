@@ -11,15 +11,15 @@ data:
       "panels": [
         {
           "title": "CPU Usage per Pod", "type": "timeseries", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
-          "targets": [ { "expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\",namespace=\"medinsight\"}[5m])) by (pod)", "legendFormat": "{{pod}}" } ]
+          "targets": [ { "datasource": "prometheus", "expr": "sum(rate(container_cpu_usage_seconds_total{container!=\"\",namespace=\"medinsight\"}[5m])) by (pod)", "legendFormat": "{{pod}}" } ]
         },
         {
           "title": "Memory Usage per Pod", "type": "timeseries", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
-          "targets": [ { "expr": "sum(container_memory_usage_bytes{container!=\"\",namespace=\"medinsight\"}) by (pod)", "legendFormat": "{{pod}}" } ]
+          "targets": [ { "datasource": "prometheus", "expr": "sum(container_memory_usage_bytes{container!=\"\",namespace=\"medinsight\"}) by (pod)", "legendFormat": "{{pod}}" } ]
         },
         {
           "title": "Memory Usage vs Limit %", "type": "gauge", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
-          "targets": [ { "expr": "sum(container_memory_usage_bytes{container!=\"\",namespace=\"medinsight\"}) by (pod) / sum(container_spec_memory_limit_bytes{container!=\"\",namespace=\"medinsight\"}) by (pod) * 100", "legendFormat": "{{pod}}" } ]
+          "targets": [ { "datasource": "prometheus", "expr": "sum(container_memory_usage_bytes{container!=\"\",namespace=\"medinsight\"}) by (pod) / sum(container_spec_memory_limit_bytes{container!=\"\",namespace=\"medinsight\"}) by (pod) * 100", "legendFormat": "{{pod}}" } ]
         }
       ],
       "refresh": "10s", "schemaVersion": 36, "style": "dark", "tags": ["infra"], "title": "3. Container Resource Usage", "uid": "container-res-03"
