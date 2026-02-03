@@ -21,6 +21,9 @@ public class AppointmentFilterRequest {
     private UUID patientId;
     private UUID doctorId;
     private AppointmentStatus status;
+    @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime startDate;
+
+    @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime endDate;
 }

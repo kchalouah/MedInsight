@@ -113,6 +113,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080/api
+        NEXT_PUBLIC_KEYCLOAK_URL: http://localhost:8180
+        NEXT_PUBLIC_KEYCLOAK_REALM: medinsight
+        NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: medinsight-frontend
+
     container_name: medinsight-frontend
     ports:
       - "3001:3000"
@@ -122,6 +128,7 @@ services:
       NEXT_PUBLIC_KEYCLOAK_URL: http://localhost:8180
       NEXT_PUBLIC_KEYCLOAK_REALM: medinsight
       NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: medinsight-frontend
+      NEXT_PUBLIC_AUTH_SERVER_URL: http://localhost:8180
       NEXT_PUBLIC_REALM: medinsight
       NEXT_PUBLIC_CLIENT_ID: medinsight-frontend
     networks:
@@ -157,14 +164,13 @@ services:
     container_name: medinsight-auth-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_HOST: postgres
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: medinsight
       KEYCLOAK_CLIENT_ID: auth-service
-      KEYCLOAK_CLIENT_SECRET: auth-service-secret
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
@@ -193,8 +199,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/medinsight
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
     ports:
       - "8080:8080"
     depends_on:
@@ -215,10 +221,9 @@ services:
     container_name: medinsight-appointment-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_HOST: postgres
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
@@ -241,10 +246,9 @@ services:
     container_name: medinsight-medical-record-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: medinsight
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
       EUREKA_URL: http://discovery-service:8761/eureka/
     ports:
@@ -272,6 +276,7 @@ services:
       EUREKA_URL: http://discovery-service:8761/eureka/
       LOKI_URL: http://loki:3100/loki/api/v1/push
       KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/medinsight
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs
     ports:
       - "8085:8085"
     depends_on:

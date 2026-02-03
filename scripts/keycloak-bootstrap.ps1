@@ -162,35 +162,48 @@ function Create-IdP {
         return 
     }
 
-    Write-Host "    Checking Identity Provider '$provider'..." -ForegroundColor Gray
+    Write-Host "    Processing Identity Provider '$provider'..." -ForegroundColor Cyan
+    
+    # 1. Delete Existing IDP (Force clean state)
     try {
-        Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/identity-provider/instances/$provider" -Headers $headers -Method Get > $null
-        Write-Host "    [OK] IDP '$provider' already exists." -ForegroundColor Yellow
-    } catch {
-        Write-Host "    [INFO] Creating IDP '$provider'..." -ForegroundColor Green
-        $idpConfig = if ($provider -eq "google") {
-            @{
-                alias = "google"; providerId = "google"; enabled = $true; trustEmail = $true; storeToken = $true
-                config = @{ clientId = $clientId; clientSecret = $clientSecret; defaultScope = "openid profile email"; useJwksUrl = "true" }
-            }
-        } else {
-            @{
-                alias = "github"; providerId = "github"; enabled = $true; trustEmail = $true; storeToken = $true
-                config = @{ clientId = $clientId; clientSecret = $clientSecret; defaultScope = "user:email" }
+        Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/identity-provider/instances/$provider" -Headers $headers -Method Delete -ErrorAction SilentlyContinue
+        Write-Host "    [INFO] Removed existing IDP '$provider' to ensure fresh configuration." -ForegroundColor Gray
+    } catch {}
+
+    # 2. Create IDP
+    Write-Host "    [INFO] Creating IDP '$provider'..." -ForegroundColor Green
+    $idpConfig = if ($provider -eq "google") {
+        @{
+            alias = "google"; providerId = "google"; enabled = $true; trustEmail = $true; storeToken = $true
+            authenticateByDefault = $false; firstBrokerLoginFlowAlias = "first broker login"
+            config = @{ 
+                clientId = $clientId; clientSecret = $clientSecret; 
+                defaultScope = "openid profile email"; useJwksUrl = "true"
+                syncMode = "IMPORT"
             }
         }
-        Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/identity-provider/instances" -Headers $headers -Method Post -Body ($idpConfig | ConvertTo-Json -Depth 5)
-
-        # Add Mapper
-        $mapperBody = @{
-            name = "default-patient-role"
-            identityProviderAlias = $provider
-            identityProviderMapper = "hardcoded-role-idp-mapper"
-            config = @{ role = "PATIENT" }
-        } | ConvertTo-Json
-        Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/identity-provider/instances/$provider/mappers" -Headers $headers -Method Post -Body $mapperBody
-        Write-Host "    [OK] IDP '$provider' created with default PATIENT role mapper." -ForegroundColor Green
+    } else {
+        @{
+            alias = "github"; providerId = "github"; enabled = $true; trustEmail = $true; storeToken = $true
+            firstBrokerLoginFlowAlias = "first broker login"
+            config = @{ clientId = $clientId; clientSecret = $clientSecret; defaultScope = "user:email"; syncMode = "IMPORT" }
+        }
     }
+    Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/identity-provider/instances" -Headers $headers -Method Post -Body ($idpConfig | ConvertTo-Json -Depth 5)
+
+    # 3. Create Mapper
+    Write-Host "    [INFO] Creating Role Mapper for '$provider'..." -ForegroundColor Green
+    $mapperBody = @{
+        name = "default-patient-role"
+        identityProviderAlias = $provider
+        identityProviderMapper = "oidc-hardcoded-role-idp-mapper"
+        config = @{ 
+            role = "PATIENT"
+            syncMode = "IMPORT"
+        }
+    } | ConvertTo-Json
+    Invoke-RestMethod -Uri "$KEYCLOAK_URL/admin/realms/$REALM/identity-provider/instances/$provider/mappers" -Headers $headers -Method Post -Body $mapperBody
+    Write-Host "    [OK] IDP '$provider' fully configured." -ForegroundColor Green
 }
 
 $G_ID = $env:GOOGLE_CLIENT_ID

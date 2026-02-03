@@ -7,8 +7,8 @@ const INFRA_LINKS = [
     { name: "Grafana", desc: "Dashboards & Metrics", url: "http://localhost:3000", icon: Activity, color: "text-orange-500", bg: "bg-orange-50" },
     { name: "Prometheus", desc: "System Monitoring", url: "http://localhost:9090", icon: Cpu, color: "text-red-500", bg: "bg-red-50" },
     { name: "pgAdmin", desc: "Database Manager", url: "http://localhost:5050", icon: Database, color: "text-blue-500", bg: "bg-blue-50" },
-    { name: "Eureka", desc: "Service Discovery", url: "http://localhost:8761", icon: Search, color: "text-green-500", bg: "bg-green-50" },
-    { name: "Keycloak", desc: "Identity & Access", url: "http://localhost:8180", icon: Shield, color: "text-purple-500", bg: "bg-purple-50" }
+    { name: "Eureka", desc: "Service Discovery", url: "/eureka", icon: Search, color: "text-green-500", bg: "bg-green-50" },
+    { name: "Keycloak", desc: "Identity & Access", url: "/auth", icon: Shield, color: "text-purple-500", bg: "bg-purple-50" }
 ]
 
 export default function QuickLinks() {

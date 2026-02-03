@@ -45,28 +45,28 @@ spring:
             - StripPrefix=1
 
         - id: records-route
-          uri: lb://medical-record-service
+          uri: http://medical-record-service:8084
           predicates:
             - Path=/api/records/**
           filters:
             - StripPrefix=1
 
         - id: audit-route
-          uri: lb://audit-service
+          uri: http://audit-service:8085
           predicates:
             - Path=/api/audit/**
           filters:
             - StripPrefix=1
 
         - id: mail-route
-          uri: lb://mail-service
+          uri: http://mail-service:8087
           predicates:
             - Path=/api/mail/**
           filters:
             - StripPrefix=1
 
         - id: ml-route
-          uri: lb://ml-service
+          uri: http://ml-service:8086
           predicates:
             - Path=/api/ml/**
           filters:
@@ -98,7 +98,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/medinsight}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://medinsight.local/realms/medinsight}
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs}
 
 ############################################

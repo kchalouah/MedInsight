@@ -93,7 +93,7 @@ export default function RegisterMedecinPage() {
 
             // Auto-login after successful registration
             try {
-                const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8180";
+                const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "";
                 const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "medinsight";
                 const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "medinsight-frontend";
 

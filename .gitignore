@@ -67,3 +67,6 @@ temp/
 *.tfstate
 *.tfstate.*
 .terraform.lock.hcl
+
+# K8s Secrets
+infra/k8s/secrets.yaml

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/layout/DashboardLayout"
+import { useRouter } from "next/navigation"
 import AppointmentSlotPicker from "@/components/appointments/AppointmentSlotPicker"
 import { medecinApi, appointmentApi, mailApi } from "@/lib/api"
 import { useAuth } from "@/lib/auth-context"
@@ -15,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion"
 
 export default function PatientAppointments() {
     const { user } = useAuth()
+    const router = useRouter()
     const [doctors, setDoctors] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [booking, setBooking] = useState(false)
@@ -257,7 +259,7 @@ export default function PatientAppointments() {
                                 </p>
                                 <div className="pt-6 w-full max-w-xs">
                                     <button
-                                        onClick={() => window.location.href = '/patient/dashboard'}
+                                        onClick={() => router.push('/patient/dashboard')}
                                         className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-all"
                                     >
                                         Retour au tableau de bord

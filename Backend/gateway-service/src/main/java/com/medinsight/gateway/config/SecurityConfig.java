@@ -115,6 +115,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/patients/**").hasAnyRole("MEDECIN", "ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/appointments/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
                         .pathMatchers("/api/records/**").hasAnyRole("PATIENT", "MEDECIN", "ADMIN", "GESTIONNAIRE")
+                        .pathMatchers(HttpMethod.POST, "/api/audit/logs").authenticated()
                         .pathMatchers("/api/audit/**").hasAnyRole("ADMIN", "RESPONSABLE_SECURITE", "GESTIONNAIRE")
                         .pathMatchers("/api/mail/**").hasAnyRole("ADMIN", "GESTIONNAIRE", "MEDECIN", "PATIENT")
                         .pathMatchers("/api/ml/**").hasAnyRole("MEDECIN", "ADMIN")

@@ -3,8 +3,8 @@ spring:
     name: audit-service
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/medinsight}
-    username: ${SPRING_DATASOURCE_USERNAME:meduser}
-    password: ${SPRING_DATASOURCE_PASSWORD:MedSecurePass2024!}
+    username: ${SPRING_DATASOURCE_USERNAME:medinsight}
+    password: ${SPRING_DATASOURCE_PASSWORD:medinsight}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -19,7 +19,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/medinsight}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://medinsight.local/realms/medinsight}
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs}
 
 server:

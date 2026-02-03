@@ -22,10 +22,10 @@ export default function LoginPage() {
 
     const handleOAuthLogin = (provider: string) => {
         setIsLoading(provider);
-        const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8180";
+        const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "";
         const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "medinsight";
         const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "medinsight-frontend";
-        const redirectUri = window.location.origin;
+        const redirectUri = typeof window !== "undefined" ? window.location.origin : "";
 
         let authUrl = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid profile email&kc_idp_hint=${provider}`;
 
@@ -38,7 +38,7 @@ export default function LoginPage() {
         setError("");
 
         try {
-            const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8180";
+            const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "";
             const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "medinsight";
             const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "medinsight-frontend";
 

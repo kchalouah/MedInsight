@@ -61,11 +61,13 @@ export interface AdminUserCreationRequest {
 }
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api', // Gateway URL
+    baseURL: process.env.NEXT_PUBLIC_API_URL || '/api', // Gateway URL
     headers: {
         'Content-Type': 'application/json',
     },
 });
+
+console.log("MedInsight V3 - Relative Path Mode Active (BaseURL: " + api.defaults.baseURL + ")");
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {

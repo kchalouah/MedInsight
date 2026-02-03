@@ -29,9 +29,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const router = useRouter()
 
     useEffect(() => {
-        // Check for existing session on mount
-        checkAuth()
+        if (typeof window === "undefined") return;
+
+        // 1. Handle OAuth Callback if present in URL
+        const urlParams = new URLSearchParams(window.location.search)
+        const code = urlParams.get("code")
+
+        if (code) {
+            handleOAuthCallback(code)
+        } else {
+            // 2. Check for existing session on mount
+            checkAuth()
+        }
     }, [])
+
+    const handleOAuthCallback = async (code: string) => {
+        setLoading(true)
+        try {
+            const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || ""
+            const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "medinsight"
+            const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "medinsight-frontend"
+            const redirectUri = typeof window !== "undefined" ? window.location.origin : ""
+
+            const params = new URLSearchParams()
+            params.append("client_id", clientId)
+            params.append("grant_type", "authorization_code")
+            params.append("code", code)
+            params.append("redirect_uri", redirectUri)
+
+            const response = await fetch(`${keycloakUrl}/realms/${realm}/protocol/openid-connect/token`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params
+            })
+
+            const data = await response.json()
+            if (response.ok && data.access_token) {
+                // Clear the code from URL without refreshing
+                const newUrl = window.location.pathname
+                window.history.replaceState({}, "", newUrl)
+
+                login(data.access_token)
+            } else {
+                console.error("OAuth Exchange failed:", data)
+                router.push("/login")
+            }
+        } catch (error) {
+            console.error("OAuth Callback Error:", error)
+            router.push("/login")
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const checkAuth = () => {
         const token = localStorage.getItem("token")

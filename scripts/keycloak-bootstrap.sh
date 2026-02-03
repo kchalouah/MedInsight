@@ -143,103 +143,68 @@ main() {
 
 create_identity_provider() {
   local token="$1" provider="$2" clientId="$3" clientSecret="$4"
-  echo "[INFO] Ensuring identity provider '$provider' exists"
+  echo "[INFO] Processing identity provider '$provider'..."
   
-  local existing
-  existing=$(curl -s -H "Authorization: Bearer $token" \
-    "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/identity-provider/instances/$provider" 2>/dev/null || echo "{}")
-  
-  if echo "$existing" | jq -e '.alias' > /dev/null 2>&1; then
-    echo "[OK] Identity provider '$provider' already exists"
+  # 1. Delete Existing IDP (Force clean state)
+  curl -s -X DELETE "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/identity-provider/instances/$provider" \
+    -H "Authorization: Bearer $token" > /dev/null 2>&1
+  echo "[INFO] Removed existing IDP '$provider' to ensure fresh configuration."
+
+  # 2. Create IDP
+  local config
+  if [[ "$provider" == "google" ]]; then
+    config="{
+      \"alias\": \"google\",
+      \"providerId\": \"google\",
+      \"enabled\": true,
+      \"trustEmail\": true,
+      \"storeToken\": true,
+      \"addReadTokenRoleOnCreate\": false,
+      \"authenticateByDefault\": false,
+      \"linkOnly\": false,
+      \"firstBrokerLoginFlowAlias\": \"first broker login\",
+      \"config\": {
+        \"clientId\": \"$clientId\",
+        \"clientSecret\": \"$clientSecret\",
+        \"defaultScope\": \"openid profile email\",
+        \"useJwksUrl\": \"true\",
+        \"guiOrder\": \"\",
+        \"syncMode\": \"IMPORT\"
+      }
+    }"
+  elif [[ "$provider" == "github" ]]; then
+    config="{\"alias\":\"github\",\"providerId\":\"github\",\"enabled\":true,\"trustEmail\":true,\"storeToken\":true,\"addReadTokenRoleOnCreate\":false,\"authenticateByDefault\":false,\"linkOnly\":false,\"firstBrokerLoginFlowAlias\":\"first broker login\",\"config\":{\"clientId\":\"$clientId\",\"clientSecret\":\"$clientSecret\",\"defaultScope\":\"user:email\",\"syncMode\":\"IMPORT\"}}"
   else
-    local config
-    if [[ "$provider" == "google" ]]; then
-      config='{"alias":"google","providerId":"google","enabled":true,"trustEmail":true,"storeToken":true,"addReadTokenRoleOnCreate":false,"authenticateByDefault":false,"linkOnly":false,"firstBrokerLoginFlowAlias":"first broker login","config":{"clientId":"'"$clientId"'","clientSecret":"'"$clientSecret"'","defaultScope":"openid profile email","useJwksUrl":"true"}}'
-    elif [[ "$provider" == "github" ]]; then
-      config='{"alias":"github","providerId":"github","enabled":true,"trustEmail":true,"storeToken":true,"addReadTokenRoleOnCreate":false,"authenticateByDefault":false,"linkOnly":false,"firstBrokerLoginFlowAlias":"first broker login","config":{"clientId":"'"$clientId"'","clientSecret":"'"$clientSecret"'","defaultScope":"user:email"}}'
-    else
-      echo "[WARN] Unknown provider '$provider', skipping"
-      return
-    fi
-    
-    curl -s -X POST "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/identity-provider/instances" \
-      -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
-      -d "$config" > /dev/null
-    echo "[OK] Identity provider '$provider' created"
-    
-    # Create default role mapper for PATIENT role
-    create_idp_role_mapper "$token" "$provider"
-  fi
-}
-
-create_default_users() {
-  local token="$1"
-  
-  create_user "$token" "admin@medinsight.tn" "Admin" "MedInsight" "Admin123!" "ADMIN"
-  create_user "$token" "security@medinsight.tn" "Security" "Officer" "Security123!" "RESPONSABLE_SECURITE"
-  create_user "$token" "doctor@medinsight.tn" "Dr. Test" "Doctor" "Doctor123!" "MEDECIN"
-  create_user "$token" "patient@medinsight.tn" "Test" "Patient" "Patient123!" "PATIENT"
-}
-
-create_user() {
-  local token="$1" email="$2" firstName="$3" lastName="$4" password="$5" role="$6"
-  echo "[INFO] Creating user: $email"
-  
-  # Create user
-  local user_data="{\"username\":\"$email\",\"email\":\"$email\",\"firstName\":\"$firstName\",\"lastName\":\"$lastName\",\"enabled\":true,\"emailVerified\":true}"
-  local create_response
-  create_response=$(curl -s -w "%{http_code}" -o /tmp/keycloak_create_user.log -X POST \
-    "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/users" \
-    -H "Authorization: Bearer Token" -H 'Content-Type: application/json' \
-    -d "$user_data")
-  
-  if [[ "$create_response" == "409" ]]; then
-    echo "[OK] User already exists"
-  elif [[ "$create_response" != "201" ]]; then
-    echo "[WARN] Failed to create user (HTTP $create_response)"
+    echo "[WARN] Unknown provider '$provider', skipping"
     return
   fi
   
-  # Get user ID
-  local user_id
-  user_id=$(curl -s -H "Authorization: Bearer $token" \
-    "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/users?username=$email" | jq -r '.[0].id // empty')
-  
-  if [[ -z "$user_id" ]]; then
-    echo "[WARN] Could not retrieve user ID for $email"
-    return
-  fi
-  
-  # Set password
-  local password_data="{\"type\":\"password\",\"value\":\"$password\",\"temporary\":false}"
-  curl -s -X PUT "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/users/$user_id/reset-password" \
+  curl -s -X POST "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/identity-provider/instances" \
     -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
-    -d "$password_data" > /dev/null
+    -d "$config"
+  echo "[OK] Identity provider '$provider' created"
   
-  # Assign role
-  local role_id
-  role_id=$(curl -s -H "Authorization: Bearer $token" \
-    "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/roles/$role" | jq -r '.id // empty')
-  
-  if [[ -n "$role_id" ]]; then
-    local role_mapping="[{\"id\":\"$role_id\",\"name\":\"$role\"}]"
-    curl -s -X POST "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/users/$user_id/role-mappings/realm" \
-      -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
-      -d "$role_mapping" > /dev/null
-    echo "[OK] User '$email' created with role $role"
-  fi
+  # 3. Create Mapper
+  create_idp_role_mapper "$token" "$provider"
 }
 
 create_idp_role_mapper() {
   local token="$1" provider="$2"
-  echo "[INFO] Creating default role mapper for '$provider'"
+  echo "[INFO] Creating role mapper for '$provider'"
   
-  local mapper_config='{"name":"default-patient-role","identityProviderAlias":"'"$provider"'","identityProviderMapper":"hardcoded-role-idp-mapper","config":{"role":"PATIENT"}}'
+  local mapper_config="{
+    \"name\": \"default-patient-role\",
+    \"identityProviderAlias\": \"$provider\",
+    \"identityProviderMapper\": \"oidc-hardcoded-role-idp-mapper\",
+    \"config\": {
+      \"role\": \"PATIENT\",
+      \"syncMode\": \"IMPORT\"
+    }
+  }"
   
   curl -s -X POST "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/identity-provider/instances/$provider/mappers" \
     -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
-    -d "$mapper_config" > /dev/null 2>&1 || true
-  
+    -d "$mapper_config"
   echo "[OK] Role mapper created for '$provider'"
 }
 

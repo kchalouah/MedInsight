@@ -4,10 +4,9 @@ metadata:
   name: medinsight-ingress
   namespace: medinsight
   annotations:
-    kubernetes.io/ingress.class: "traefik"
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    kubernetes.io/ingress.class: "nginx"
 spec:
-  ingressClassName: traefik
+  ingressClassName: nginx
   rules:
   - http:
       paths:
@@ -25,7 +24,7 @@ spec:
             name: gateway-service
             port:
               number: 8080
-      - path: /auth
+      - path: /
         pathType: Prefix
         backend:
           service:
@@ -46,3 +45,10 @@ spec:
             name: keycloak
             port:
               number: 8080
+      - path: /eureka
+        pathType: Prefix
+        backend:
+          service:
+            name: discovery-service
+            port:
+              number: 8761

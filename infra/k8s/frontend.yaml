@@ -13,23 +13,27 @@ spec:
       labels:
         app: frontend
     spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: curlimages/curl:8.2.1
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              sleep 5
+            done
       containers:
       - name: frontend
         image: kchalouah/medinsight-frontend:latest
+        imagePullPolicy: IfNotPresent
         env:
-        - name: NEXT_PUBLIC_GATEWAY_URL
-          value: "http://medinsight.local/api"
         - name: NEXT_PUBLIC_API_URL
-          value: "http://medinsight.local/api"
+          value: "/api"
         - name: NEXT_PUBLIC_KEYCLOAK_URL
-          value: "http://medinsight.local/auth"
+          value: ""
         - name: NEXT_PUBLIC_KEYCLOAK_REALM
           value: "medinsight"
         - name: NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
-          value: "medinsight-frontend"
-        - name: NEXT_PUBLIC_REALM
-          value: "medinsight"
-        - name: NEXT_PUBLIC_CLIENT_ID
           value: "medinsight-frontend"
         ports:
         - containerPort: 3000
@@ -40,7 +44,9 @@ metadata:
   name: frontend
   namespace: medinsight
 spec:
+  type: ClusterIP
   ports:
   - port: 3000
+    targetPort: 3000
   selector:
     app: frontend

@@ -4,31 +4,6 @@ metadata:
   name: medinsight
 
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: db-credentials
-  namespace: medinsight
-type: Opaque
-stringData:
-  POSTGRES_USER: "medinsight"
-  POSTGRES_PASSWORD: "CHANGE_ME"
-  POSTGRES_DB: "medinsight"
-
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: keycloak-credentials
-  namespace: medinsight
-type: Opaque
-stringData:
-  KEYCLOAK_ADMIN: "admin"
-  KEYCLOAK_ADMIN_PASSWORD: "admin"
-  KC_DB_USERNAME: "medinsight"
-  KC_DB_PASSWORD: "CHANGE_ME"
-
----
 # PostgreSQL (Ideally use RDS)
 apiVersion: apps/v1
 kind: StatefulSet
@@ -106,25 +81,13 @@ spec:
         - name: KC_DB_URL
           value: "jdbc:postgresql://postgres:5432/medinsight"
         - name: KC_DB_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-credentials
-              key: KC_DB_USERNAME
+          valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_USER } }
         - name: KC_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-credentials
-              key: KC_DB_PASSWORD
+          valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_PASSWORD } }
         - name: KEYCLOAK_ADMIN
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-credentials
-              key: KEYCLOAK_ADMIN
+          valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KEYCLOAK_ADMIN } }
         - name: KEYCLOAK_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-credentials
-              key: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KEYCLOAK_ADMIN_PASSWORD } }
         - name: KC_HOSTNAME_STRICT
           value: "false"
         - name: KC_HOSTNAME_STRICT_HTTPS
@@ -134,7 +97,7 @@ spec:
         - name: KC_PROXY
           value: "edge"
         - name: KC_HTTP_RELATIVE_PATH
-          value: "/auth"
+          value: ""
         - name: KC_HEALTH_ENABLED
           value: "true"
         - name: KC_DB_SCHEMA
@@ -146,15 +109,15 @@ spec:
           name: http
         livenessProbe:
           httpGet:
-            path: /auth/health/live
+            path: /health/live
             port: 8080
-          initialDelaySeconds: 120
+          initialDelaySeconds: 180
           periodSeconds: 20
         readinessProbe:
           httpGet:
-            path: /auth/health/ready
+            path: /health/ready
             port: 8080
-          initialDelaySeconds: 120
+          initialDelaySeconds: 180
           periodSeconds: 20
         resources:
           requests:
@@ -195,7 +158,7 @@ spec:
     spec:
       containers:
       - name: discovery-service
-        image: kchalouah/medinsight-discovery-service:latest # PLACEHOLDER
+        image: kchalouah/medinsight-discovery-service:latest
         ports:
         - containerPort: 8761
 ---

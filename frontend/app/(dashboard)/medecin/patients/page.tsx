@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/layout/DashboardLayout"
 import { patientApi, UserResponse } from "@/lib/api"
+import { useRouter } from "next/navigation"
 import { Search, User, Filter, ChevronRight, Activity, Calendar } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function MedecinPatients() {
+    const router = useRouter()
     const [patients, setPatients] = useState<UserResponse[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState("")
@@ -97,7 +99,7 @@ export default function MedecinPatients() {
                                     </div>
 
                                     <button
-                                        onClick={() => window.location.href = `/medecin/patients/${patient.keycloakId}`}
+                                        onClick={() => router.push(`/medecin/patients/${patient.keycloakId}`)}
                                         className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 group-hover:bg-primary transition-all"
                                     >
                                         Consulter le Dossier

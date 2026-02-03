@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: medinsight-config
+  namespace: medinsight
+data:
+  SPRING_PROFILES_ACTIVE: "docker"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/medinsight"
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-service:8761/eureka/"
+  KEYCLOAK_URL: "http://keycloak:8080"
+  KEYCLOAK_ISSUER_URI: "http://medinsight.local/realms/medinsight"
+  KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs"
+  LOKI_URL: "http://loki:3100/loki/api/v1/push"

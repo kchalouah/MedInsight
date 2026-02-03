@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-test-script
+  namespace: medinsight
+data:
+  test_backend_api.py: |
+    import httpx
+    import asyncio
+    import logging
+    import sys
+    import os
+    from datetime import datetime
+
+    # --- Configuration (Cluster-internal URLs) ---
+    GATEWAY_URL = os.getenv("GATEWAY_URL", "http://gateway-service:8080")
+    KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://keycloak:8080/realms/medinsight/protocol/openid-connect/token")
+    ADMIN_USER = os.getenv("ADMIN_USER", "admin@medinsight.tn")
+    ADMIN_PASS = os.getenv("ADMIN_PASS", "Admin123!")
+
+    # --- Setup Logging ---
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[logging.StreamHandler(sys.stdout)]
+    )
+    logger = logging.getLogger("MedInsight-API-Test")
+
+    async def get_token(username: str, password: str):
+        """Get Keycloak access token"""
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                response = await client.post(
+                    KEYCLOAK_URL,
+                    data={
+                        "username": username,
+                        "password": password,
+                        "grant_type": "password",
+                        "client_id": "medinsight-frontend"
+                    }
+                )
+                response.raise_for_status()
+                return response.json()["access_token"]
+            except Exception as e:
+                logger.error(f"Failed to get token for {username}: {e}")
+                return None
+
+    async def test_endpoint(client, endpoint, token, method="GET", data=None):
+        """Test a single API endpoint"""
+        url = f"{GATEWAY_URL}{endpoint}"
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+        
+        try:
+            if method == "GET":
+                response = await client.get(url, headers=headers)
+            elif method == "POST":
+                response = await client.post(url, headers=headers, json=data)
+            
+            logger.info(f"✅ {method} {endpoint} → {response.status_code}")
+            return response.status_code
+        except Exception as e:
+            logger.error(f"❌ {method} {endpoint} → ERROR: {e}")
+            return None
+
+    async def run_tests():
+        """Run comprehensive API tests"""
+        logger.info("=" * 60)
+        logger.info("MedInsight API Test Suite - Cluster Internal")
+        logger.info("=" * 60)
+        
+        # 1. Get Admin Token
+        logger.info("\n[1/5] Testing Authentication...")
+        admin_token = await get_token(ADMIN_USER, ADMIN_PASS)
+        if not admin_token:
+            logger.error("❌ Authentication failed! Cannot proceed.")
+            return False
+        logger.info("✅ Admin authentication successful")
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # 2. Test Gateway Health
+            logger.info("\n[2/5] Testing Gateway Service...")
+            await test_endpoint(client, "/actuator/health", None)
+            
+            # 3. Test Auth Service
+            logger.info("\n[3/5] Testing Auth Service...")
+            await test_endpoint(client, "/api/auth/users", admin_token)
+            
+            # 4. Test Appointment Service
+            logger.info("\n[4/5] Testing Appointment Service...")
+            await test_endpoint(client, "/api/appointments", admin_token)
+            
+            # 5. Test Medical Record Service
+            logger.info("\n[5/5] Testing Medical Record Service...")
+            await test_endpoint(client, "/api/records", admin_token)
+        
+        logger.info("\n" + "=" * 60)
+        logger.info("✅ API Test Suite Completed Successfully!")
+        logger.info("=" * 60)
+        return True
+
+    if __name__ == "__main__":
+        result = asyncio.run(run_tests())
+        sys.exit(0 if result else 1)
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: api-test
+  namespace: medinsight
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: api-test
+        image: python:3.11-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            pip install httpx --quiet
+            python /scripts/test_backend_api.py
+        env:
+        - name: GATEWAY_URL
+          value: "http://gateway-service:8080"
+        - name: KEYCLOAK_URL
+          value: "http://keycloak:8080/realms/medinsight/protocol/openid-connect/token"
+        - name: ADMIN_USER
+          value: "admin@medinsight.tn"
+        - name: ADMIN_PASS
+          value: "Admin123!"
+        volumeMounts:
+        - name: script
+          mountPath: /scripts
+      volumes:
+      - name: script
+        configMap:
+          name: api-test-script

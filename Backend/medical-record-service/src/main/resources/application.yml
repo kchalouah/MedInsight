@@ -2,9 +2,9 @@ spring:
   application:
     name: medical-record-service
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:medinsight_records}
-    username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:postgres}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/medinsight}
+    username: ${SPRING_DATASOURCE_USERNAME:medinsight}
+    password: ${SPRING_DATASOURCE_PASSWORD:medinsight}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -20,7 +20,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/medinsight}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://medinsight.local/realms/medinsight}
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs}
 
 server:

@@ -10,56 +10,188 @@ spec:
       - name: bootstrap
         image: badouralix/curl-jq:latest
         command: ["/bin/sh", "-c"]
+        env:
+          - name: KEYCLOAK_ADMIN
+            valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KEYCLOAK_ADMIN } }
+          - name: KEYCLOAK_ADMIN_PASSWORD
+            valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KEYCLOAK_ADMIN_PASSWORD } }
+          - name: GOOGLE_CLIENT_ID
+            valueFrom: { secretKeyRef: { name: oauth-secrets, key: GOOGLE_CLIENT_ID } }
+          - name: GOOGLE_CLIENT_SECRET
+            valueFrom: { secretKeyRef: { name: oauth-secrets, key: GOOGLE_CLIENT_SECRET } }
+          - name: GITHUB_CLIENT_ID
+            valueFrom: { secretKeyRef: { name: oauth-secrets, key: GITHUB_CLIENT_ID } }
+          - name: GITHUB_CLIENT_SECRET
+            valueFrom: { secretKeyRef: { name: oauth-secrets, key: GITHUB_CLIENT_SECRET } }
+          - name: KEYCLOAK_CLIENT_SECRET
+            valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KEYCLOAK_CLIENT_SECRET } }
         args:
           - |
             # Wait for Keycloak to be ready
             echo "Waiting for Keycloak to be ready..."
-            until curl -s http://keycloak:8080/auth/health/ready | grep -q 'UP'; do
+            until curl -s http://keycloak:8080/health/ready | grep -q 'UP'; do
               sleep 10
             done
             echo "Keycloak is ready!"
 
             # 1. Get Token
             echo "Getting admin token..."
-            TOKEN=$(curl -s -X POST "http://keycloak:8080/auth/realms/master/protocol/openid-connect/token" \
-              -d "username=admin" \
-              -d "password=admin" \
+            TOKEN=$(curl -s -X POST "http://keycloak:8080/realms/master/protocol/openid-connect/token" \
+              -d "username=$KEYCLOAK_ADMIN" \
+              -d "password=$KEYCLOAK_ADMIN_PASSWORD" \
               -d "grant_type=password" \
               -d "client_id=admin-cli" | jq -r '.access_token')
 
-            if [ -z "$TOKEN" ]; then echo "Failed to get token"; exit 1; fi
+            if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then echo "Failed to get token"; exit 1; fi
 
             # 2. Create Realm
-            echo "Creating realm medinsight..."
-            curl -s -X POST "http://keycloak:8080/auth/admin/realms" \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "Content-Type: application/json" \
-              -d '{"realm":"medinsight","enabled":true}'
-
-            # 3. Create Roles
-            for role in ADMIN MEDECIN PATIENT RESPONSABLE_SECURITE GESTION_ADMIN; do
-              echo "Creating role $role..."
-              curl -s -X POST "http://keycloak:8080/auth/admin/realms/medinsight/roles" \
+            echo "Ensuring realm medinsight exists..."
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight")
+            if [ "$STATUS" != "200" ]; then
+              echo "Creating realm medinsight..."
+              curl -s -X POST "http://keycloak:8080/admin/realms" \
                 -H "Authorization: Bearer $TOKEN" \
                 -H "Content-Type: application/json" \
-                -d "{\"name\":\"$role\"}"
+                -d '{"realm":"medinsight","enabled":true}'
+            fi
+
+            # 3. Create Roles
+            ROLES="ADMIN MEDECIN PATIENT RESPONSABLE_SECURITE GESTIONNAIRE"
+            for role in $ROLES; do
+              echo "Ensuring role $role exists..."
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight/roles/$role")
+              if [ "$STATUS" != "200" ]; then
+                echo "Creating role $role..."
+                curl -s -X POST "http://keycloak:8080/admin/realms/medinsight/roles" \
+                  -H "Authorization: Bearer $TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"name\":\"$role\"}"
+              fi
             done
 
             # 4. Create Confidential Clients
-            for client in medinsight-gateway auth-service; do
-              echo "Creating client $client..."
-              curl -s -X POST "http://keycloak:8080/auth/admin/realms/medinsight/clients" \
+            # Auth Service
+            echo "Ensuring client auth-service exists..."
+            EXISTS=$(curl -s -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight/clients?clientId=auth-service" | jq -r '.[0].id // empty')
+            if [ -z "$EXISTS" ]; then
+               curl -s -X POST "http://keycloak:8080/admin/realms/medinsight/clients" \
                 -H "Authorization: Bearer $TOKEN" \
                 -H "Content-Type: application/json" \
-                -d "{\"clientId\":\"$client\",\"enabled\":true,\"secret\":\"${client}-secret\",\"serviceAccountsEnabled\":true,\"publicClient\":false,\"redirectUris\":[\"*\"],\"webOrigins\":[\"*\"]}"
-            done
+                -d "{\"clientId\":\"auth-service\",\"enabled\":true,\"secret\":\"$KEYCLOAK_CLIENT_SECRET\",\"serviceAccountsEnabled\":true,\"publicClient\":false,\"redirectUris\":[\"*\"],\"webOrigins\":[\"*\"]}"
+            fi
+
+            # Gateway
+            echo "Ensuring client medinsight-gateway exists..."
+            EXISTS=$(curl -s -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight/clients?clientId=medinsight-gateway" | jq -r '.[0].id // empty')
+            if [ -z "$EXISTS" ]; then
+               curl -s -X POST "http://keycloak:8080/admin/realms/medinsight/clients" \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" \
+                -d '{"clientId":"medinsight-gateway","enabled":true,"secret":"gateway-secret","serviceAccountsEnabled":true,"publicClient":false,"redirectUris":["*"],"webOrigins":["*"]}'
+            fi
 
             # 5. Create Public Client
-            echo "Creating client medinsight-frontend..."
-            curl -s -X POST "http://keycloak:8080/auth/admin/realms/medinsight/clients" \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "Content-Type: application/json" \
-              -d '{"clientId":"medinsight-frontend","enabled":true,"publicClient":true,"protocol":"openid-connect","redirectUris":["*"],"webOrigins":["*"]}'
+            echo "Ensuring client medinsight-frontend exists..."
+            EXISTS=$(curl -s -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight/clients?clientId=medinsight-frontend" | jq -r '.[0].id // empty')
+            if [ -z "$EXISTS" ]; then
+              curl -s -X POST "http://keycloak:8080/admin/realms/medinsight/clients" \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" \
+                -d '{"clientId":"medinsight-frontend","enabled":true,"publicClient":true,"protocol":"openid-connect","redirectUris":["*"],"webOrigins":["*"]}'
+            fi
+
+            # 6. Setup Google Identity Provider (If credentials present)
+            if [ -n "$GOOGLE_CLIENT_ID" ] && [ -n "$GOOGLE_CLIENT_SECRET" ]; then
+              echo "Ensuring Google IdP exists..."
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight/identity-provider/instances/google")
+              if [ "$STATUS" != "200" ]; then
+                echo "Creating Google IdP..."
+                curl -s -X POST "http://keycloak:8080/admin/realms/medinsight/identity-provider/instances" \
+                  -H "Authorization: Bearer $TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{
+                    \"alias\": \"google\",
+                    \"providerId\": \"google\",
+                    \"enabled\": true,
+                    \"trustEmail\": true,
+                    \"storeToken\": true,
+                    \"addReadTokenRoleOnCreate\": false,
+                    \"authenticateByDefault\": false,
+                    \"linkOnly\": false,
+                    \"firstBrokerLoginFlowAlias\": \"first broker login\",
+                    \"config\": {
+                      \"clientId\": \"$GOOGLE_CLIENT_ID\",
+                      \"clientSecret\": \"$GOOGLE_CLIENT_SECRET\",
+                      \"defaultScope\": \"openid profile email\",
+                      \"useJwksUrl\": \"true\",
+                      \"syncMode\": \"IMPORT\"
+                    }
+                  }"
+              fi
+              
+              # Add Role Mapper
+              echo "Ensuring role mapper exists for Google..."
+              MAPPERS=$(curl -s -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight/identity-provider/instances/google/mappers")
+              if ! echo "$MAPPERS" | jq -e '.[] | select(.name=="default-patient-role")' > /dev/null 2>&1; then
+                echo "Creating Google role mapper..."
+                curl -s -X POST "http://keycloak:8080/admin/realms/medinsight/identity-provider/instances/google/mappers" \
+                  -H "Authorization: Bearer $TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{
+                    \"name\": \"default-patient-role\",
+                    \"identityProviderAlias\": \"google\",
+                    \"identityProviderMapper\": \"oidc-hardcoded-role-idp-mapper\",
+                    \"config\": {
+                      \"role\": \"PATIENT\",
+                      \"syncMode\": \"IMPORT\"
+                    }
+                  }"
+              fi
+            fi
+
+            # 7. Create Users
+            create_user() {
+              local email=$1
+              local first=$2
+              local last=$3
+              local pass=$4
+              local role=$5
+
+              echo "Checking if user $email exists..."
+              local user_id=$(curl -s -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight/users?username=$email" | jq -r '.[0].id // empty')
+              
+              if [ -z "$user_id" ]; then
+                echo "Creating user: $email..."
+                curl -s -X POST "http://keycloak:8080/admin/realms/medinsight/users" \
+                  -H "Authorization: Bearer $TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"username\":\"$email\",\"email\":\"$email\",\"firstName\":\"$first\",\"lastName\":\"$last\",\"enabled\":true,\"emailVerified\":true}"
+                
+                user_id=$(curl -s -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight/users?username=$email" | jq -r '.[0].id')
+              else
+                echo "User $email already exists."
+              fi
+
+              echo "Setting password for $email..."
+              curl -s -X PUT "http://keycloak:8080/admin/realms/medinsight/users/$user_id/reset-password" \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "{\"type\":\"password\",\"value\":\"$pass\",\"temporary\":false}"
+
+              echo "Assigning role $role to $email..."
+              local role_obj=$(curl -s -H "Authorization: Bearer $TOKEN" "http://keycloak:8080/admin/realms/medinsight/roles/$role")
+              local role_id=$(echo $role_obj | jq -r '.id')
+              
+              curl -s -X POST "http://keycloak:8080/admin/realms/medinsight/users/$user_id/role-mappings/realm" \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "[{\"id\":\"$role_id\",\"name\":\"$role\"}]"
+            }
+
+            create_user "admin@medinsight.tn" "Admin" "MedInsight" "Admin123!" "ADMIN"
+            create_user "security@medinsight.tn" "Security" "Officer" "Security123!" "RESPONSABLE_SECURITE"
+            create_user "doctor@medinsight.tn" "Dr. Test" "Doctor" "Doctor123!" "MEDECIN"
+            create_user "patient@medinsight.tn" "Test" "Patient" "Patient123!" "PATIENT"
 
             echo "Bootstrap complete!"
       restartPolicy: OnFailure

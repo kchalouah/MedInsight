@@ -14,38 +14,38 @@ spec:
       labels:
         app: auth-service
     spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: curlimages/curl:8.2.1
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Waiting for Keycloak medinsight realm..."
+            until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              sleep 5
+            done
+            echo "Keycloak is ready!"
       containers:
       - name: auth-service
         image: kchalouah/medinsight-auth-service:latest
+        envFrom:
+        - configMapRef:
+            name: medinsight-config
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "docker"
-        - name: DB_HOST
-          value: "postgres"
-        - name: POSTGRES_USER
+        - name: SPRING_DATASOURCE_USERNAME
           valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_USER } }
-        - name: POSTGRES_PASSWORD
+        - name: SPRING_DATASOURCE_PASSWORD
           valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_PASSWORD } }
-        - name: POSTGRES_DB
-          valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_DB } }
-        - name: KEYCLOAK_URL
-          value: "http://keycloak:8080"
-        - name: KEYCLOAK_REALM
-          value: "medinsight"
+        - name: KEYCLOAK_ADMIN
+          valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KEYCLOAK_ADMIN } }
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KEYCLOAK_ADMIN_PASSWORD } }
+        - name: KEYCLOAK_CLIENT_SECRET
+          valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KEYCLOAK_CLIENT_SECRET } }
         - name: KEYCLOAK_CLIENT_ID
           value: "auth-service"
-        - name: KEYCLOAK_CLIENT_SECRET
-          value: "auth-service-secret" # Should be in secret
-        - name: KEYCLOAK_ADMIN
-          valueFrom: { secretKeyRef: { name: keycloak-credentials, key: KEYCLOAK_ADMIN } }
-        - name: KEYCLOAK_ADMIN_PASSWORD
-          valueFrom: { secretKeyRef: { name: keycloak-credentials, key: KEYCLOAK_ADMIN_PASSWORD } }
-        - name: KEYCLOAK_ISSUER_URI
-          value: "http://keycloak:8080/realms/medinsight"
-        - name: KEYCLOAK_JWK_SET_URI
-          value: "http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs"
-        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-          value: "http://discovery-service:8761/eureka/"
+        - name: KEYCLOAK_REALM
+          value: "medinsight"
         ports:
         - containerPort: 8081
 ---
@@ -77,18 +77,27 @@ spec:
       labels:
         app: gateway-service
     spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: curlimages/curl:8.2.1
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              sleep 5
+            done
       containers:
       - name: gateway-service
         image: kchalouah/medinsight-gateway-service:latest
+        envFrom:
+        - configMapRef:
+            name: medinsight-config
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "docker"
-        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-          value: "http://discovery-service:8761/eureka/"
-        - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
-          value: "http://keycloak:8080/realms/medinsight"
-        - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-          value: "http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs"
+        # Gateway might need explicit mapping if property names differ, but ConfigMap handles standard ones.
+        - name: KEYCLOAK_ISSUER_URI
+          valueFrom: { configMapKeyRef: { name: medinsight-config, key: KEYCLOAK_ISSUER_URI } }
+        - name: KEYCLOAK_JWK_SET_URI
+          valueFrom: { configMapKeyRef: { name: medinsight-config, key: KEYCLOAK_JWK_SET_URI } }
         ports:
         - containerPort: 8080
 ---
@@ -120,26 +129,26 @@ spec:
       labels:
         app: appointment-service
     spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: curlimages/curl:8.2.1
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              sleep 5
+            done
       containers:
       - name: appointment-service
         image: kchalouah/medinsight-appointment-service:latest
+        envFrom:
+        - configMapRef:
+            name: medinsight-config
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "docker"
-        - name: DB_HOST
-          value: "postgres"
-        - name: POSTGRES_USER
+        - name: SPRING_DATASOURCE_USERNAME
           valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_USER } }
-        - name: POSTGRES_PASSWORD
+        - name: SPRING_DATASOURCE_PASSWORD
           valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_PASSWORD } }
-        - name: POSTGRES_DB
-          valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_DB } }
-        - name: KEYCLOAK_ISSUER_URI
-          value: "http://keycloak:8080/realms/medinsight"
-        - name: KEYCLOAK_JWK_SET_URI
-          value: "http://keycloak:8080/realms/medinsight/protocol/openid-connect/certs"
-        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-          value: "http://discovery-service:8761/eureka/"
         ports:
         - containerPort: 8082
 ---
@@ -171,24 +180,28 @@ spec:
       labels:
         app: medical-record-service
     spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: curlimages/curl:8.2.1
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              sleep 5
+            done
       containers:
       - name: medical-record-service
         image: kchalouah/medinsight-medical-record-service:latest
+        envFrom:
+        - configMapRef:
+            name: medinsight-config
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "docker"
-        - name: POSTGRES_HOST
-          value: "postgres"
-        - name: POSTGRES_DB
-          valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_DB } }
-        - name: POSTGRES_USER
+        - name: SPRING_DATASOURCE_USERNAME
           valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_USER } }
-        - name: POSTGRES_PASSWORD
+        - name: SPRING_DATASOURCE_PASSWORD
           valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_PASSWORD } }
-        - name: KEYCLOAK_ISSUER_URI
-          value: "http://keycloak:8080/realms/medinsight"
         - name: EUREKA_URL
-          value: "http://discovery-service:8761/eureka/"
+          valueFrom: { configMapKeyRef: { name: medinsight-config, key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE } }
         ports:
         - containerPort: 8084
 ---
@@ -220,24 +233,30 @@ spec:
       labels:
         app: audit-service
     spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: curlimages/curl:8.2.1
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              sleep 5
+            done
       containers:
       - name: audit-service
         image: kchalouah/medinsight-audit-service:latest
+        envFrom:
+        - configMapRef:
+            name: medinsight-config
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "docker"
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres:5432/medinsight" # or use env var
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_USER } }
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_PASSWORD } }
         - name: EUREKA_URL
-          value: "http://discovery-service:8761/eureka/"
+          valueFrom: { configMapKeyRef: { name: medinsight-config, key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE } }
         - name: LOKI_URL
           value: "http://loki:3100/loki/api/v1/push"
-        - name: KEYCLOAK_ISSUER_URI
-          value: "http://keycloak:8080/realms/medinsight"
         ports:
         - containerPort: 8085
 ---
@@ -269,24 +288,32 @@ spec:
       labels:
         app: mail-service
     spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: curlimages/curl:8.2.1
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              sleep 5
+            done
       containers:
       - name: mail-service
         image: kchalouah/medinsight-mail-service:latest
+        envFrom:
+        - configMapRef:
+            name: medinsight-config
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "docker"
+        - name: SMTP_USERNAME
+          valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_USERNAME } }
+        - name: SMTP_PASSWORD
+          valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PASSWORD } }
         - name: EUREKA_URL
-          value: "http://discovery-service:8761/eureka/"
+          valueFrom: { configMapKeyRef: { name: medinsight-config, key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE } }
         - name: SMTP_HOST
           value: "smtp.gmail.com"
         - name: SMTP_PORT
           value: "587"
-        - name: SMTP_USERNAME
-          value: "PLACEHOLDER_EMAIL"
-        - name: SMTP_PASSWORD
-          value: "PLACEHOLDER_PASS"
-        - name: KEYCLOAK_ISSUER_URI
-          value: "http://keycloak:8080/realms/medinsight"
         ports:
         - containerPort: 8087
 ---
@@ -318,16 +345,29 @@ spec:
       labels:
         app: ml-service
     spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: curlimages/curl:8.2.1
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              sleep 5
+            done
       containers:
       - name: ml-service
         image: kchalouah/medinsight-ml-service:latest
+        envFrom:
+        - configMapRef:
+            name: medinsight-config
         env:
+        # Override specific names if needed
         - name: EUREKA_SERVER_URL
-          value: "http://discovery-service:8761/eureka/"
+          valueFrom: { configMapKeyRef: { name: medinsight-config, key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE } }
+        - name: KEYCLOAK_ISSUER
+          valueFrom: { configMapKeyRef: { name: medinsight-config, key: KEYCLOAK_ISSUER_URI } }
         - name: INSTANCE_HOST
           value: "ml-service"
-        - name: KEYCLOAK_ISSUER
-          value: "http://keycloak:8080/realms/medinsight"
         ports:
         - containerPort: 8086
 ---
