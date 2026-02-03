@@ -75,7 +75,7 @@ create_confidential_client() {
   if [[ -z "$id" || "$id" == "null" ]]; then
     curl -s -X POST "$KEYCLOAK_URL/admin/realms/$KEYCLOAK_REALM/clients" \
       -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
-      -d "{\"clientId\":\"$clientId\",\"enabled\":true,\"protocol\":\"openid-connect\",\"serviceAccountsEnabled\":true,\"publicClient\":false,\"secret\":\"$clientSecret\",\"redirectUris\":[\"*\"],\"webOrigins\":[\"*\"]}"
+      -d "{\"clientId\":\"$clientId\",\"enabled\":true,\"protocol\":\"openid-connect\",\"serviceAccountsEnabled\":true,\"directAccessGrantsEnabled\":true,\"publicClient\":false,\"secret\":\"$clientSecret\",\"redirectUris\":[\"*\"],\"webOrigins\":[\"*\"]}"
     echo "[OK] Client '$clientId' created"
   else
     echo "[OK] Client '$clientId' already exists"

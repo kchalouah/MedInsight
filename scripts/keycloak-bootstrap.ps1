@@ -118,6 +118,7 @@ foreach ($client in $CONFIDENTIAL_CLIENTS) {
             protocol               = "openid-connect"
             serviceAccountsEnabled = $true
             publicClient           = $false
+            directAccessGrantsEnabled = $true
             secret                 = $client.secret
             redirectUris           = @("*")
             webOrigins             = @("*")
