@@ -8,7 +8,6 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   ingressClassName: nginx
   rules:
@@ -37,13 +36,6 @@ spec:
             name: keycloak
             port:
               number: 8080
-      - path: /argocd(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: argocd-server
-            port:
-              number: 443
       # Compatibility for legacy /auth prefix (strips /auth)
       - path: /auth(/|$)(.*)
         pathType: ImplementationSpecific
@@ -52,47 +44,3 @@ spec:
             name: keycloak
             port:
               number: 8080
-
----
-# Ingress for services on original paths (No Rewrites)
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: medinsight-main-ingress
-  namespace: medinsight
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: medinsightpds.duckdns.org
-    http:
-      paths:
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: gateway-service
-            port:
-              number: 8080
-      - path: /realms
-        pathType: Prefix
-        backend:
-          service:
-            name: keycloak
-            port:
-              number: 8080
-      - path: /resources
-        pathType: Prefix
-        backend:
-          service:
-            name: keycloak
-            port:
-              number: 8080
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend
-            port:
-              number: 3000
