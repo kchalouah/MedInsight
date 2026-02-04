@@ -36,6 +36,13 @@ spec:
             name: keycloak
             port:
               number: 8080
+      - path: /argocd(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 443
       # Compatibility for legacy /auth prefix (strips /auth)
       - path: /auth(/|$)(.*)
         pathType: ImplementationSpecific
