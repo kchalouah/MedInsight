@@ -87,12 +87,16 @@ spec:
         app: gateway-service
     spec:
       initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done"]
       - name: wait-for-keycloak
         image: curlimages/curl:8.2.1
         command: ["/bin/sh", "-c"]
         args:
           - |
             until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              echo "Waiting for Keycloak..."
               sleep 5
             done
       containers:
@@ -144,12 +148,16 @@ spec:
         app: appointment-service
     spec:
       initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done"]
       - name: wait-for-keycloak
         image: curlimages/curl:8.2.1
         command: ["/bin/sh", "-c"]
         args:
           - |
             until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              echo "Waiting for Keycloak..."
               sleep 5
             done
       containers:
@@ -200,12 +208,16 @@ spec:
         app: medical-record-service
     spec:
       initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done"]
       - name: wait-for-keycloak
         image: curlimages/curl:8.2.1
         command: ["/bin/sh", "-c"]
         args:
           - |
             until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              echo "Waiting for Keycloak..."
               sleep 5
             done
       containers:
@@ -258,12 +270,16 @@ spec:
         app: audit-service
     spec:
       initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done"]
       - name: wait-for-keycloak
         image: curlimages/curl:8.2.1
         command: ["/bin/sh", "-c"]
         args:
           - |
             until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              echo "Waiting for Keycloak..."
               sleep 5
             done
       containers:
@@ -318,12 +334,16 @@ spec:
         app: mail-service
     spec:
       initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done"]
       - name: wait-for-keycloak
         image: curlimages/curl:8.2.1
         command: ["/bin/sh", "-c"]
         args:
           - |
             until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              echo "Waiting for Keycloak..."
               sleep 5
             done
       containers:
@@ -380,12 +400,16 @@ spec:
         app: ml-service
     spec:
       initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done"]
       - name: wait-for-keycloak
         image: curlimages/curl:8.2.1
         command: ["/bin/sh", "-c"]
         args:
           - |
             until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              echo "Waiting for Keycloak..."
               sleep 5
             done
       containers:
