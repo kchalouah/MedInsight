@@ -11,7 +11,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: medinsight.local
+  - host: medinsightpds.duckdns.org
     http:
       paths:
       - path: /pgadmin(/|$)(.*)
@@ -57,7 +57,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: medinsight.local
+  - host: medinsightpds.duckdns.org
     http:
       paths:
       - path: /api
