@@ -17,16 +17,18 @@ spec:
         app: auth-service
     spec:
       initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done"]
       - name: wait-for-keycloak
         image: curlimages/curl:8.2.1
         command: ["/bin/sh", "-c"]
         args:
           - |
-            echo "Waiting for Keycloak medinsight realm..."
             until curl -s http://keycloak:8080/realms/medinsight | grep -q 'medinsight'; do
+              echo "Waiting for Keycloak..."
               sleep 5
             done
-            echo "Keycloak is ready!"
       containers:
       - name: auth-service
         image: kchalouah/medinsight-auth-service:latest
