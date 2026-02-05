@@ -1,5 +1,11 @@
 # Values for loki-stack
 
+grafana:
+  enabled: false
+  sidecar:
+    datasources:
+      enabled: false
+
 loki:
   enabled: true
   persistence:
@@ -7,11 +13,17 @@ loki:
     size: 2Gi
   resources:
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: "500m"
+      memory: "512Mi"
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: "200m"
+      memory: "256Mi"
+  livenessProbe:
+    initialDelaySeconds: 120
+    failureThreshold: 15
+  readinessProbe:
+    initialDelaySeconds: 60
+    failureThreshold: 15
 
 promtail:
   enabled: true

@@ -1,13 +1,13 @@
-# Optimized values for kube-prometheus-stack on Minikube
+# Optimized values for kube-prometheus-stack on Minikube/Docker Desktop
 prometheus:
   prometheusSpec:
     resources:
       requests:
-        memory: "256Mi"
-        cpu: "100m"
-      limits:
         memory: "512Mi"
-        cpu: "250m"
+        cpu: "200m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
     storageSpec:
       volumeClaimTemplate:
         spec:
@@ -47,15 +47,15 @@ grafana:
     dashboards:
       enabled: true
       label: grafana_dashboard
-      searchNamespace: ALL
-  additionalDataSources:
-    - name: Loki
-      type: loki
-      url: http://loki:3100
-      access: proxy
-      isDefault: false
-      jsonData:
-        maxLines: 1000
+      searchNamespace: medinsight  # Narrow search to local namespace
+  additionalDataSources: []
+  # Increased probes for stability on Docker Desktop
+  readinessProbe:
+    initialDelaySeconds: 30
+    failureThreshold: 15
+  livenessProbe:
+    initialDelaySeconds: 60
+    failureThreshold: 15
 
 alertmanager:
   enabled: false
@@ -70,14 +70,17 @@ prometheusOperator:
       memory: 100Mi
 
 nodeExporter:
-  enabled: true
+  enabled: false  # Disabled to fix Docker Desktop mount conflicts
 
 kubeStateMetrics:
   enabled: true
 
+# Disable components that usually fail/unnecessary in local K8s
 kubeControllerManager:
   enabled: false
 kubeScheduler:
   enabled: false
 kubeEtcd:
+  enabled: false
+kubeProxy:
   enabled: false
