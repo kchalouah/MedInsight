@@ -62,7 +62,7 @@ export default function PatientDashboard() {
                     </div>
                     <Link
                         href="/patient/appointments"
-                        className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                        className="bg-primary text-white px-6 py-3 rounded-2xl font-bold hover:bg-teal-700 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
                     >
                         <Calendar className="w-5 h-5" />
                         Prendre un rendez-vous
@@ -123,7 +123,7 @@ export default function PatientDashboard() {
                                         transition={{ delay: idx * 0.1 }}
                                         className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex items-center gap-4 group"
                                     >
-                                        <div className="w-14 h-14 rounded-xl bg-primary/10 flex flex-col items-center justify-center text-primary">
+                                            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex flex-col items-center justify-center text-primary">
                                             <span className="text-xs font-bold uppercase">{new Date(app.appointmentDateTime).toLocaleDateString('fr-FR', { month: 'short' })}</span>
                                             <span className="text-xl font-bold leading-none">{new Date(app.appointmentDateTime).getDate()}</span>
                                         </div>

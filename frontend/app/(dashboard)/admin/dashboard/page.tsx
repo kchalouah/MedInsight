@@ -107,7 +107,7 @@ export default function AdminDashboard() {
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-6 shadow-card"
+                    className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-6 shadow-card"
                 >
                     <h3 className="text-lg font-semibold text-slate-900 mb-4">Gestion Rapide</h3>
                     <p className="text-slate-500 mb-4">
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
                     animate={{ opacity: 1, x: 0 }}
                     className="space-y-4"
                 >
-                    <div className="bg-gradient-to-br from-primary/5 to-teal-500/5 backdrop-blur-md border border-primary/20 rounded-xl p-6 shadow-card">
+                    <div className="bg-gradient-to-br from-primary/5 to-teal-500/5 backdrop-blur-md border border-primary/20 rounded-2xl p-6 shadow-card">
                         <h3 className="text-lg font-semibold text-slate-900 mb-4">Actions Rapides</h3>
                         <div className="space-y-3">
                             <button

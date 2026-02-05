@@ -147,13 +147,13 @@ export default function PatientDossier() {
                             <>
                                 <button
                                     onClick={() => setIsEditing(false)}
-                                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-200 transition-colors"
+                                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-200 transition-colors"
                                 >
                                     <X className="w-4 h-4" /> Annuler
                                 </button>
                                 <button
                                     onClick={handleSave}
-                                    className="px-4 py-2 bg-emerald-500 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20"
+                                    className="px-4 py-2 bg-emerald-500 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20"
                                 >
                                     <Save className="w-4 h-4" /> Enregistrer
                                 </button>
@@ -162,13 +162,13 @@ export default function PatientDossier() {
                             <>
                                 <button
                                     onClick={() => setIsEditing(true)}
-                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors"
+                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors"
                                 >
                                     <Edit className="w-4 h-4" /> Modifier
                                 </button>
                                 <button
                                     onClick={handleDownload}
-                                    className="px-4 py-2 bg-primary text-white rounded-xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                                    className="px-4 py-2 bg-primary text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                                 >
                                     <Download className="w-4 h-4" /> Télécharger PDF
                                 </button>
@@ -222,7 +222,7 @@ export default function PatientDossier() {
                                                 <option value="O-">O-</option>
                                             </select>
                                         ) : (
-                                            <div className="p-3 bg-red-50 rounded-xl text-slate-800 font-bold border border-red-100">
+                                            <div className="p-3 bg-red-50 rounded-2xl text-slate-800 font-bold border border-red-100">
                                                 {dossier.medicalRecord?.bloodType || "Non renseigné"}
                                             </div>
                                         )}
@@ -241,7 +241,7 @@ export default function PatientDossier() {
                                                 className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 resize-none"
                                             />
                                         ) : (
-                                            <div className="p-3 bg-orange-50 rounded-xl text-slate-800 font-medium border border-orange-100 text-sm">
+                                            <div className="p-3 bg-orange-50 rounded-2xl text-slate-800 font-medium border border-orange-100 text-sm">
                                                 {dossier.medicalRecord?.allergies || "Aucune allergie signalée"}
                                             </div>
                                         )}
@@ -260,7 +260,7 @@ export default function PatientDossier() {
                                                 className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 resize-none"
                                             />
                                         ) : (
-                                            <div className="p-3 bg-blue-50 rounded-xl text-slate-700 text-sm border border-blue-100 leading-relaxed">
+                                            <div className="p-3 bg-blue-50 rounded-2xl text-slate-700 text-sm border border-blue-100 leading-relaxed">
                                                 {dossier.medicalRecord?.medicalHistory || "Aucun antécédent majeur"}
                                             </div>
                                         )}

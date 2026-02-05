@@ -90,23 +90,23 @@ export default function SecurityAuditLogsPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-4">
+                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-4">
                         <p className="text-sm text-slate-600">Total Logs</p>
                         <p className="text-2xl font-bold text-slate-900 mt-1">{logs.length}</p>
                     </div>
-                    <div className="bg-white/90 backdrop-blur-md border border-green-200 rounded-xl p-4">
+                    <div className="bg-white/90 backdrop-blur-md border border-green-200 rounded-2xl p-4">
                         <p className="text-sm text-green-700">Succès</p>
                         <p className="text-2xl font-bold text-green-900 mt-1">
                             {logs.filter(l => l.result === "SUCCESS").length}
                         </p>
                     </div>
-                    <div className="bg-white/90 backdrop-blur-md border border-red-200 rounded-xl p-4">
+                    <div className="bg-white/90 backdrop-blur-md border border-red-200 rounded-2xl p-4">
                         <p className="text-sm text-red-700">Échecs</p>
                         <p className="text-2xl font-bold text-red-900 mt-1">
                             {logs.filter(l => l.result === "FAILED").length}
                         </p>
                     </div>
-                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-4">
+                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-4">
                         <p className="text-sm text-slate-600">Services Actifs</p>
                         <p className="text-2xl font-bold text-slate-900 mt-1">
                             {new Set(logs.map(l => l.service)).size}
@@ -118,7 +118,7 @@ export default function SecurityAuditLogsPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl shadow-card overflow-hidden"
+                    className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl shadow-card overflow-hidden"
                 >
                     <div className="overflow-x-auto">
                         <table className="w-full">

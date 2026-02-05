@@ -204,7 +204,7 @@ export default function AdminUsersPage() {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden my-8"
+                            className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden my-8"
                         >
                             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                                 <h2 className="text-lg font-bold text-slate-800">Créer un nouvel utilisateur</h2>
@@ -222,7 +222,7 @@ export default function AdminUsersPage() {
                                             <input
                                                 required
                                                 type="text"
-                                                className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                 value={newData.firstName}
                                                 onChange={e => setNewData({ ...newData, firstName: e.target.value })}
                                             />
@@ -232,7 +232,7 @@ export default function AdminUsersPage() {
                                             <input
                                                 required
                                                 type="text"
-                                                className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                 value={newData.lastName}
                                                 onChange={e => setNewData({ ...newData, lastName: e.target.value })}
                                             />
@@ -242,7 +242,7 @@ export default function AdminUsersPage() {
                                             <input
                                                 required
                                                 type="email"
-                                                className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                 value={newData.email}
                                                 onChange={e => setNewData({ ...newData, email: e.target.value })}
                                             />
@@ -252,7 +252,7 @@ export default function AdminUsersPage() {
                                             <input
                                                 required
                                                 type="password"
-                                                className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                 value={newData.password}
                                                 onChange={e => setNewData({ ...newData, password: e.target.value })}
                                             />
@@ -261,7 +261,7 @@ export default function AdminUsersPage() {
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Téléphone</label>
                                             <input
                                                 type="text"
-                                                className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                 value={newData.phoneNumber}
                                                 onChange={e => setNewData({ ...newData, phoneNumber: e.target.value })}
                                             />
@@ -269,7 +269,7 @@ export default function AdminUsersPage() {
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Rôle</label>
                                             <select
-                                                className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                 value={newData.role}
                                                 onChange={e => setNewData({ ...newData, role: e.target.value })}
                                             >
@@ -286,7 +286,7 @@ export default function AdminUsersPage() {
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Adresse</label>
                                             <input
                                                 type="text"
-                                                className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                 value={newData.addressLine}
                                                 onChange={e => setNewData({ ...newData, addressLine: e.target.value })}
                                             />
@@ -295,7 +295,7 @@ export default function AdminUsersPage() {
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Ville</label>
                                             <input
                                                 type="text"
-                                                className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                 value={newData.city}
                                                 onChange={e => setNewData({ ...newData, city: e.target.value })}
                                             />
@@ -312,7 +312,7 @@ export default function AdminUsersPage() {
                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Date de naissance</label>
                                                 <input
                                                     type="date"
-                                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                     value={newData.dateOfBirth}
                                                     onChange={e => setNewData({ ...newData, dateOfBirth: e.target.value })}
                                                 />
@@ -320,7 +320,7 @@ export default function AdminUsersPage() {
                                             <div>
                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Genre</label>
                                                 <select
-                                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                     value={newData.gender}
                                                     onChange={e => setNewData({ ...newData, gender: e.target.value })}
                                                 >
@@ -335,7 +335,7 @@ export default function AdminUsersPage() {
                                                 <input
                                                     type="text"
                                                     placeholder="ex: A+"
-                                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                     value={newData.bloodType}
                                                     onChange={e => setNewData({ ...newData, bloodType: e.target.value })}
                                                 />
@@ -344,7 +344,7 @@ export default function AdminUsersPage() {
                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Assurance</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                     value={newData.insuranceProvider}
                                                     onChange={e => setNewData({ ...newData, insuranceProvider: e.target.value })}
                                                 />
@@ -362,7 +362,7 @@ export default function AdminUsersPage() {
                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Spécialisation</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                     value={newData.specialization}
                                                     onChange={e => setNewData({ ...newData, specialization: e.target.value })}
                                                 />
@@ -371,7 +371,7 @@ export default function AdminUsersPage() {
                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Numéro de licence</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                     value={newData.licenseNumber}
                                                     onChange={e => setNewData({ ...newData, licenseNumber: e.target.value })}
                                                 />
@@ -380,7 +380,7 @@ export default function AdminUsersPage() {
                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Années d'expérience</label>
                                                 <input
                                                     type="number"
-                                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                     value={newData.yearsOfExperience}
                                                     onChange={e => setNewData({ ...newData, yearsOfExperience: parseInt(e.target.value) })}
                                                 />
@@ -389,7 +389,7 @@ export default function AdminUsersPage() {
                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Frais de consultation (TND)</label>
                                                 <input
                                                     type="number"
-                                                    className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                                                    className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                                                     value={newData.consultationFee}
                                                     onChange={e => setNewData({ ...newData, consultationFee: parseFloat(e.target.value) })}
                                                 />
@@ -402,13 +402,13 @@ export default function AdminUsersPage() {
                                     <button
                                         type="button"
                                         onClick={() => setIsCreateModalOpen(false)}
-                                        className="px-6 py-2 text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+                                        className="px-6 py-2 text-slate-600 hover:bg-slate-50 rounded-2xl transition-colors"
                                     >
                                         Annuler
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-6 py-2 bg-primary text-white rounded-xl hover:bg-teal-700 shadow-md transition-all active:scale-95"
+                                        className="px-6 py-2 bg-primary text-white rounded-2xl hover:bg-teal-700 shadow-md transition-all active:scale-95"
                                     >
                                         Créer l'utilisateur
                                     </button>
@@ -419,13 +419,13 @@ export default function AdminUsersPage() {
                 )}
 
                 {/* Filters & Search */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                         <input
                             type="text"
                             placeholder="Rechercher un utilisateur..."
-                            className="w-full pl-10 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                            className="w-full pl-10 pr-4 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                         />
@@ -433,7 +433,7 @@ export default function AdminUsersPage() {
                     <div className="flex items-center gap-2">
                         <Filter className="w-5 h-5 text-slate-400" />
                         <select
-                            className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none"
+                            className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none"
                             value={roleFilter}
                             onChange={e => setRoleFilter(e.target.value)}
                         >
@@ -448,7 +448,7 @@ export default function AdminUsersPage() {
                 </div>
 
                 {/* Users Table */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>

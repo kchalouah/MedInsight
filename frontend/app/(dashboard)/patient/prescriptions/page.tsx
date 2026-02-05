@@ -60,7 +60,7 @@ export default function PatientPrescriptions() {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Rechercher un médicament..."
-                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-purple-500 transition-all"
+                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-1 focus:ring-purple-500 transition-all"
                         />
                     </div>
                 </div>
@@ -133,17 +133,17 @@ export default function PatientPrescriptions() {
                             <div className="md:w-48 space-y-3 shrink-0">
                                 <button
                                     onClick={() => setSelectedPrescription(null)}
-                                    className="w-full p-3 bg-white text-slate-600 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50"
+                                    className="w-full p-3 bg-white text-slate-600 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-50"
                                 >
                                     <X className="w-5 h-5" /> Fermer
                                 </button>
                                 <button
                                     onClick={() => window.print()}
-                                    className="w-full p-3 bg-primary text-white rounded-xl font-bold flex items-center gap-2 hover:shadow-lg shadow-primary/20"
+                                    className="w-full p-3 bg-primary text-white rounded-2xl font-bold flex items-center gap-2 hover:shadow-lg shadow-primary/20"
                                 >
                                     <Printer className="w-5 h-5" /> Imprimer
                                 </button>
-                                <button className="w-full p-3 bg-white text-slate-600 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50">
+                                <button className="w-full p-3 bg-white text-slate-600 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-50">
                                     <Download className="w-5 h-5" /> Télécharger
                                 </button>
                             </div>

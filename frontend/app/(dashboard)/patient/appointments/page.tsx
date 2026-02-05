@@ -163,7 +163,7 @@ export default function PatientAppointments() {
                                 <div className="pt-8 flex justify-between items-center bg-slate-50/50 -mx-8 -mb-8 p-8 border-t border-slate-100 mt-auto">
                                     <button
                                         onClick={prevStep}
-                                        className="text-slate-600 hover:text-slate-800 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 border border-slate-300 bg-white hover:bg-slate-50 shadow-sm"
+                                        className="text-slate-600 hover:text-slate-800 px-6 py-3 rounded-2xl font-bold transition-all flex items-center gap-2 border border-slate-300 bg-white hover:bg-slate-50 shadow-sm"
                                     >
                                         <ArrowLeft className="w-4 h-4" />
                                         Retour
@@ -171,7 +171,7 @@ export default function PatientAppointments() {
                                     <button
                                         disabled={!appointmentDate || !appointmentTime}
                                         onClick={nextStep}
-                                        className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-teal-700 transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-primary/20"
+                                        className="bg-primary text-white px-8 py-3 rounded-2xl font-bold hover:bg-teal-700 transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-primary/20"
                                     >
                                         Suivant
                                         <ChevronRight className="w-5 h-5" />
@@ -208,7 +208,7 @@ export default function PatientAppointments() {
                                         <label className="text-sm font-semibold text-slate-700">Motif de la consultation</label>
                                         <textarea
                                             placeholder="Décrivez brièvement votre besoin..."
-                                            className="w-full p-4 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 resize-none h-32"
+                                            className="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 resize-none h-32"
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}
                                         />
@@ -217,7 +217,7 @@ export default function PatientAppointments() {
                                 <div className="pt-8 flex gap-4 bg-slate-50/50 -mx-8 -mb-8 p-8 border-t border-slate-100 mt-auto">
                                     <button
                                         onClick={prevStep}
-                                        className="text-slate-500 hover:text-slate-700 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 border border-slate-200 bg-white hover:bg-slate-50"
+                                        className="text-slate-500 hover:text-slate-700 px-6 py-3 rounded-2xl font-bold transition-all flex items-center gap-2 border border-slate-200 bg-white hover:bg-slate-50"
                                     >
                                         <ArrowLeft className="w-4 h-4" />
                                         Retour
@@ -225,7 +225,7 @@ export default function PatientAppointments() {
                                     <button
                                         disabled={booking || !reason}
                                         onClick={handleBookAppointment}
-                                        className="flex-1 bg-primary text-white py-3 rounded-xl font-bold text-lg hover:bg-teal-700 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="flex-1 bg-primary text-white py-3 rounded-2xl font-bold text-lg hover:bg-teal-700 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {booking ? (
                                             <>
@@ -260,7 +260,7 @@ export default function PatientAppointments() {
                                 <div className="pt-6 w-full max-w-xs">
                                     <button
                                         onClick={() => router.push('/patient/dashboard')}
-                                        className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-all"
+                                        className="w-full bg-slate-900 text-white py-3 rounded-2xl font-bold hover:bg-slate-800 transition-all"
                                     >
                                         Retour au tableau de bord
                                     </button>

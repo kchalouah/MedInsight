@@ -146,7 +146,7 @@ export default function MedecinPatientDossier() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <p className="text-slate-600 text-sm italic leading-relaxed bg-slate-50 p-4 rounded-xl">
+                                                <p className="text-slate-600 text-sm italic leading-relaxed bg-slate-50 p-4 rounded-2xl">
                                                     "{note.noteContent}"
                                                 </p>
                                             </motion.div>

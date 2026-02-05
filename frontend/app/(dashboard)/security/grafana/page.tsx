@@ -20,7 +20,7 @@ export default function SecurityGrafanaPage() {
                         href="http://localhost:3000"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 inline-flex items-center gap-2"
+                        className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 inline-flex items-center gap-2"
                     >
                         Ouvrir Grafana
                         <ExternalLink className="w-5 h-5" />

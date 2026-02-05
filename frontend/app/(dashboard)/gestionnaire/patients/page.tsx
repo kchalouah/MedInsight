@@ -47,7 +47,7 @@ export default function GestionnairePatientsPage() {
                     <input
                         type="text"
                         placeholder="Rechercher un patient par nom ou email..."
-                        className="w-full pl-12 pr-4 h-12 bg-white border border-slate-200 rounded-xl focus:border-primary outline-none"
+                        className="w-full pl-12 pr-4 h-12 bg-white border border-slate-200 rounded-2xl focus:border-primary outline-none"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -60,7 +60,7 @@ export default function GestionnairePatientsPage() {
                         ) : filteredPatients.map((patient) => (
                             <div key={patient.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold">
+                                    <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center font-bold">
                                         {patient.firstName[0]}{patient.lastName[0]}
                                     </div>
                                     <div>

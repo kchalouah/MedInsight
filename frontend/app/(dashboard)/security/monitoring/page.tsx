@@ -46,7 +46,7 @@ export default function SecurityMonitoringPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-gradient-to-br from-green-500/5 to-green-600/5 backdrop-blur-md border border-green-200 rounded-xl p-6"
+                        className="bg-gradient-to-br from-green-500/5 to-green-600/5 backdrop-blur-md border border-green-200 rounded-2xl p-6"
                     >
                         <div className="flex items-center justify-between mb-2">
                             <p className="text-sm font-medium text-slate-600">Services Actifs</p>
@@ -60,7 +60,7 @@ export default function SecurityMonitoringPage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.1 }}
-                        className="bg-gradient-to-br from-blue-500/5 to-blue-600/5 backdrop-blur-md border border-blue-200 rounded-xl p-6"
+                        className="bg-gradient-to-br from-blue-500/5 to-blue-600/5 backdrop-blur-md border border-blue-200 rounded-2xl p-6"
                     >
                         <div className="flex items-center justify-between mb-2">
                             <p className="text-sm font-medium text-slate-600">Uptime Moyen</p>
@@ -74,7 +74,7 @@ export default function SecurityMonitoringPage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-gradient-to-br from-purple-500/5 to-purple-600/5 backdrop-blur-md border border-purple-200 rounded-xl p-6"
+                        className="bg-gradient-to-br from-purple-500/5 to-purple-600/5 backdrop-blur-md border border-purple-200 rounded-2xl p-6"
                     >
                         <div className="flex items-center justify-between mb-2">
                             <p className="text-sm font-medium text-slate-600">Requêtes/h</p>
@@ -88,7 +88,7 @@ export default function SecurityMonitoringPage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.3 }}
-                        className="bg-gradient-to-br from-orange-500/5 to-orange-600/5 backdrop-blur-md border border-orange-200 rounded-xl p-6"
+                        className="bg-gradient-to-br from-orange-500/5 to-orange-600/5 backdrop-blur-md border border-orange-200 rounded-2xl p-6"
                     >
                         <div className="flex items-center justify-between mb-2">
                             <p className="text-sm font-medium text-slate-600">Alertes Actives</p>
@@ -100,7 +100,7 @@ export default function SecurityMonitoringPage() {
                 </div>
 
                 {/* Services Status */}
-                <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-6 shadow-card">
+                <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-6 shadow-card">
                     <h3 className="text-lg font-semibold text-slate-900 mb-4">État des Services</h3>
                     <div className="space-y-4">
                         {services.map((service, index) => (
@@ -140,7 +140,7 @@ export default function SecurityMonitoringPage() {
 
                 {/* Database Status */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-6 shadow-card">
+                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-6 shadow-card">
                         <h3 className="text-lg font-semibold text-slate-900 mb-4">État des Bases de Données</h3>
                         <div className="space-y-3">
                             {[
@@ -163,7 +163,7 @@ export default function SecurityMonitoringPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-6 shadow-card">
+                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-6 shadow-card">
                         <h3 className="text-lg font-semibold text-slate-900 mb-4">Alertes Récentes</h3>
                         <div className="space-y-3">
                             <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">

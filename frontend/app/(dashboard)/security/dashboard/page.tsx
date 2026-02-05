@@ -45,7 +45,7 @@ export default function SecurityDashboard() {
                         className="group block p-6 bg-white rounded-2xl border border-slate-200 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 transition-all"
                     >
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-orange-100 text-orange-600 rounded-xl group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                            <div className="p-3 bg-orange-100 text-orange-600 rounded-2xl group-hover:bg-orange-600 group-hover:text-white transition-colors">
                                 <Activity className="w-6 h-6" />
                             </div>
                             <div>
@@ -63,7 +63,7 @@ export default function SecurityDashboard() {
                         className="group block p-6 bg-white rounded-2xl border border-slate-200 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 transition-all"
                     >
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-red-100 text-red-600 rounded-xl group-hover:bg-red-600 group-hover:text-white transition-colors">
+                            <div className="p-3 bg-red-100 text-red-600 rounded-2xl group-hover:bg-red-600 group-hover:text-white transition-colors">
                                 <Activity className="w-6 h-6" />
                             </div>
                             <div>
@@ -81,7 +81,7 @@ export default function SecurityDashboard() {
                         className="group block p-6 bg-white rounded-2xl border border-slate-200 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10 transition-all"
                     >
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-blue-100 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                 <FileText className="w-6 h-6" />
                             </div>
                             <div>
@@ -94,7 +94,7 @@ export default function SecurityDashboard() {
 
                     <div className="block p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
                         <div className="flex items-center gap-4 mb-4 opacity-50">
-                            <div className="p-3 bg-slate-200 text-slate-500 rounded-xl">
+                            <div className="p-3 bg-slate-200 text-slate-500 rounded-2xl">
                                 <Globe className="w-6 h-6" />
                             </div>
                             <div>

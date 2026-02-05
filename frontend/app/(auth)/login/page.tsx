@@ -101,6 +101,8 @@ export default function LoginPage() {
         }
     };
 
+    // Page de connexion : OAuth + email/password
+    // Les champs et boutons sont stylés pour cohérence (padding, arrondis, focus)
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50 relative overflow-hidden font-body">
             {/* Background blobs */}
@@ -137,7 +139,7 @@ export default function LoginPage() {
                                 variant="outline"
                                 onClick={() => handleOAuthLogin('google')}
                                 disabled={!!isLoading}
-                                className="bg-white hover:bg-slate-50 hover:text-slate-900 border-slate-300 text-slate-700 h-11"
+                                className="bg-white hover:bg-slate-50 hover:text-slate-900 border-slate-300 text-slate-700 h-11 rounded-2xl px-4 shadow-sm"
                             >
                                 {isLoading === 'google' ? (
                                     <span className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
@@ -150,7 +152,7 @@ export default function LoginPage() {
                                 variant="outline"
                                 onClick={() => handleOAuthLogin('github')}
                                 disabled={!!isLoading}
-                                className="bg-white hover:bg-slate-50 hover:text-slate-900 border-slate-300 text-slate-700 h-11"
+                                className="bg-white hover:bg-slate-50 hover:text-slate-900 border-slate-300 text-slate-700 h-11 rounded-2xl px-4 shadow-sm"
                             >
                                 {isLoading === 'github' ? (
                                     <span className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
@@ -186,7 +188,7 @@ export default function LoginPage() {
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     disabled={!!isLoading}
-                                    className="h-10 border-slate-300 focus:border-primary focus:ring-primary"
+                                    className="h-12 p-3 border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -199,12 +201,12 @@ export default function LoginPage() {
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     disabled={!!isLoading}
-                                    className="h-10 border-slate-300 focus:border-primary focus:ring-primary"
+                                    className="h-12 p-3 border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                 />
                             </div>
                             <Button
                                 type="submit"
-                                className="w-full h-11 text-base font-medium"
+                                className="w-full h-12 text-base font-medium rounded-2xl shadow-md"
                                 disabled={!!isLoading}
                             >
                                 {isLoading === 'email' && <span className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />}

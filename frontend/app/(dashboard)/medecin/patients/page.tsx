@@ -52,10 +52,10 @@ export default function MedecinPatients() {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Rechercher par nom, email ou ID..."
-                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-primary transition-all"
+                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-1 focus:ring-primary transition-all"
                         />
                     </div>
-                    <button className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition-all">
+                    <button className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-medium hover:bg-slate-200 transition-all">
                         <Filter className="w-4 h-4" />
                         Filtres
                     </button>
@@ -88,11 +88,11 @@ export default function MedecinPatients() {
                                     <p className="text-xs text-slate-500 mb-4">{patient.email}</p>
 
                                     <div className="grid grid-cols-2 gap-3 mb-6">
-                                        <div className="p-2 bg-slate-50 rounded-xl">
+                                        <div className="p-2 bg-slate-50 rounded-2xl">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase">Groupe Sanguin</p>
                                             <p className="text-sm font-bold text-slate-700">O+</p>
                                         </div>
-                                        <div className="p-2 bg-slate-50 rounded-xl">
+                                        <div className="p-2 bg-slate-50 rounded-2xl">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase">RDV Total</p>
                                             <p className="text-sm font-bold text-slate-700">12</p>
                                         </div>

@@ -83,7 +83,7 @@ export default function AdminReportsPage() {
 
                 {/* Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-6 shadow-card">
+                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-6 shadow-card">
                         <h3 className="text-lg font-semibold text-slate-900 mb-4">Évolution des Rendez-vous</h3>
                         <div className="h-64 w-full">
                             <ResponsiveContainer width="100%" height="100%">
@@ -100,7 +100,7 @@ export default function AdminReportsPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-6 shadow-card">
+                    <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-6 shadow-card">
                         <h3 className="text-lg font-semibold text-slate-900 mb-4">Spécialités les Plus Demandées</h3>
                         <div className="h-64 w-full">
                             <ResponsiveContainer width="100%" height="100%">
@@ -117,7 +117,7 @@ export default function AdminReportsPage() {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-6 shadow-card">
+                <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-6 shadow-card">
                     <h3 className="text-lg font-semibold text-slate-900 mb-4">Activité Récente</h3>
                     <div className="space-y-4">
                         {auditLogs.length > 0 ? (

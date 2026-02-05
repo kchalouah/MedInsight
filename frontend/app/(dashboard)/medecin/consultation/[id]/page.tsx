@@ -197,15 +197,15 @@ export default function ConsultationPage() {
                                 Contexte Clinique
                             </h3>
                             <div className="space-y-4 text-sm">
-                                <div className="p-3 bg-red-50 rounded-xl border border-red-100">
+                                <div className="p-3 bg-red-50 rounded-2xl border border-red-100">
                                     <p className="text-xs text-red-600 font-bold uppercase mb-1">Groupe Sanguin</p>
                                     <p className="font-bold text-slate-800">{dossier?.medicalRecord?.bloodType || "Non renseigné"}</p>
                                 </div>
-                                <div className="p-3 bg-orange-50 rounded-xl border border-orange-100">
+                                <div className="p-3 bg-orange-50 rounded-2xl border border-orange-100">
                                     <p className="text-xs text-orange-600 font-bold uppercase mb-1">Allergies</p>
                                     <p className="font-medium text-slate-800 line-clamp-2">{dossier?.medicalRecord?.allergies || "Aucune connue"}</p>
                                 </div>
-                                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                                <div className="p-3 bg-blue-50 rounded-2xl border border-blue-100">
                                     <p className="text-xs text-blue-600 font-bold uppercase mb-1">Antécédents</p>
                                     <p className="text-slate-700 font-medium leading-relaxed">
                                         {dossier?.medicalRecord?.medicalHistory || "Aucun antécédent majeur"}
@@ -227,12 +227,12 @@ export default function ConsultationPage() {
                                 value={symptoms}
                                 onChange={(e) => setSymptoms(e.target.value)}
                                 placeholder="Décrivez les symptômes observés..."
-                                className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-sm text-slate-200 placeholder:text-slate-500 mb-4 focus:ring-1 focus:ring-teal-500 outline-none h-24 transition-all"
+                                className="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-3 text-sm text-slate-200 placeholder:text-slate-500 mb-4 focus:ring-1 focus:ring-teal-500 outline-none h-24 transition-all"
                             />
                             <button
                                 onClick={handleRunAiAssistant}
                                 disabled={isAiLoading || !symptoms}
-                                className="w-full py-3 bg-teal-500 text-slate-900 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-teal-400 transition-all disabled:opacity-50"
+                                className="w-full py-3 bg-teal-500 text-slate-900 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-teal-400 transition-all disabled:opacity-50"
                             >
                                 {isAiLoading ? "Analyse en cours..." : "Lancer l'Analyse IA"}
                             </button>
@@ -299,7 +299,7 @@ export default function ConsultationPage() {
                                             value={medication}
                                             onChange={(e) => setMedication(e.target.value)}
                                             placeholder="Ex: Doliprane 1000mg"
-                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-1 focus:ring-purple-500 transition-all outline-none"
+                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:ring-1 focus:ring-purple-500 transition-all outline-none"
                                         />
                                     </div>
                                 </div>
@@ -309,12 +309,12 @@ export default function ConsultationPage() {
                                         value={dosage}
                                         onChange={(e) => setDosage(e.target.value)}
                                         placeholder="Ex: 1cp x 3/jour"
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-1 focus:ring-purple-500 outline-none"
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:ring-1 focus:ring-purple-500 outline-none"
                                     />
                                 </div>
                                 <button
                                     onClick={handleAddPrescription}
-                                    className="py-3 bg-purple-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-purple-700 transition-all"
+                                    className="py-3 bg-purple-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-purple-700 transition-all"
                                 >
                                     Ajouter
                                 </button>

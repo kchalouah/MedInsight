@@ -75,7 +75,7 @@ export default function DoctorAppointmentsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center">
                     <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 bg-slate-50">
                         <Calendar className="text-slate-500 w-4 h-4" />
                         <input
@@ -105,7 +105,7 @@ export default function DoctorAppointmentsPage() {
                     {loading ? (
                         <p className="text-center py-8 text-slate-500">Chargement des rendez-vous...</p>
                     ) : appointments.length === 0 ? (
-                        <div className="text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
+                        <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 border-dashed">
                             <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                             <p className="text-slate-500 font-medium">Aucun rendez-vous trouvé pour cette date.</p>
                         </div>
@@ -116,7 +116,7 @@ export default function DoctorAppointmentsPage() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
-                                className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row justify-between gap-4"
+                                className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row justify-between gap-4"
                             >
                                 <div className="flex gap-4">
                                     <div className="flex flex-col items-center justify-center bg-blue-50 w-16 h-16 rounded-lg text-blue-700">
@@ -149,19 +149,19 @@ export default function DoctorAppointmentsPage() {
                                         <>
                                             <button
                                                 onClick={() => handleStatusUpdate(apt.id, 'COMPLETED')}
-                                                className="w-full py-2 px-3 bg-primary text-white text-sm font-medium rounded-xl hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+                                                className="w-full py-2 px-3 bg-primary text-white text-sm font-medium rounded-2xl hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <CheckCircle className="w-4 h-4" /> Terminer
                                             </button>
                                             <button
                                                 onClick={() => handleStatusUpdate(apt.id, 'CANCELLED')}
-                                                className="w-full py-2 px-3 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors"
+                                                className="w-full py-2 px-3 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-2xl hover:bg-red-50 transition-colors"
                                             >
                                                 Annuler
                                             </button>
                                         </>
                                     ) : (
-                                        <button className="w-full py-2 px-3 bg-slate-100 text-slate-500 text-sm font-medium rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
+                                        <button className="w-full py-2 px-3 bg-slate-100 text-slate-500 text-sm font-medium rounded-2xl cursor-not-allowed flex items-center justify-center gap-2">
                                             <FileText className="w-4 h-4" /> Détails
                                         </button>
                                     )}

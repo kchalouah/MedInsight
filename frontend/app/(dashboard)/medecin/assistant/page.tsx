@@ -54,7 +54,7 @@ export default function AssistantPage() {
                     <p className="text-slate-600">Analyse des symptômes et suggestions de diagnostic</p>
                 </div>
 
-                <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-6 shadow-card">
+                <div className="bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-6 shadow-card">
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                         <FileText className="inline w-4 h-4 mr-1" />
                         Symptômes du patient
@@ -81,7 +81,7 @@ export default function AssistantPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="grid grid-cols-1 lg:grid-cols-2 gap-6"
                     >
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-6">
                             <h3 className="text-lg font-semibold text-blue-900 mb-3">Diagnostic Suggéré</h3>
                             <p className="text-blue-800">{diagnosis.diagnosis || "Non disponible"}</p>
                             {diagnosis.confidence && (
@@ -92,7 +92,7 @@ export default function AssistantPage() {
                         </div>
 
                         {treatment && (
-                            <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6">
+                            <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-2xl p-6">
                                 <h3 className="text-lg font-semibold text-green-900 mb-3">Traitement Suggéré</h3>
                                 <p className="text-green-800">{treatment.treatment || "Non disponible"}</p>
                             </div>
