@@ -20,7 +20,7 @@ data:
     ADMIN_USER = os.getenv("ADMIN_USER", "admin")
     ADMIN_PASS = os.getenv("ADMIN_PASS", "KeycloakAdmin2024!")
     CLIENT_ID = os.getenv("CLIENT_ID", "auth-service")
-    CLIENT_SECRET = os.getenv("CLIENT_SECRET", "security-secret")
+    CLIENT_SECRET = os.getenv("CLIENT_SECRET", "auth-service-secret")
 
     # --- Setup Logging ---
     logging.basicConfig(

@@ -15,13 +15,13 @@ prometheus:
           resources:
             requests:
               storage: 2Gi
-    externalUrl: http://medinsight.local/prometheus
+    externalUrl: http://medinsightpds.duckdns.org/prometheus
     routePrefix: /prometheus
   ingress:
     enabled: true
     ingressClassName: nginx
     hosts:
-      - medinsight.local
+      - medinsightpds.duckdns.org
     paths:
       - /prometheus
     pathType: Prefix
@@ -33,12 +33,12 @@ grafana:
     enabled: true
     ingressClassName: nginx
     hosts:
-      - medinsight.local
+      - medinsightpds.duckdns.org
     path: /grafana
     pathType: Prefix
   grafana.ini:
     server:
-      root_url: http://medinsight.local/grafana/
+      root_url: http://medinsightpds.duckdns.org/grafana/
       serve_from_sub_path: true
   serviceMonitor:
     enabled: true
