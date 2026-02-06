@@ -103,6 +103,10 @@ public class KeycloakService {
             return getUserIdByEmail(email, token);
 
         } catch (WebClientResponseException e) {
+            if (e.getStatusCode().value() == 409) {
+                log.info("User {} already exists in Keycloak, fetching ID...", email);
+                return getUserIdByEmail(email, getAdminToken());
+            }
             log.error("Failed to create user in Keycloak: {}", e.getResponseBodyAsString());
             throw new KeycloakIntegrationException("Failed to create user in Keycloak: " + e.getMessage(), e);
         }

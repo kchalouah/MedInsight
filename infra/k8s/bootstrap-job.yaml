@@ -198,6 +198,7 @@ spec:
             create_user "security@medinsight.tn" "Security" "Officer" "Security123!" "RESPONSABLE_SECURITE"
             create_user "doctor@medinsight.tn" "Dr. Test" "Doctor" "Doctor123!" "MEDECIN"
             create_user "patient@medinsight.tn" "Test" "Patient" "Patient123!" "PATIENT"
+            create_user "gestionnaire@medinsight.tn" "Gestion" "Admin" "Gestion123!" "GESTIONNAIRE"
 
             echo "Bootstrap complete!"
       restartPolicy: OnFailure

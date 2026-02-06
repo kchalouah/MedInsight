@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: medinsight-compatibility-ingress
+  namespace: medinsight
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /api/$1$2$3
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    # Ensure this doesn't conflict with main ingress by being more specific if needed
+    # but nginx usually matches longest path or specific order
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: medinsightpds.duckdns.org
+    http:
+      paths:
+      # Match common prefixes that should have /api but don't in stale builds
+      - path: /(appointments|patients|medecins|records|audit|mail|ml|prescriptions)(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: gateway-service
+            port:
+              number: 8080

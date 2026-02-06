@@ -37,9 +37,23 @@ data:
         "Endocrinologie", "Gastro-entérologie"
     ]
 
-    TUNISIAN_MALE_NAMES = ["Ahmed", "Mohamed", "Ibrahim", "Youssef", "Aziz", "Firas", "Karim", "Walid", "Sami", "Anis"]
-    TUNISIAN_FEMALE_NAMES = ["Ameni", "Fatma", "Mariem", "Sarra", "Emna", "Hela", "Noura", "Rym", "Salma", "Yasmine"]
-    TUNISIAN_LAST_NAMES = ["Trabelsi", "Gharbi", "Ben Ali", "Jaziri", "Bouazizi", "Hammami", "Dridi", "Mejri", "Saidi"]
+    TUNISIAN_MALE_NAMES = [
+        "Ahmed", "Mohamed", "Ibrahim", "Youssef", "Aziz", "Firas", "Karim", "Walid", "Sami", "Anis", 
+        "Bilel", "Hamdi", "Omar", "Mehdi", "Amine", "Nizar", "Rafik", "Skander", "Hassen", "Mourad",
+        "Seif", "Ayoub", "Malek", "Rayen", "Iyed"
+    ]
+
+    TUNISIAN_FEMALE_NAMES = [
+        "Ameni", "Fatma", "Mariem", "Sarra", "Emna", "Hela", "Noura", "Rym", "Salma", "Yasmine", 
+        "Chaima", "Ines", "Siwar", "Khadija", "Lobna", "Meriem", "Zeineb", "Asma", "Mouna", "Dorra",
+        "Farah", "Ghofrane", "Wiem", "Chiraz", "Rania"
+    ]
+
+    TUNISIAN_LAST_NAMES = [
+        "Trabelsi", "Gharbi", "Ben Ali", "Jaziri", "Bouazizi", "Hammami", "Dridi", "Mejri", "Saidi", 
+        "Ayari", "Riahi", "Mebarki", "Ben Ahmed", "Chebbi", "Mansouri", "Abidi", "Sassi", "Louhichi", 
+        "Bejaoui", "Triki", "Karray", "Zribi", "Elloumi", "Ben Amor", "Chaabane", "Haddad", "Guesmi"
+    ]
 
     CITIES = ["Tunis", "Sfax", "Sousse", "Bizerte", "Gabès", "Ariana", "Monastir", "Nabeul", "Kairouan", "Gafsa"]
 
@@ -49,6 +63,16 @@ data:
             self.client = httpx.AsyncClient(timeout=30.0)
             self.tokens = {"admin": None}
             self.users = {"doctors": [], "patients": []}
+
+        def get_tunisian_name(self, gender=None):
+            if gender == "MALE":
+                first = random.choice(TUNISIAN_MALE_NAMES)
+            elif gender == "FEMALE":
+                first = random.choice(TUNISIAN_FEMALE_NAMES)
+            else:
+                first = random.choice(TUNISIAN_MALE_NAMES + TUNISIAN_FEMALE_NAMES)
+            last = random.choice(TUNISIAN_LAST_NAMES)
+            return first, last
 
         async def get_admin_token(self):
             data = {
@@ -83,48 +107,122 @@ data:
             except: pass
             return None
 
-        async def create_doctors(self, count=5):
+        async def create_doctors(self, count=8):
             logger.info(f"--- Creating {count} Doctors ---")
             for _ in range(count):
-                first = random.choice(TUNISIAN_MALE_NAMES)
-                last = random.choice(TUNISIAN_LAST_NAMES)
-                email_prefix = random.randint(100, 999)
-                email = f"dr.{email_prefix}.{first.lower()}@medinsight.tn"
+                spec = random.choice(SPECIALIZATIONS)
+                first_name, last_name = self.get_tunisian_name() 
+                email = f"dr.{first_name.lower()}.{last_name.lower()}.{random.randint(100,999)}@medinsight.tn"
+                password = "password123"
                 payload = {
-                    "email": email, "password": "password123",
-                    "firstName": first, "lastName": last, "phoneNumber": "+21620000000",
-                    "specialization": random.choice(SPECIALIZATIONS), "licenseNumber": f"TUN-{random.randint(1000,9999)}",
-                    "yearsOfExperience": 5, "consultationFee": 60.0
+                    "email": email, "password": password, "firstName": first_name, "lastName": last_name,
+                    "phoneNumber": "+216" + str(random.randint(20, 99)) + str(random.randint(100000, 999999)),
+                    "addressLine": self.fake.street_address(), "city": random.choice(CITIES), "country": "Tunisie",
+                    "specialization": spec, "licenseNumber": f"TUN-{random.randint(10000, 99999)}",
+                    "yearsOfExperience": random.randint(2, 35), "consultationFee": float(random.choice([40, 50, 60, 70, 80, 90, 100, 120]))
                 }
-                resp = await self.client.post(f"{GATEWAY_URL}/api/auth/register/medecin", json=payload)
-                if resp.status_code in [200, 201]:
-                    self.users["doctors"].append({"id": resp.json().get("id"), "email": email, "password": "password123"})
-                    logger.info(f"✅ Created Doctor: {email}")
+                try:
+                    resp = await self.client.post(f"{GATEWAY_URL}/api/auth/register/medecin", json=payload)
+                    if resp.status_code in [200, 201]:
+                        user_id = resp.json().get("id")
+                        self.users["doctors"].append({"id": user_id, "email": email, "password": password, "name": f"Dr. {first_name} {last_name}"})
+                        logger.info(f"✅ Created Doctor: Dr. {first_name} {last_name}")
+                        
+                        # Create default schedule for the doctor
+                        sched_resp = await self.client.post(f"{GATEWAY_URL}/api/appointments/schedule/{user_id}/default", headers={"Authorization": f"Bearer {self.tokens['admin']}"})
+                        if sched_resp.status_code in [200, 201]:
+                            logger.info(f"   📅 Created default schedule for {first_name}")
+                    elif resp.status_code == 409:
+                        self.users["doctors"].append({"email": email, "password": password, "name": f"Dr. {first_name} {last_name}"})
+                except Exception as e: logger.error(f"Error creating doctor: {e}")
 
-        async def create_patients(self, count=5):
+        async def create_patients(self, count=15):
             logger.info(f"--- Creating {count} Patients ---")
             for _ in range(count):
-                first = random.choice(TUNISIAN_FEMALE_NAMES)
-                last = random.choice(TUNISIAN_LAST_NAMES)
-                email = f"{first.lower()}.{random.randint(100,999)}@example.com"
+                gender_code = random.choice(["MALE", "FEMALE"])
+                first_name, last_name = self.get_tunisian_name(gender_code)
+                email = f"{first_name.lower()}.{last_name.lower()}.{random.randint(100,999)}@example.com"
+                password = "password123"
                 payload = {
-                    "email": email, "password": "password123",
-                    "firstName": first, "lastName": last, "phoneNumber": "+21650000000",
-                    "dateOfBirth": "1990-01-01", "gender": "FEMALE"
+                    "email": email, "password": password, "firstName": first_name, "lastName": last_name,
+                    "phoneNumber": "+216" + str(random.randint(20, 99)) + str(random.randint(100000, 999999)),
+                    "dateOfBirth": self.fake.date_of_birth(minimum_age=18, maximum_age=80).isoformat(),
+                    "addressLine": self.fake.street_address(), "city": random.choice(CITIES), "country": "Tunisie", "gender": gender_code
                 }
-                resp = await self.client.post(f"{GATEWAY_URL}/api/auth/register/patient", json=payload)
-                if resp.status_code in [200, 201]:
-                    self.users["patients"].append({"id": resp.json().get("id"), "email": email, "password": "password123"})
-                    logger.info(f"✅ Created Patient: {email}")
+                try:
+                    resp = await self.client.post(f"{GATEWAY_URL}/api/auth/register/patient", json=payload)
+                    if resp.status_code in [200, 201]:
+                        user_id = resp.json().get("id")
+                        self.users["patients"].append({"id": user_id, "email": email, "password": password, "name": f"{first_name} {last_name}"})
+                        logger.info(f"✅ Created Patient: {first_name} {last_name}")
+                    elif resp.status_code == 409:
+                        self.users["patients"].append({"email": email, "password": password, "name": f"{first_name} {last_name}"})
+                except Exception as e: logger.error(f"Error creating patient: {e}")
+
+        async def create_admin_users(self):
+            logger.info("--- Creating Administrative Users ---")
+            if not self.tokens["admin"]: return
+            admins = [
+                {"email": "admin@medinsight.tn", "role": "ADMIN", "firstName": "Super", "lastName": "Admin"},
+                {"email": "gestion@medinsight.tn", "role": "GESTIONNAIRE", "firstName": "Sami", "lastName": "Gestion"},
+                {"email": "security@medinsight.tn", "role": "RESPONSABLE_SECURITE", "firstName": "Securité", "lastName": "Officer"}
+            ]
+            headers = {"Authorization": f"Bearer {self.tokens['admin']}"}
+            for admin in admins:
+                payload = {**admin, "password": "password123"}
+                resp = await self.client.post(f"{GATEWAY_URL}/api/admin/users", json=payload, headers=headers)
+                if resp.status_code in [200, 201]: logger.info(f"✅ Created {admin['role']}")
+
+        async def create_appointments_and_history(self):
+            logger.info("--- Generating Appointments & History ---")
+            valid_patients = [p for p in self.users["patients"] if p.get("id")]
+            valid_doctors = [d for d in self.users["doctors"] if d.get("id")]
+            if not valid_doctors or not valid_patients: return
+            for patient in valid_patients:
+                pat_token = await self.get_user_token(patient["email"], patient["password"])
+                if not pat_token: continue
+                pat_headers = {"Authorization": f"Bearer {pat_token}"}
+                for _ in range(random.randint(2, 4)):
+                    doctor = random.choice(valid_doctors)
+                    is_past = random.random() < 0.7
+                    days = random.randint(1, 60)
+                    appt_date = datetime.now() + timedelta(days=(-days if is_past else days))
+                    appt_date = appt_date.replace(hour=random.randint(9,16), minute=0, second=0, microsecond=0)
+                    payload = {"patientId": patient["id"], "doctorId": doctor["id"], "appointmentDateTime": appt_date.isoformat(), "reason": self.fake.sentence()}
+                    resp = await self.client.post(f"{GATEWAY_URL}/api/appointments", json=payload, headers=pat_headers)
+                    if resp.status_code in [200, 201] and is_past:
+                        await self.process_past_appointment(resp.json().get("id"), doctor, patient, appt_date)
+
+        async def process_past_appointment(self, appt_id, doctor, patient, date):
+            doc_token = await self.get_user_token(doctor["email"], doctor["password"])
+            if not doc_token or not appt_id: return
+            headers = {"Authorization": f"Bearer {doc_token}"}
+            await self.client.put(f"{GATEWAY_URL}/api/appointments/{appt_id}", json={"status": "COMPLETED"}, headers=headers)
+            await self.client.post(f"{GATEWAY_URL}/api/records/notes", json={"appointmentId": appt_id, "patientId": patient["id"], "noteContent": self.fake.paragraph()}, headers=headers)
+            if random.random() < 0.6:
+                await self.client.post(f"{GATEWAY_URL}/api/appointments/{appt_id}/prescriptions", json={"patientId": patient["id"], "medicationName": "Paracétamol", "dosage": "1g", "duration": "5 jours", "instructions": "3x/jour"}, headers=headers)
+
+        async def initialize_medical_records(self):
+            logger.info("--- Initializing Medical Records ---")
+            if not self.users["doctors"]: return
+            doc_token = await self.get_user_token(self.users["doctors"][0]["email"], self.users["doctors"][0]["password"])
+            if not doc_token: return
+            headers = {"Authorization": f"Bearer {doc_token}"}
+            for patient in self.users["patients"]:
+                if not patient.get("id"): continue
+                payload = {"bloodType": random.choice(["O+", "A+", "B+"]), "allergies": "Aucune", "chronicConditions": "Aucune", "emergencyContactName": self.fake.name(), "emergencyContactPhone": "+21620000000", "medicalHistory": "RAS"}
+                await self.client.put(f"{GATEWAY_URL}/api/records/patient/{patient['id']}", json=payload, headers=headers)
 
         async def run(self):
-            logger.info("🚀 Internal Populator Started")
+            logger.info("🚀 Starting MedInsight V2 Data Populator")
             if await self.get_admin_token():
-                logger.info("✅ Admin logged in")
-                await self.create_doctors(5)
-                await self.create_patients(5)
+                await self.create_admin_users()
+            await self.create_doctors(8)
+            await self.create_patients(15)
+            await self.create_appointments_and_history()
+            await self.initialize_medical_records()
             await self.client.aclose()
-            logger.info("✨ Done")
+            logger.info("✨ Data Population Complete!")
 
     if __name__ == "__main__":
         asyncio.run(MedInsightDataPopulator().run())

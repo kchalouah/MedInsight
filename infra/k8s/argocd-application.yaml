@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: medinsight
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kchalouah/MedInsight.git
+    targetRevision: main
+    path: infra/k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: medinsight
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

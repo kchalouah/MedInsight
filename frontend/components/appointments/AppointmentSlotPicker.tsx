@@ -1,51 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import api from '@/lib/api';
 
-interface TimeSlot {
-    startTime: string;
-    endTime: string;
-    durationMinutes: number;
-    isAvailable: boolean;
-    status: 'AVAILABLE' | 'BOOKED' | 'UNAVAILABLE';
-}
-
-interface AppointmentSlotPickerProps {
-    doctorId: string;
-    onSlotSelect: (slot: Date) => void;
-    selectedSlot?: Date;
-}
-
-export default function AppointmentSlotPicker({
-    doctorId,
-    onSlotSelect,
-    selectedSlot
-}: AppointmentSlotPickerProps) {
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-    const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // Generate next 14 days for calendar
-    const getNext14Days = () => {
-        const days = [];
-        for (let i = 0; i < 14; i++) {
-            const date = new Date();
-            date.setDate(date.getDate() + i);
-            days.push(date);
-        }
-        return days;
-    };
-
-    const days = getNext14Days();
-
-    // Fetch available slots when date changes
-    useEffect(() => {
-        if (doctorId && selectedDate) {
-            fetchAvailableSlots();
-        }
-    }, [doctorId, selectedDate]);
+// ... (existing interfaces) ...
 
     const fetchAvailableSlots = async () => {
         setLoading(true);
@@ -53,24 +10,14 @@ export default function AppointmentSlotPicker({
 
         try {
             const dateStr = selectedDate.toISOString().split('T')[0];
-            const token = localStorage.getItem('token');
-
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/appointments/slots/available?doctorId=${doctorId}&date=${dateStr}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
+            const response = await api.get<TimeSlot[]>('/appointments/slots/available', {
+                params: {
+                    doctorId,
+                    date: dateStr
                 }
-            );
+            });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch available slots');
-            }
-
-            const slots: TimeSlot[] = await response.json();
-            setAvailableSlots(slots);
+            setAvailableSlots(response.data);
         } catch (err) {
             setError('Impossible de charger les créneaux disponibles');
             console.error('Error fetching slots:', err);
